@@ -4,16 +4,16 @@ import {
   Search, BookOpen, Video, FileText, Headphones, MonitorPlay,
   Plus, Trash2, Edit3, LayoutDashboard, Eye, Filter, X,
   GraduationCap, CheckCircle2, AlertCircle, ExternalLink, Lock,
-  Upload, LogOut, ClipboardList, Download, Settings
+  Upload, LogOut, ClipboardList, Download, Settings, FolderEdit
 } from 'lucide-react';
 
-const CATEGORIES = [
-  { slug: 'zanist', name: 'ZANIST', desc: 'Fîzîk, kîmya, biyolojî û xweza' },
-  { slug: 'birkari', name: 'BÎRKARÎ', desc: 'Hejmêr, geometrî û mantiq' },
-  { slug: 'ziman-weje', name: 'ZIMAN û WÊJEYA KURDÎ', desc: 'Rêziman, çîrok, helbest û xwendin' },
-  { slug: 'zarok', name: 'ZAROK', desc: 'Pêşdibistan, lîstik û fêrbûna bingehîn' },
-  { slug: 'huner', name: 'HUNER', desc: 'Muzîk, wêne, şano û çand' },
-  { slug: 'teknoloji', name: 'TEKNOLOJÎ', desc: 'Bîrkarî, bernameçêkirin û zanista dîjîtal' }
+const DEFAULT_CATEGORIES = [
+  { slug: 'zanist', name: 'ZANIST', description: 'Fîzîk, kîmya, biyolojî û xweza', sort_order: 1 },
+  { slug: 'birkari', name: 'BÎRKARÎ', description: 'Hejmêr, geometrî û mantiq', sort_order: 2 },
+  { slug: 'ziman-weje', name: 'ZIMAN û WÊJEYA KURDÎ', description: 'Rêziman, çîrok, helbest û xwendin', sort_order: 3 },
+  { slug: 'zarok', name: 'ZAROK', description: 'Pêşdibistan, lîstik û fêrbûna bingehîn', sort_order: 4 },
+  { slug: 'huner', name: 'HUNER', description: 'Muzîk, wêne, şano û çand', sort_order: 5 },
+  { slug: 'teknoloji', name: 'TEKNOLOJÎ', description: 'Bîrkarî, bernameçêkirin û zanista dîjîtal', sort_order: 6 }
 ];
 
 const LEVELS = ['Destpêk', 'Navîn', 'Pêşketî'];
@@ -29,18 +29,25 @@ const ADMIN_PASS = 'kurdiklass2026';
 
 export default function App() {
   const [lessons, setLessons] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('student');
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
 
   // Site Yazıları (Mîhengên Malperê)
   const [siteTexts, setSiteTexts] = useState({
+    all_categories_label: 'HEMÛ BEŞ (TÜMÜ)',
     hero_badge: 'Çavkaniyên Perwerdehiyê yên Kurdî',
     hero_title: 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
     hero_subtitle: 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
     footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.'
   });
   const [settingsMsg, setSettingsMsg] = useState('');
+
+  // Kategori Ekleme / Düzenleme State'i
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatDesc, setNewCatDesc] = useState('');
+  const [catMsg, setCatMsg] = useState('');
 
   // Şifre Giriş Formu
   const [passwordInput, setPasswordInput] = useState('');
@@ -74,7 +81,78 @@ export default function App() {
   useEffect(() => {
     fetchLessons();
     fetchSiteSettings();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('sort_order', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      setCategories(data);
+    }
+  };
+
+  const handleUpdateCategoryName = (slug, value) => {
+    setCategories((prev) =>
+      prev.map((cat) => (cat.slug === slug ? { ...cat, name: value } : cat))
+    );
+  };
+
+  const handleSaveCategories = async () => {
+    setCatMsg('Tê tomarkirin...');
+    const { error } = await supabase.from('categories').upsert(categories);
+    if (error) {
+      setCatMsg('Çewtî: ' + error.message);
+    } else {
+      setCatMsg('Navên beşan (kategorî) bi serkeftî hatin nûkirin!');
+      fetchCategories();
+    }
+    setTimeout(() => setCatMsg(''), 4000);
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+
+    const generatedSlug = newCatName
+      .toLowerCase()
+      .replace(/î/g, 'i')
+      .replace(/ê/g, 'e')
+      .replace(/û/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || `cat-${Date.now()}`;
+
+    const newCat = {
+      slug: `${generatedSlug}-${Math.floor(100 + Math.random() * 900)}`,
+      name: newCatName.trim(),
+      description: newCatDesc.trim(),
+      sort_order: categories.length + 1
+    };
+
+    const { error } = await supabase.from('categories').insert([newCat]);
+    if (error) {
+      setCatMsg('Çewtî: ' + error.message);
+    } else {
+      setNewCatName('');
+      setNewCatDesc('');
+      setCatMsg('Beşa nû hat zêdekirin!');
+      fetchCategories();
+    }
+    setTimeout(() => setCatMsg(''), 4000);
+  };
+
+  const handleDeleteCategory = async (slug) => {
+    if (!window.confirm('Tu piştrast î ku dixwazî vê beşê jê bibî?')) return;
+    const { error } = await supabase.from('categories').delete().eq('slug', slug);
+    if (!error) {
+      fetchCategories();
+    }
+  };
 
   const fetchSiteSettings = async () => {
     const { data } = await supabase
@@ -85,6 +163,7 @@ export default function App() {
 
     if (data) {
       setSiteTexts({
+        all_categories_label: data.all_categories_label || 'HEMÛ BEŞ (TÜMÜ)',
         hero_badge: data.hero_badge || 'Çavkaniyên Perwerdehiyê yên Kurdî',
         hero_title: data.hero_title || 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
         hero_subtitle: data.hero_subtitle || 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
@@ -225,7 +304,7 @@ export default function App() {
     setFormData({
       title: lesson.title || '',
       description: lesson.description || '',
-      category_slug: lesson.category_slug || 'zanist',
+      category_slug: lesson.category_slug || categories[0]?.slug || 'zanist',
       media_type: lesson.media_type || 'video',
       media_url: lesson.media_url || '',
       thumbnail_url: lesson.thumbnail_url || '',
@@ -242,7 +321,7 @@ export default function App() {
     setFormData({
       title: '',
       description: '',
-      category_slug: 'zanist',
+      category_slug: categories[0]?.slug || 'zanist',
       media_type: 'video',
       media_url: '',
       thumbnail_url: '',
@@ -324,7 +403,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* KATEGORİ ŞERİDİ */}
+        {/* DİNAMİK KATEGORİ ŞERİDİ */}
         {viewMode === 'student' && (
           <nav className="bg-red-800 border-t border-red-600/40 overflow-x-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 py-2 whitespace-nowrap">
@@ -336,9 +415,9 @@ export default function App() {
                     : 'text-red-100 hover:bg-red-700'
                 }`}
               >
-                HEMÛ BEŞ (TÜMÜ)
+                {siteTexts.all_categories_label}
               </button>
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <button
                   key={cat.slug}
                   onClick={() => {
@@ -363,7 +442,7 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'student' ? (
           <>
-            {/* HERO VE ARAMA (DİNAMİK YAZILAR) */}
+            {/* HERO VE ARAMA */}
             <div className="bg-gradient-to-r from-red-700 to-red-900 rounded-2xl p-6 sm:p-8 text-white mb-8 shadow-lg">
               <div className="max-w-2xl">
                 <span className="inline-block bg-red-600/80 text-red-100 text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
@@ -395,7 +474,7 @@ export default function App() {
                 <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4 mb-5">
                   <div>
                     <span className="text-xs font-bold uppercase tracking-wider text-red-600 bg-red-50 px-2.5 py-1 rounded">
-                      {CATEGORIES.find((c) => c.slug === activeLesson.category_slug)?.name || 'DERS'}
+                      {categories.find((c) => c.slug === activeLesson.category_slug)?.name || 'DERS'}
                     </span>
                     <h2 className="text-2xl font-bold text-slate-900 mt-2">{activeLesson.title}</h2>
                   </div>
@@ -570,7 +649,7 @@ export default function App() {
                   <h2 className="text-lg font-bold text-slate-800">
                     {selectedCategory === 'all'
                       ? 'Hemû Materyalên Perwerdehiyê'
-                      : CATEGORIES.find((c) => c.slug === selectedCategory)?.name}
+                      : categories.find((c) => c.slug === selectedCategory)?.name}
                   </h2>
                   <span className="text-sm text-slate-500 font-medium">
                     {filteredLessons.length} materyal hat dîtin
@@ -601,7 +680,7 @@ export default function App() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {filteredLessons.map((lesson) => {
-                      const catObj = CATEGORIES.find((c) => c.slug === lesson.category_slug);
+                      const catObj = categories.find((c) => c.slug === lesson.category_slug);
                       const hasGuide = Boolean(lesson.teacher_guide || lesson.guide_pdf_url);
                       return (
                         <div
@@ -705,7 +784,7 @@ export default function App() {
                   <div>
                     <h1 className="text-2xl font-bold">Panela Rêveberiya KurdiKlass</h1>
                     <p className="text-slate-400 text-sm">
-                      Ders, PDF, Rêbera Mamosteyan û nivîsên malperê bi hêsanî biguherîne.
+                      Ders, PDF, Rêbera Mamosteyan û beşên malperê bi hêsanî biguherîne.
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -770,7 +849,7 @@ export default function App() {
                         onChange={(e) => setFormData({ ...formData, category_slug: e.target.value })}
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
                       >
-                        {CATEGORIES.map((c) => (
+                        {categories.map((c) => (
                           <option key={c.slug} value={c.slug}>{c.name}</option>
                         ))}
                       </select>
@@ -961,7 +1040,7 @@ export default function App() {
                               {lesson.title}
                             </td>
                             <td className="py-3 px-4 text-red-600 font-medium">
-                              {CATEGORIES.find((c) => c.slug === lesson.category_slug)?.name}
+                              {categories.find((c) => c.slug === lesson.category_slug)?.name}
                             </td>
                             <td className="py-3 px-4 text-slate-600">{lesson.level}</td>
                             <td className="py-3 px-4 text-right space-x-2">
@@ -987,6 +1066,66 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* KATEGORİ BAŞLIKLARINI DÜZENLEME (BEŞ Û KATEGORÎ) */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <FolderEdit className="w-5 h-5 text-red-600" />
+                    <span>Beş û Sernavên Sereke Biguherîne (Ana Menü Kategorileri)</span>
+                  </h2>
+
+                  {catMsg && (
+                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
+                      {catMsg}
+                    </div>
+                  )}
+
+                  <div className="space-y-3 mb-6">
+                    {categories.map((cat) => (
+                      <div key={cat.slug} className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={cat.name}
+                          onChange={(e) => handleUpdateCategoryName(cat.slug, e.target.value)}
+                          className="flex-1 border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-semibold focus:outline-none focus:border-red-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCategory(cat.slug)}
+                          className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100"
+                          title="Beşê Jê Bibe"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={handleSaveCategories}
+                      className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
+                    >
+                      Navên Beşan Tomar Bike
+                    </button>
+                  </div>
+
+                  {/* YENİ KATEGORİ EKLEME */}
+                  <form onSubmit={handleAddCategory} className="pt-4 border-t border-slate-200 flex flex-wrap gap-3">
+                    <input
+                      type="text"
+                      value={newCatName}
+                      onChange={(e) => setNewCatName(e.target.value)}
+                      placeholder="Navê Beşa Nû (Mînak: DÎROK û ERDNÎGARÎ)"
+                      className="flex-1 min-w-[220px] border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
+                    >
+                      + Beşa Nû Zêde Bike
+                    </button>
+                  </form>
+                </div>
+
                 {/* SİTE YAZILARINI DÜZENLEME (MÎHENGÊN MALPERÊ) */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -1003,24 +1142,24 @@ export default function App() {
                   <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Nivîsa Jorîn (Üst Rozet)
+                        Bişkojka Hemû Beşan (Tümü Butonu)
                       </label>
                       <input
                         type="text"
-                        value={siteTexts.hero_badge}
-                        onChange={(e) => setSiteTexts({ ...siteTexts, hero_badge: e.target.value })}
+                        value={siteTexts.all_categories_label}
+                        onChange={(e) => setSiteTexts({ ...siteTexts, all_categories_label: e.target.value })}
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Nivîsa Binerdê (Footer / Alt Bilgi)
+                        Nivîsa Jorîn (Üst Rozet)
                       </label>
                       <input
                         type="text"
-                        value={siteTexts.footer_text}
-                        onChange={(e) => setSiteTexts({ ...siteTexts, footer_text: e.target.value })}
+                        value={siteTexts.hero_badge}
+                        onChange={(e) => setSiteTexts({ ...siteTexts, hero_badge: e.target.value })}
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
                       />
                     </div>
@@ -1050,6 +1189,18 @@ export default function App() {
                     </div>
 
                     <div className="md:col-span-2">
+                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
+                        Nivîsa Binerdê (Footer / Alt Bilgi)
+                      </label>
+                      <input
+                        type="text"
+                        value={siteTexts.footer_text}
+                        onChange={(e) => setSiteTexts({ ...siteTexts, footer_text: e.target.value })}
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
                       <button
                         type="submit"
                         className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-lg transition text-sm"
@@ -1065,7 +1216,7 @@ export default function App() {
         )}
       </main>
 
-      {/* ALT BİLGİ (FOOTER - DİNAMİK YAZI) */}
+      {/* ALT BİLGİ (FOOTER) */}
       <footer className="bg-slate-900 text-slate-400 py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
           <div className="font-bold text-white text-base">
