@@ -4,7 +4,7 @@ import {
   Search, BookOpen, Video, FileText, Headphones, MonitorPlay,
   Plus, Trash2, Edit3, LayoutDashboard, Eye, Filter, X,
   GraduationCap, CheckCircle2, AlertCircle, ExternalLink, Lock,
-  Upload, LogOut, ClipboardList, Download
+  Upload, LogOut, ClipboardList, Download, Settings
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -25,7 +25,6 @@ const MEDIA_TYPES = [
   { id: 'interactive', label: 'Çalakiya Interaktîf', icon: MonitorPlay }
 ];
 
-// YÖNETİCİ ŞİFRESİ (İstediğiniz zaman buradan değiştirebilirsiniz)
 const ADMIN_PASS = 'kurdiklass2026';
 
 export default function App() {
@@ -33,6 +32,15 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('student');
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
+
+  // Site Yazıları (Mîhengên Malperê)
+  const [siteTexts, setSiteTexts] = useState({
+    hero_badge: 'Çavkaniyên Perwerdehiyê yên Kurdî',
+    hero_title: 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
+    hero_subtitle: 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
+    footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.'
+  });
+  const [settingsMsg, setSettingsMsg] = useState('');
 
   // Şifre Giriş Formu
   const [passwordInput, setPasswordInput] = useState('');
@@ -65,7 +73,40 @@ export default function App() {
 
   useEffect(() => {
     fetchLessons();
+    fetchSiteSettings();
   }, []);
+
+  const fetchSiteSettings = async () => {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('*')
+      .eq('id', 1)
+      .single();
+
+    if (data) {
+      setSiteTexts({
+        hero_badge: data.hero_badge || 'Çavkaniyên Perwerdehiyê yên Kurdî',
+        hero_title: data.hero_title || 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
+        hero_subtitle: data.hero_subtitle || 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
+        footer_text: data.footer_text || 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.'
+      });
+    }
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    setSettingsMsg('Tê tomarkirin...');
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert({ id: 1, ...siteTexts });
+
+    if (error) {
+      setSettingsMsg('Çewtî: ' + error.message);
+    } else {
+      setSettingsMsg('Nivîsên malperê bi serkeftî hatin nûkirin!');
+    }
+    setTimeout(() => setSettingsMsg(''), 4000);
+  };
 
   const fetchLessons = async () => {
     setLoading(true);
@@ -80,7 +121,6 @@ export default function App() {
     setLoading(false);
   };
 
-  // Basit Tek Şifre ile Admin Girişi
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (passwordInput.trim() === ADMIN_PASS) {
@@ -93,14 +133,12 @@ export default function App() {
     }
   };
 
-  // Çıkış Yap
   const handleLogout = () => {
     setIsAdmin(false);
     localStorage.removeItem('kk_admin');
     setViewMode('student');
   };
 
-  // Supabase Storage'a Doğrudan Dosya Yükleme
   const handleFileUpload = async (event, targetField) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -138,7 +176,6 @@ export default function App() {
     setTimeout(() => setStatusMsg({ type: '', text: '' }), 4000);
   };
 
-  // Ders Ekleme veya Güncelleme
   const handleSaveLesson = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
@@ -326,17 +363,17 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'student' ? (
           <>
-            {/* HERO VE ARAMA */}
+            {/* HERO VE ARAMA (DİNAMİK YAZILAR) */}
             <div className="bg-gradient-to-r from-red-700 to-red-900 rounded-2xl p-6 sm:p-8 text-white mb-8 shadow-lg">
               <div className="max-w-2xl">
                 <span className="inline-block bg-red-600/80 text-red-100 text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
-                  Çavkaniyên Perwerdehiyê yên Kurdî
+                  {siteTexts.hero_badge}
                 </span>
                 <h1 className="text-2xl sm:text-4xl font-extrabold mb-3 leading-tight">
-                  Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî
+                  {siteTexts.hero_title}
                 </h1>
                 <p className="text-red-100 text-sm sm:text-base mb-6">
-                  Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.
+                  {siteTexts.hero_subtitle}
                 </p>
 
                 <div className="relative">
@@ -620,7 +657,7 @@ export default function App() {
             </div>
           </>
         ) : (
-          /* ================= ADMIN PANELİ (BASİT TEK ŞİFRE KORUMALI) ================= */
+          /* ================= ADMIN PANELİ ================= */
           <div>
             {!isAdmin ? (
               <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md border border-slate-200 p-8 mt-8">
@@ -668,7 +705,7 @@ export default function App() {
                   <div>
                     <h1 className="text-2xl font-bold">Panela Rêveberiya KurdiKlass</h1>
                     <p className="text-slate-400 text-sm">
-                      Ders, PDF û Rêbera Mamosteyan bi hêsanî li malperê zêde bike.
+                      Ders, PDF, Rêbera Mamosteyan û nivîsên malperê bi hêsanî biguherîne.
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -685,7 +722,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* DERS EKLEME / DÜZENLEME FORMU (DOSYA YÜKLEMELİ) */}
+                {/* DERS EKLEME / DÜZENLEME FORMU */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5 text-red-600" />
@@ -754,14 +791,13 @@ export default function App() {
                       </select>
                     </div>
 
-                    {/* ANA MATERYAL LİNKİ VEYA DOĞRUDAN DOSYA YÜKLEME */}
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Lînka Materyalê an Pel Bar Bike (PDF / Deng / Vîdyo)
                       </label>
                       <div className="flex gap-2">
                         <input
-                          type="url"
+                          type="text"
                           value={formData.media_url}
                           onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
                           placeholder="https://... an jî pel bar bike ->"
@@ -779,14 +815,13 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* KAPAK GÖRSELİ LİNKİ VEYA DOĞRUDAN RESİM YÜKLEME */}
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Wêneyê Bergê (Kapak Görseli Yükle / URL)
                       </label>
                       <div className="flex gap-2">
                         <input
-                          type="url"
+                          type="text"
                           value={formData.thumbnail_url}
                           onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
                           placeholder="https://... an jî wêne bar bike ->"
@@ -848,7 +883,7 @@ export default function App() {
                       />
                     </div>
 
-                    {/* ÖĞRETMEN REHBERİ (RÊBERA MAMOSTEYAN) BÖLÜMÜ */}
+                    {/* ÖĞRETMEN REHBERİ */}
                     <div className="md:col-span-2 bg-amber-50/60 border border-amber-200 rounded-xl p-4 space-y-3">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <label className="text-xs font-extrabold uppercase text-amber-900 flex items-center gap-1.5">
@@ -951,19 +986,92 @@ export default function App() {
                     </table>
                   </div>
                 </div>
+
+                {/* SİTE YAZILARINI DÜZENLEME (MÎHENGÊN MALPERÊ) */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-red-600" />
+                    <span>Mîhengên Nivîsên Malperê (Site Yazılarını Düzenle)</span>
+                  </h2>
+
+                  {settingsMsg && (
+                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
+                      {settingsMsg}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
+                        Nivîsa Jorîn (Üst Rozet)
+                      </label>
+                      <input
+                        type="text"
+                        value={siteTexts.hero_badge}
+                        onChange={(e) => setSiteTexts({ ...siteTexts, hero_badge: e.target.value })}
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
+                        Nivîsa Binerdê (Footer / Alt Bilgi)
+                      </label>
+                      <input
+                        type="text"
+                        value={siteTexts.footer_text}
+                        onChange={(e) => setSiteTexts({ ...siteTexts, footer_text: e.target.value })}
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
+                        Sernavê Sereke (Ana Sayfa Büyük Başlık)
+                      </label>
+                      <input
+                        type="text"
+                        value={siteTexts.hero_title}
+                        onChange={(e) => setSiteTexts({ ...siteTexts, hero_title: e.target.value })}
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
+                        Daxuyaniya Sereke (Ana Sayfa Alt Açıklama)
+                      </label>
+                      <textarea
+                        rows="2"
+                        value={siteTexts.hero_subtitle}
+                        onChange={(e) => setSiteTexts({ ...siteTexts, hero_subtitle: e.target.value })}
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <button
+                        type="submit"
+                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-lg transition text-sm"
+                      >
+                        Nivîsên Malperê Tomar Bike
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
           </div>
         )}
       </main>
 
-      {/* ALT BİLGİ (FOOTER) */}
+      {/* ALT BİLGİ (FOOTER - DİNAMİK YAZI) */}
       <footer className="bg-slate-900 text-slate-400 py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
           <div className="font-bold text-white text-base">
             Kurdi<span className="text-red-500">Klass</span>
           </div>
-          <p>Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.</p>
+          <p>{siteTexts.footer_text}</p>
         </div>
       </footer>
     </div>
