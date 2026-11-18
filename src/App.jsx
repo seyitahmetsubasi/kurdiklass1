@@ -18,16 +18,21 @@ const DEFAULT_CATEGORIES = [
 ];
 
 const DEFAULT_UI_TEXTS = {
+  // Üst Menü ve Genel
   brand_first: 'Kurdi',
   brand_second: 'Klass',
   nav_site: 'Malper (Sîte)',
   nav_learn: 'Hînbûn / Lîstik',
   nav_admin: 'Panela Rêveber (Admin)',
   all_categories_label: 'HEMÛ BEŞ (TÜMÜ)',
+
+  // Ana Sayfa (Hero ve Arama)
   hero_badge: 'Çavkaniyên Perwerdehiyê yên Kurdî',
   hero_title: 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
   hero_subtitle: 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
   search_placeholder: 'Li ders, mijar an materyalan bigere...',
+
+  // Filtreler ve Seviyeler
   filter_title: 'Parzûn (Filtre)',
   filter_level_label: 'Ast (Seviye)',
   filter_level_all: 'Hemû Ast',
@@ -44,6 +49,8 @@ const DEFAULT_UI_TEXTS = {
   media_pdf: 'Belge / PDF',
   media_audio: 'Deng / Podcast',
   media_interactive: 'Çalakiya Interaktîf',
+
+  // Ders Listesi ve Detayları
   list_all_title: 'Hemû Materyalên Perwerdehiyê',
   list_count_suffix: 'materyal hat dîtin',
   loading_text: 'Materyal tên barkirin...',
@@ -59,20 +66,67 @@ const DEFAULT_UI_TEXTS = {
   guide_empty_text: 'Ji bo vê dersê pela rêberê li jor hatiye barkirin.',
   meta_level_prefix: 'Ast:',
   meta_grade_prefix: 'Pola Perwerdehiyê:',
-  footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.'
+  footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.',
+
+  // Hînbûn / Lîstik (Kurmancî Öğrenme Bölümü Yazıları)
+  learn_title: 'Fêrbûna Kurmancî — Lîstik û Rahênan',
+  learn_subtitle: 'Bi gavên kurt û lîstikên nivîskî (bê deng) Kurmancî hîn bibe!',
+  learn_xp_label: 'Pûan (XP)',
+  learn_units_heading: 'Beşên Fêrbûnê Hilbijêre:',
+  learn_empty_units: 'Hêj pirs nehatine zêdekirin. Ji Panela Rêveber pirsan zêde bikin.',
+  learn_stage_prefix: 'Qonax',
+  learn_question_count_suffix: 'pirs / lîstik',
+  learn_type_sentence: 'Peyvan Rêz Bike (Cümle Kurma)',
+  learn_type_choice: 'Vebijêrka Rast Hilbijêre (Çoktan Seçmeli)',
+  learn_sentence_placeholder: 'Ji bo avakirina hevokê li peyvên jêrîn bitikîne...',
+  learn_correct_msg: 'Aferîn! Bersiva te rast e (+10 XP)',
+  learn_wrong_prefix: 'Bersiva rast:',
+  learn_check_btn: 'Kontrol Bike',
+  learn_next_btn: 'Berdewam Bike (Sonraki)',
+  learn_win_title: 'Pîroz be! Ev beş qediya!',
+  learn_lose_title: 'Dilên te qediyan! Dîsa biceribîne',
+  learn_total_xp_prefix: 'Pûanê te yê giştî:',
+  learn_replay_btn: 'Dîsa Bilîze',
+  learn_back_units_btn: 'Vegere Beşan'
 };
 
 const UI_FIELD_LABELS = [
+  // Genel ve Menü
   { key: 'brand_first', label: 'Logo İlk Kelime (Kurdi)' },
   { key: 'brand_second', label: 'Logo İkinci Kelime (Klass)' },
   { key: 'nav_site', label: 'Üst Menü: Site Butonu' },
-  { key: 'nav_learn', label: 'Üst Menü: Kurmancî Öğrenme / Lîstik Butonu' },
+  { key: 'nav_learn', label: 'Üst Menü: Hînbûn / Lîstik Butonu' },
   { key: 'nav_admin', label: 'Üst Menü: Admin Butonu' },
   { key: 'all_categories_label', label: 'Kategori Şeridi: Tümü Butonu' },
+
+  // Ana Sayfa
   { key: 'hero_badge', label: 'Ana Sayfa Üst Rozet Yazısı' },
   { key: 'hero_title', label: 'Ana Sayfa Büyük Başlık' },
   { key: 'hero_subtitle', label: 'Ana Sayfa Alt Açıklama' },
   { key: 'search_placeholder', label: 'Arama Kutusu İpucu Yazısı' },
+
+  // Hînbûn / Lîstik Yazıları
+  { key: 'learn_title', label: 'Hînbûn / Lîstik: Büyük Başlık' },
+  { key: 'learn_subtitle', label: 'Hînbûn / Lîstik: Alt Açıklama' },
+  { key: 'learn_xp_label', label: 'Hînbûn / Lîstik: Puan (XP) Etiketi' },
+  { key: 'learn_units_heading', label: 'Hînbûn / Lîstik: Ünite Seçim Başlığı' },
+  { key: 'learn_empty_units', label: 'Hînbûn / Lîstik: Soru Yokken Çıkan Uyarı' },
+  { key: 'learn_stage_prefix', label: 'Hînbûn / Lîstik: Aşama Ön Eki (Qonax)' },
+  { key: 'learn_question_count_suffix', label: 'Hînbûn / Lîstik: Soru Sayısı Son Eki' },
+  { key: 'learn_type_sentence', label: 'Hînbûn / Lîstik: Cümle Kurma Etiketi' },
+  { key: 'learn_type_choice', label: 'Hînbûn / Lîstik: Çoktan Seçmeli Etiketi' },
+  { key: 'learn_sentence_placeholder', label: 'Hînbûn / Lîstik: Kelime Seçme İpucu' },
+  { key: 'learn_correct_msg', label: 'Hînbûn / Lîstik: Doğru Cevap Tebrik Yazısı' },
+  { key: 'learn_wrong_prefix', label: 'Hînbûn / Lîstik: Yanlış Cevap Ön Eki' },
+  { key: 'learn_check_btn', label: 'Hînbûn / Lîstik: Kontrol Et Butonu' },
+  { key: 'learn_next_btn', label: 'Hînbûn / Lîstik: Sonraki Soru Butonu' },
+  { key: 'learn_win_title', label: 'Hînbûn / Lîstik: Bölüm Tamamlandı Başlığı' },
+  { key: 'learn_lose_title', label: 'Hînbûn / Lîstik: Canlar Bitti Başlığı' },
+  { key: 'learn_total_xp_prefix', label: 'Hînbûn / Lîstik: Toplam Puan Yazısı' },
+  { key: 'learn_replay_btn', label: 'Hînbûn / Lîstik: Tekrar Oyna Butonu' },
+  { key: 'learn_back_units_btn', label: 'Hînbûn / Lîstik: Ünitelere Dön Butonu' },
+
+  // Filtreler ve Dersler
   { key: 'filter_title', label: 'Sol Panel: Filtre Başlığı' },
   { key: 'filter_level_label', label: 'Filtre: Seviye Başlığı' },
   { key: 'filter_level_all', label: 'Filtre: Tüm Seviyeler Seçeneği' },
@@ -114,22 +168,23 @@ export default function App() {
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [ui, setUi] = useState(DEFAULT_UI_TEXTS);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('student'); // 'student' | 'learn' | 'admin'
+  const [viewMode, setViewMode] = useState('student');
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
   const [settingsMsg, setSettingsMsg] = useState('');
 
-  // Kurmancî Öğrenme / Lîstik State'leri (Sessiz Etkileşimli Modül)
+  // Kurmancî Öğrenme / Lîstik State'leri
   const [exercises, setExercises] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState('');
   const [builtWords, setBuiltWords] = useState([]);
-  const [answerState, setAnswerState] = useState(null); // null | 'correct' | 'wrong'
+  const [answerState, setAnswerState] = useState(null);
   const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
   const [hearts, setHearts] = useState(5);
   const [unitCompleted, setUnitCompleted] = useState(false);
 
-  // Admin Yeni Alıştırma Formu
+  // Admin Alıştırma Ekleme & Düzenleme State'i
+  const [editingExId, setEditingExId] = useState(null);
   const [exForm, setExForm] = useState({
     unit_title: 'Beşa 1: Silav û Nasîn',
     exercise_type: 'choice',
@@ -200,7 +255,7 @@ export default function App() {
     }
   };
 
-  const handleAddExercise = async (e) => {
+  const handleSaveExercise = async (e) => {
     e.preventDefault();
     const parsedOptions = exForm.options_raw
       .split(',')
@@ -212,32 +267,66 @@ export default function App() {
       return;
     }
 
-    const { error } = await supabase.from('kurmanci_exercises').insert([
-      {
-        unit_title: exForm.unit_title.trim(),
-        exercise_type: exForm.exercise_type,
-        question_text: exForm.question_text.trim(),
-        options: parsedOptions,
-        correct_answer: exForm.correct_answer.trim(),
-        explanation: exForm.explanation.trim(),
-        sort_order: exercises.length + 1
-      }
-    ]);
+    const payload = {
+      unit_title: exForm.unit_title.trim(),
+      exercise_type: exForm.exercise_type,
+      question_text: exForm.question_text.trim(),
+      options: parsedOptions,
+      correct_answer: exForm.correct_answer.trim(),
+      explanation: exForm.explanation.trim()
+    };
 
-    if (error) {
-      setExMsg('Çewtî: ' + error.message);
+    if (editingExId) {
+      const { error } = await supabase
+        .from('kurmanci_exercises')
+        .update(payload)
+        .eq('id', editingExId);
+
+      if (error) {
+        setExMsg('Çewtî: ' + error.message);
+      } else {
+        setExMsg('Pirs bi serkeftî hat nûkirin!');
+        resetExForm();
+        fetchExercises();
+      }
     } else {
-      setExMsg('Pirsa nû li beşa Hînbûn / Lîstik hat zêdekirin!');
-      setExForm({
-        ...exForm,
-        question_text: '',
-        options_raw: '',
-        correct_answer: '',
-        explanation: ''
-      });
-      fetchExercises();
+      const { error } = await supabase.from('kurmanci_exercises').insert([
+        { ...payload, sort_order: exercises.length + 1 }
+      ]);
+
+      if (error) {
+        setExMsg('Çewtî: ' + error.message);
+      } else {
+        setExMsg('Pirsa nû li beşa Hînbûn / Lîstik hat zêdekirin!');
+        resetExForm();
+        fetchExercises();
+      }
     }
     setTimeout(() => setExMsg(''), 4000);
+  };
+
+  const startEditingExercise = (ex) => {
+    setEditingExId(ex.id);
+    setExForm({
+      unit_title: ex.unit_title || '',
+      exercise_type: ex.exercise_type || 'choice',
+      question_text: ex.question_text || '',
+      options_raw: Array.isArray(ex.options) ? ex.options.join(', ') : '',
+      correct_answer: ex.correct_answer || '',
+      explanation: ex.explanation || ''
+    });
+  };
+
+  const resetExForm = () => {
+    setEditingExId(null);
+    setExForm({
+      unit_title: 'Beşa 1: Silav û Nasîn',
+      exercise_type: 'choice',
+      question_text: '',
+      options_raw: '',
+      correct_answer: '',
+      explanation: ''
+    });
   };
 
   const handleDeleteExercise = async (id) => {
@@ -686,17 +775,17 @@ export default function App() {
       {/* ANA İÇERİK ALANI */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'learn' ? (
-          /* ================= KURMANCÎ ÖĞRENME / LÎSTİK MODÜLÜ (SESSİZ) ================= */
+          /* ================= KURMANCÎ ÖĞRENME / LÎSTİK MODÜLÜ (TAM DÜZENLENEBİLİR YAZILAR) ================= */
           <div className="max-w-3xl mx-auto">
             <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 text-white mb-6 shadow-md flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-extrabold">Fêrbûna Kurmancî — Lîstik û Rahênan</h1>
+                <h1 className="text-2xl font-extrabold">{ui.learn_title}</h1>
                 <p className="text-emerald-100 text-sm mt-1">
-                  Bi gavên kurt û lîstikên nivîskî (bê deng) Kurmancî hîn bibe!
+                  {ui.learn_subtitle}
                 </p>
               </div>
               <div className="bg-white/20 px-4 py-2 rounded-xl text-center">
-                <div className="text-xs uppercase font-bold text-emerald-100">Pûan (XP)</div>
+                <div className="text-xs uppercase font-bold text-emerald-100">{ui.learn_xp_label}</div>
                 <div className="text-2xl font-black flex items-center gap-1">
                   <Award className="w-5 h-5 text-amber-300" />
                   <span>{xpPoints}</span>
@@ -707,10 +796,10 @@ export default function App() {
             {!selectedUnit ? (
               /* ÜNİTE HARİTASI */
               <div className="space-y-4">
-                <h2 className="text-lg font-bold text-slate-800">Beşên Fêrbûnê Hilbijêre:</h2>
+                <h2 className="text-lg font-bold text-slate-800">{ui.learn_units_heading}</h2>
                 {unitList.length === 0 ? (
                   <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-500">
-                    Hêj pirs nehatine zêdekirin. Ji Panela Rêveber pirsan zêde bikin.
+                    {ui.learn_empty_units}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -724,10 +813,10 @@ export default function App() {
                         >
                           <div>
                             <span className="text-xs font-extrabold uppercase text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-                              Qonax {idx + 1}
+                              {ui.learn_stage_prefix} {idx + 1}
                             </span>
                             <h3 className="text-lg font-bold text-slate-900 mt-2">{unitName}</h3>
-                            <p className="text-xs text-slate-500 mt-1">{count} pirs / lîstik</p>
+                            <p className="text-xs text-slate-500 mt-1">{count} {ui.learn_question_count_suffix}</p>
                           </div>
                           <div className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center">
                             <ArrowRight className="w-5 h-5" />
@@ -745,10 +834,10 @@ export default function App() {
                   <Award className="w-9 h-9" />
                 </div>
                 <h2 className="text-2xl font-extrabold text-slate-900">
-                  {hearts === 0 ? 'Dilên te qediyan! Dîsa biceribîne' : 'Pîroz be! Ev beş qediya!'}
+                  {hearts === 0 ? ui.learn_lose_title : ui.learn_win_title}
                 </h2>
                 <p className="text-slate-600 text-sm">
-                  Pûanê te yê giştî: <strong>{xpPoints} XP</strong>
+                  {ui.learn_total_xp_prefix} <strong>{xpPoints} XP</strong>
                 </p>
                 <div className="flex items-center justify-center gap-3 pt-2">
                   <button
@@ -756,20 +845,19 @@ export default function App() {
                     className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    <span>Dîsa Bilîze</span>
+                    <span>{ui.learn_replay_btn}</span>
                   </button>
                   <button
                     onClick={() => setSelectedUnit(null)}
                     className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-5 py-2.5 rounded-xl"
                   >
-                    Vegere Beşan
+                    {ui.learn_back_units_btn}
                   </button>
                 </div>
               </div>
             ) : (
               /* AKTİF SORU KARTI */
               <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-md">
-                {/* İlerleme Çubuğu ve Canlar */}
                 <div className="flex items-center gap-4 mb-6">
                   <button
                     onClick={() => setSelectedUnit(null)}
@@ -793,8 +881,8 @@ export default function App() {
 
                 <span className="text-xs font-bold uppercase text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded">
                   {currentEx?.exercise_type === 'sentence'
-                    ? 'Peyvan Rêz Bike (Cümle Kurma)'
-                    : 'Vebijêrka Rast Hilbijêre (Çoktan Seçmeli)'}
+                    ? ui.learn_type_sentence
+                    : ui.learn_type_choice}
                 </span>
 
                 <h2 className="text-xl font-bold text-slate-900 mt-3 mb-6">
@@ -802,12 +890,11 @@ export default function App() {
                 </h2>
 
                 {currentEx?.exercise_type === 'sentence' ? (
-                  /* KELİME SIRALAMA (CÜMLE KURMA) */
                   <div className="space-y-6">
                     <div className="min-h-[64px] p-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-wrap gap-2 items-center">
                       {builtWords.length === 0 ? (
                         <span className="text-xs text-slate-400">
-                          Ji bo avakirina hevokê li peyvên jêrîn bitikîne...
+                          {ui.learn_sentence_placeholder}
                         </span>
                       ) : (
                         builtWords.map((item) => (
@@ -845,7 +932,6 @@ export default function App() {
                     </div>
                   </div>
                 ) : (
-                  /* ÇOKTAN SEÇMELİ */
                   <div className="grid grid-cols-1 gap-3">
                     {(currentEx?.options || []).map((opt, idx) => (
                       <button
@@ -865,13 +951,12 @@ export default function App() {
                   </div>
                 )}
 
-                {/* CEVAP GERİ BİLDİRİMİ VE KONTROL BUTONU */}
                 <div className="mt-8 pt-5 border-t border-slate-100">
                   {answerState === 'correct' && (
                     <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 mb-4">
                       <div className="font-extrabold flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                        <span>Aferîn! Bersiva te rast e (+10 XP)</span>
+                        <span>{ui.learn_correct_msg}</span>
                       </div>
                       {currentEx?.explanation && (
                         <p className="text-xs mt-1 text-emerald-800">{currentEx.explanation}</p>
@@ -883,7 +968,7 @@ export default function App() {
                     <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 mb-4">
                       <div className="font-extrabold flex items-center gap-2">
                         <AlertCircle className="w-5 h-5 text-red-600" />
-                        <span>Bersiva rast: {currentEx?.correct_answer}</span>
+                        <span>{ui.learn_wrong_prefix} {currentEx?.correct_answer}</span>
                       </div>
                       {currentEx?.explanation && (
                         <p className="text-xs mt-1 text-red-800">{currentEx.explanation}</p>
@@ -897,7 +982,7 @@ export default function App() {
                       onClick={checkExerciseAnswer}
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 rounded-xl transition"
                     >
-                      Kontrol Bike
+                      {ui.learn_check_btn}
                     </button>
                   ) : (
                     <button
@@ -905,7 +990,7 @@ export default function App() {
                       onClick={goToNextExercise}
                       className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-3 rounded-xl transition"
                     >
-                      Berdewam Bike (Sonraki)
+                      {ui.learn_next_btn}
                     </button>
                   )}
                 </div>
@@ -1255,7 +1340,7 @@ export default function App() {
                   <div>
                     <h1 className="text-2xl font-bold">Panela Rêveberiya KurdiKlass</h1>
                     <p className="text-slate-400 text-sm">
-                      Ders, PDF, pirsên hînbûnê û hemû nivîsên malperê ji vir biguherîne.
+                      Ders, PDF, pirsên Hînbûn / Lîstik û hemû nivîsên malperê ji vir biguherîne.
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -1488,14 +1573,18 @@ export default function App() {
                   </form>
                 </div>
 
-                {/* KURMANCÎ ÖĞRENME / LÎSTİK SORU YÖNETİMİ */}
+                {/* KURMANCÎ ÖĞRENME / LÎSTİK SORU EKLEME & DÜZENLEME */}
                 <div className="bg-white rounded-2xl border border-emerald-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-emerald-600" />
-                    <span>Pirsên Fêrbûna Kurmancî / Lîstik (Duolingo Modülü Soruları)</span>
+                    <span>
+                      {editingExId
+                        ? 'Pirsa Hînbûn / Lîstik Sererast Bike'
+                        : 'Pirsên Fêrbûna Kurmancî / Lîstik (Ekle ve Düzenle)'}
+                    </span>
                   </h2>
                   <p className="text-xs text-slate-500 mb-4">
-                    Ji bo beşa Hînbûn / Lîstik pirsên nû yên hilbijartinê an rêzkirina hevokan zêde bike.
+                    Ji bo beşa Hînbûn / Lîstik pirsên nû zêde bike an pirsên heyî sererast bike.
                   </p>
 
                   {exMsg && (
@@ -1504,7 +1593,7 @@ export default function App() {
                     </div>
                   )}
 
-                  <form onSubmit={handleAddExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <form onSubmit={handleSaveExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Navê Beşê / Qonaxê (Ünite Adı)
@@ -1588,30 +1677,49 @@ export default function App() {
                       />
                     </div>
 
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 flex items-center gap-3">
                       <button
                         type="submit"
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
                       >
-                        + Pirsa Nû Zêde Bike
+                        {editingExId ? 'Guhertina Pirsê Tomar Bike' : '+ Pirsa Nû Zêde Bike'}
                       </button>
+                      {editingExId && (
+                        <button
+                          type="button"
+                          onClick={resetExForm}
+                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm"
+                        >
+                          Betal Bike
+                        </button>
+                      )}
                     </div>
                   </form>
 
-                  <div className="space-y-2 max-h-60 overflow-y-auto border-t border-slate-100 pt-4">
+                  <div className="space-y-2 max-h-64 overflow-y-auto border-t border-slate-100 pt-4">
                     {exercises.map((ex) => (
-                      <div key={ex.id} className="flex items-center justify-between bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
-                        <div>
+                      <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
+                        <div className="flex-1">
                           <span className="text-xs font-bold text-emerald-700 mr-2">[{ex.unit_title}]</span>
                           <span className="font-medium text-slate-800">{ex.question_text}</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteExercise(ex.id)}
-                          className="text-red-600 hover:text-red-800 p-1"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => startEditingExercise(ex)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-medium"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Sererast</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteExercise(ex.id)}
+                            className="text-red-600 hover:text-red-800 p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1725,14 +1833,14 @@ export default function App() {
                   </form>
                 </div>
 
-                {/* SİTEDEKİ TÜM YAZILARI DÜZENLEME */}
+                {/* SİTEDEKİ TÜM YAZILARI DÜZENLEME (HÎNBÛN / LÎSTİK DAHİL TÜM METİNLER) */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-red-600" />
                     <span>Hemû Nivîsên Malperê Biguherîne (Sitedeki Tüm Yazılar)</span>
                   </h2>
                   <p className="text-xs text-slate-500 mb-5">
-                    Sernav, bişkojk, parzûn, ast û hemû nivîsên ku li ser malperê xuya dikin ji vir biguherîne.
+                    Sernav, bişkojk, beşa Hînbûn / Lîstik, parzûn, ast û hemû nivîsên ku li ser malperê xuya dikin ji vir biguherîne.
                   </p>
 
                   {settingsMsg && (
