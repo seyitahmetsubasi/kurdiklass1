@@ -25,16 +25,17 @@ const MEDIA_TYPES = [
   { id: 'interactive', label: 'Çalakiya Interaktîf', icon: MonitorPlay }
 ];
 
+// YÖNETİCİ ŞİFRESİ (İstediğiniz zaman buradan değiştirebilirsiniz)
+const ADMIN_PASS = 'kurdiklass2026';
+
 export default function App() {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('student'); // 'student' | 'admin'
-  const [session, setSession] = useState(null);
+  const [viewMode, setViewMode] = useState('student');
+  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
 
-  // Admin Giriş Formu
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
+  // Şifre Giriş Formu
+  const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
 
   // Filtreler ve Aktif Ders
@@ -43,11 +44,11 @@ export default function App() {
   const [selectedMedia, setSelectedMedia] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLesson, setActiveLesson] = useState(null);
-  const [lessonTab, setLessonTab] = useState('content'); // 'content' | 'guide'
+  const [lessonTab, setLessonTab] = useState('content');
 
   // Admin Ders Formu
   const [editingId, setEditingId] = useState(null);
-  const [uploadingField, setUploadingField] = useState(''); // 'media' | 'thumb' | 'guide' | ''
+  const [uploadingField, setUploadingField] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -62,18 +63,8 @@ export default function App() {
   });
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
 
-  // Oturum kontrolü ve dersleri çekme
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
     fetchLessons();
-    return () => subscription.unsubscribe();
   }, []);
 
   const fetchLessons = async () => {
@@ -89,30 +80,27 @@ export default function App() {
     setLoading(false);
   };
 
-  // Supabase Auth ile Admin Girişi
-  const handleAdminLogin = async (e) => {
+  // Basit Tek Şifre ile Admin Girişi
+  const handleAdminLogin = (e) => {
     e.preventDefault();
-    setAuthLoading(true);
-    setAuthError('');
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password: password
-    });
-
-    if (error) {
-      setAuthError('E-posta an şîfre xelet e! Ji kerema xwe kontrol bike.');
+    if (passwordInput.trim() === ADMIN_PASS) {
+      setIsAdmin(true);
+      localStorage.setItem('kk_admin', 'true');
+      setAuthError('');
+      setPasswordInput('');
+    } else {
+      setAuthError('Şîfre xelet e! Ji kerema xwe dîsa biceribîne.');
     }
-    setAuthLoading(false);
   };
 
   // Çıkış Yap
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    setIsAdmin(false);
+    localStorage.removeItem('kk_admin');
     setViewMode('student');
   };
 
-  // Supabase Storage'a Doğrudan Dosya Yükleme (Sadece Admin)
+  // Supabase Storage'a Doğrudan Dosya Yükleme
   const handleFileUpload = async (event, targetField) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -187,7 +175,6 @@ export default function App() {
     setTimeout(() => setStatusMsg({ type: '', text: '' }), 4000);
   };
 
-  // Ders Silme
   const handleDeleteLesson = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê dersê jê bibî?')) return;
     const { error } = await supabase.from('lessons').delete().eq('id', id);
@@ -365,7 +352,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* AKTİF DERS DETAY PANELİ (ÖĞRETMEN REHBERİ SEKMELİ) */}
+            {/* AKTİF DERS DETAY PANELİ */}
             {activeLesson && (
               <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-8">
                 <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4 mb-5">
@@ -633,9 +620,9 @@ export default function App() {
             </div>
           </>
         ) : (
-          /* ================= ADMIN PANELİ (SUPABASE AUTH KORUMALI) ================= */
+          /* ================= ADMIN PANELİ (BASİT TEK ŞİFRE KORUMALI) ================= */
           <div>
-            {!session ? (
+            {!isAdmin ? (
               <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md border border-slate-200 p-8 mt-8">
                 <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <Lock className="w-6 h-6" />
@@ -644,33 +631,19 @@ export default function App() {
                   Têketina Rêveber (Admin)
                 </h2>
                 <p className="text-sm text-center text-slate-500 mb-6">
-                  Bi hesabê xwe yê Supabase (E-posta û Şîfre) têkeve panelê.
+                  Ji bo birêvebirina naveroka KurdiKlass şîfreyê binivîse.
                 </p>
 
                 <form onSubmit={handleAdminLogin} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                      E-posta
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@kurdiklass.org"
-                      className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                      Şîfre
+                      Şîfreya Rêveber
                     </label>
                     <input
                       type="password"
                       required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder="••••••••••••"
                       className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
                     />
@@ -682,10 +655,9 @@ export default function App() {
 
                   <button
                     type="submit"
-                    disabled={authLoading}
-                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-lg transition disabled:opacity-50"
+                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-lg transition"
                   >
-                    {authLoading ? 'Têketin tê kontrolkirin...' : 'Têkeve Panelê'}
+                    Têkeve Panelê
                   </button>
                 </form>
               </div>
@@ -696,7 +668,7 @@ export default function App() {
                   <div>
                     <h1 className="text-2xl font-bold">Panela Rêveberiya KurdiKlass</h1>
                     <p className="text-slate-400 text-sm">
-                      Têketî: <span className="text-white font-medium">{session.user.email}</span>
+                      Ders, PDF û Rêbera Mamosteyan bi hêsanî li malperê zêde bike.
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
