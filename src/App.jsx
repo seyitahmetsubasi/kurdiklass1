@@ -5,7 +5,7 @@ import {
   Plus, Trash2, Edit3, LayoutDashboard, Eye, Filter, X,
   GraduationCap, CheckCircle2, AlertCircle, ExternalLink, Lock,
   Upload, LogOut, ClipboardList, Download, Settings, FolderEdit,
-  Sparkles, Award, ArrowRight, RotateCcw, Heart
+  Sparkles, Award, ArrowRight, RotateCcw, Heart, Image as ImageIcon
 } from 'lucide-react';
 
 const DEFAULT_CATEGORIES = [
@@ -18,21 +18,16 @@ const DEFAULT_CATEGORIES = [
 ];
 
 const DEFAULT_UI_TEXTS = {
-  // Üst Menü ve Genel
   brand_first: 'Kurdi',
   brand_second: 'Klass',
   nav_site: 'Malper (Sîte)',
   nav_learn: 'Hînbûn / Lîstik',
   nav_admin: 'Panela Rêveber (Admin)',
   all_categories_label: 'HEMÛ BEŞ (TÜMÜ)',
-
-  // Ana Sayfa (Hero ve Arama)
   hero_badge: 'Çavkaniyên Perwerdehiyê yên Kurdî',
   hero_title: 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
   hero_subtitle: 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
   search_placeholder: 'Li ders, mijar an materyalan bigere...',
-
-  // Filtreler ve Seviyeler
   filter_title: 'Parzûn (Filtre)',
   filter_level_label: 'Ast (Seviye)',
   filter_level_all: 'Hemû Ast',
@@ -49,8 +44,6 @@ const DEFAULT_UI_TEXTS = {
   media_pdf: 'Belge / PDF',
   media_audio: 'Deng / Podcast',
   media_interactive: 'Çalakiya Interaktîf',
-
-  // Ders Listesi ve Detayları
   list_all_title: 'Hemû Materyalên Perwerdehiyê',
   list_count_suffix: 'materyal hat dîtin',
   loading_text: 'Materyal tên barkirin...',
@@ -68,11 +61,11 @@ const DEFAULT_UI_TEXTS = {
   meta_grade_prefix: 'Pola Perwerdehiyê:',
   footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.',
 
-  // Hînbûn / Lîstik (Kurmancî Öğrenme Bölümü Yazıları)
+  // Hînbûn / Lîstik Yazıları
   learn_title: 'Fêrbûna Kurmancî — Lîstik û Rahênan',
   learn_subtitle: 'Bi gavên kurt û lîstikên nivîskî (bê deng) Kurmancî hîn bibe!',
   learn_xp_label: 'Pûan (XP)',
-  learn_units_heading: 'Beşên Fêrbûnê Hilbijêre:',
+  learn_units_heading: 'Beşên Fêrbûnê Hilbijêre (Asta 1):',
   learn_empty_units: 'Hêj pirs nehatine zêdekirin. Ji Panela Rêveber pirsan zêde bikin.',
   learn_stage_prefix: 'Qonax',
   learn_question_count_suffix: 'pirs / lîstik',
@@ -91,21 +84,16 @@ const DEFAULT_UI_TEXTS = {
 };
 
 const UI_FIELD_LABELS = [
-  // Genel ve Menü
   { key: 'brand_first', label: 'Logo İlk Kelime (Kurdi)' },
   { key: 'brand_second', label: 'Logo İkinci Kelime (Klass)' },
   { key: 'nav_site', label: 'Üst Menü: Site Butonu' },
   { key: 'nav_learn', label: 'Üst Menü: Hînbûn / Lîstik Butonu' },
   { key: 'nav_admin', label: 'Üst Menü: Admin Butonu' },
   { key: 'all_categories_label', label: 'Kategori Şeridi: Tümü Butonu' },
-
-  // Ana Sayfa
   { key: 'hero_badge', label: 'Ana Sayfa Üst Rozet Yazısı' },
   { key: 'hero_title', label: 'Ana Sayfa Büyük Başlık' },
   { key: 'hero_subtitle', label: 'Ana Sayfa Alt Açıklama' },
   { key: 'search_placeholder', label: 'Arama Kutusu İpucu Yazısı' },
-
-  // Hînbûn / Lîstik Yazıları
   { key: 'learn_title', label: 'Hînbûn / Lîstik: Büyük Başlık' },
   { key: 'learn_subtitle', label: 'Hînbûn / Lîstik: Alt Açıklama' },
   { key: 'learn_xp_label', label: 'Hînbûn / Lîstik: Puan (XP) Etiketi' },
@@ -125,8 +113,6 @@ const UI_FIELD_LABELS = [
   { key: 'learn_total_xp_prefix', label: 'Hînbûn / Lîstik: Toplam Puan Yazısı' },
   { key: 'learn_replay_btn', label: 'Hînbûn / Lîstik: Tekrar Oyna Butonu' },
   { key: 'learn_back_units_btn', label: 'Hînbûn / Lîstik: Ünitelere Dön Butonu' },
-
-  // Filtreler ve Dersler
   { key: 'filter_title', label: 'Sol Panel: Filtre Başlığı' },
   { key: 'filter_level_label', label: 'Filtre: Seviye Başlığı' },
   { key: 'filter_level_all', label: 'Filtre: Tüm Seviyeler Seçeneği' },
@@ -185,13 +171,15 @@ export default function App() {
 
   // Admin Alıştırma Ekleme & Düzenleme State'i
   const [editingExId, setEditingExId] = useState(null);
+  const [uploadingExImg, setUploadingExImg] = useState(false);
   const [exForm, setExForm] = useState({
-    unit_title: 'Beşa 1: Silav û Nasîn',
+    unit_title: 'Asta 1 - Beşa 1: Alfabeya Kurmancî',
     exercise_type: 'choice',
     question_text: '',
     options_raw: '',
     correct_answer: '',
-    explanation: ''
+    explanation: '',
+    image_url: ''
   });
   const [exMsg, setExMsg] = useState('');
 
@@ -255,6 +243,31 @@ export default function App() {
     }
   };
 
+  const handleExImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingExImg(true);
+    const fileExt = file.name.split('.').pop();
+    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `exercises/${safeName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('materyal')
+      .upload(filePath, file);
+
+    if (!uploadError) {
+      const { data: publicData } = supabase.storage
+        .from('materyal')
+        .getPublicUrl(filePath);
+
+      if (publicData?.publicUrl) {
+        setExForm((prev) => ({ ...prev, image_url: publicData.publicUrl }));
+      }
+    }
+    setUploadingExImg(false);
+  };
+
   const handleSaveExercise = async (e) => {
     e.preventDefault();
     const parsedOptions = exForm.options_raw
@@ -273,7 +286,8 @@ export default function App() {
       question_text: exForm.question_text.trim(),
       options: parsedOptions,
       correct_answer: exForm.correct_answer.trim(),
-      explanation: exForm.explanation.trim()
+      explanation: exForm.explanation.trim(),
+      image_url: exForm.image_url.trim()
     };
 
     if (editingExId) {
@@ -313,19 +327,21 @@ export default function App() {
       question_text: ex.question_text || '',
       options_raw: Array.isArray(ex.options) ? ex.options.join(', ') : '',
       correct_answer: ex.correct_answer || '',
-      explanation: ex.explanation || ''
+      explanation: ex.explanation || '',
+      image_url: ex.image_url || ''
     });
   };
 
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
-      unit_title: 'Beşa 1: Silav û Nasîn',
+      unit_title: 'Asta 1 - Beşa 1: Alfabeya Kurmancî',
       exercise_type: 'choice',
       question_text: '',
       options_raw: '',
       correct_answer: '',
-      explanation: ''
+      explanation: '',
+      image_url: ''
     });
   };
 
@@ -775,7 +791,7 @@ export default function App() {
       {/* ANA İÇERİK ALANI */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'learn' ? (
-          /* ================= KURMANCÎ ÖĞRENME / LÎSTİK MODÜLÜ (TAM DÜZENLENEBİLİR YAZILAR) ================= */
+          /* ================= KURMANCÎ ÖĞRENME / LÎSTİK MODÜLÜ ================= */
           <div className="max-w-3xl mx-auto">
             <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 text-white mb-6 shadow-md flex items-center justify-between">
               <div>
@@ -804,22 +820,36 @@ export default function App() {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {unitList.map((unitName, idx) => {
-                      const count = exercises.filter((e) => e.unit_title === unitName).length;
+                      const unitItems = exercises.filter((e) => e.unit_title === unitName);
+                      const previewImg = unitItems.find((e) => e.image_url)?.image_url;
                       return (
                         <div
                           key={unitName}
                           onClick={() => startUnit(unitName)}
-                          className="bg-white border-2 border-slate-200 hover:border-emerald-500 rounded-2xl p-5 cursor-pointer transition shadow-sm hover:shadow-md flex items-center justify-between"
+                          className="bg-white border-2 border-slate-200 hover:border-emerald-500 rounded-2xl overflow-hidden cursor-pointer transition shadow-sm hover:shadow-md flex flex-col"
                         >
-                          <div>
-                            <span className="text-xs font-extrabold uppercase text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-                              {ui.learn_stage_prefix} {idx + 1}
-                            </span>
-                            <h3 className="text-lg font-bold text-slate-900 mt-2">{unitName}</h3>
-                            <p className="text-xs text-slate-500 mt-1">{count} {ui.learn_question_count_suffix}</p>
-                          </div>
-                          <div className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                            <ArrowRight className="w-5 h-5" />
+                          {previewImg && (
+                            <div className="h-32 w-full bg-slate-100 overflow-hidden">
+                              <img
+                                src={previewImg}
+                                alt={unitName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="p-5 flex items-center justify-between gap-3">
+                            <div>
+                              <span className="text-xs font-extrabold uppercase text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                                {ui.learn_stage_prefix} {idx + 1}
+                              </span>
+                              <h3 className="text-base font-bold text-slate-900 mt-2">{unitName}</h3>
+                              <p className="text-xs text-slate-500 mt-1">
+                                {unitItems.length} {ui.learn_question_count_suffix}
+                              </p>
+                            </div>
+                            <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                              <ArrowRight className="w-5 h-5" />
+                            </div>
                           </div>
                         </div>
                       );
@@ -856,7 +886,7 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              /* AKTİF SORU KARTI */
+              /* AKTİF SORU KARTI (GÖRSELLİ) */
               <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-md">
                 <div className="flex items-center gap-4 mb-6">
                   <button
@@ -884,6 +914,17 @@ export default function App() {
                     ? ui.learn_type_sentence
                     : ui.learn_type_choice}
                 </span>
+
+                {/* KONU İLE BAĞLANTILI GÖRSEL */}
+                {currentEx?.image_url && (
+                  <div className="mt-4 mb-4 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 h-48 sm:h-56">
+                    <img
+                      src={currentEx.image_url}
+                      alt={currentEx.question_text}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
 
                 <h2 className="text-xl font-bold text-slate-900 mt-3 mb-6">
                   {currentEx?.question_text}
@@ -1573,7 +1614,7 @@ export default function App() {
                   </form>
                 </div>
 
-                {/* KURMANCÎ ÖĞRENME / LÎSTİK SORU EKLEME & DÜZENLEME */}
+                {/* KURMANCÎ ÖĞRENME / LÎSTİK SORU EKLEME & DÜZENLEME (GÖRSEL YÜKLEMELİ) */}
                 <div className="bg-white rounded-2xl border border-emerald-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-emerald-600" />
@@ -1584,7 +1625,7 @@ export default function App() {
                     </span>
                   </h2>
                   <p className="text-xs text-slate-500 mb-4">
-                    Ji bo beşa Hînbûn / Lîstik pirsên nû zêde bike an pirsên heyî sererast bike.
+                    Ji bo beşa Hînbûn / Lîstik pirsên nû bi wêne zêde bike an pirsên heyî sererast bike.
                   </p>
 
                   {exMsg && (
@@ -1603,7 +1644,7 @@ export default function App() {
                         required
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="Mînak: Beşa 1: Silav û Nasîn"
+                        placeholder="Mînak: Asta 1 - Beşa 1: Alfabeya Kurmancî"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -1634,6 +1675,31 @@ export default function App() {
                         placeholder="Mînak: Hevokê rast rêz bike: 'Ben okula gidiyorum.'"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Wêneyê Pirsê (Konu Görseli Yükle / URL - Opsiyonel)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={exForm.image_url}
+                          onChange={(e) => setExForm({ ...exForm, image_url: e.target.value })}
+                          placeholder="https://... an jî wêne bar bike ->"
+                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                        />
+                        <label className="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                          <ImageIcon className="w-4 h-4" />
+                          <span>{uploadingExImg ? 'Tê barkirin...' : 'Wêne Bar Bike'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleExImageUpload}
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     <div>
@@ -1699,11 +1765,20 @@ export default function App() {
                   <div className="space-y-2 max-h-64 overflow-y-auto border-t border-slate-100 pt-4">
                     {exercises.map((ex) => (
                       <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
-                        <div className="flex-1">
-                          <span className="text-xs font-bold text-emerald-700 mr-2">[{ex.unit_title}]</span>
-                          <span className="font-medium text-slate-800">{ex.question_text}</span>
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          {ex.image_url && (
+                            <img
+                              src={ex.image_url}
+                              alt=""
+                              className="w-9 h-9 rounded object-cover shrink-0 border border-slate-200"
+                            />
+                          )}
+                          <div className="truncate">
+                            <span className="text-xs font-bold text-emerald-700 mr-2">[{ex.unit_title}]</span>
+                            <span className="font-medium text-slate-800">{ex.question_text}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <button
                             type="button"
                             onClick={() => startEditingExercise(ex)}
@@ -1833,7 +1908,7 @@ export default function App() {
                   </form>
                 </div>
 
-                {/* SİTEDEKİ TÜM YAZILARI DÜZENLEME (HÎNBÛN / LÎSTİK DAHİL TÜM METİNLER) */}
+                {/* SİTEDEKİ TÜM YAZILARI DÜZENLEME */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-red-600" />
