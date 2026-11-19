@@ -1,334 +1,208 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from './supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 import {
-  Search, BookOpen, Video, FileText, Headphones, MonitorPlay,
-  Plus, Trash2, Edit3, LayoutDashboard, Eye, Filter, X,
-  GraduationCap, CheckCircle2, AlertCircle, ExternalLink, Lock,
-  Upload, LogOut, ClipboardList, Download, Settings, FolderEdit,
-  Sparkles, Award, ArrowRight, RotateCcw, Heart, Image as ImageIcon,
-  BookA, ChevronDown
+  Search,
+  BookOpen,
+  Video,
+  FileText,
+  Headphones,
+  Plus,
+  Trash2,
+  Edit3,
+  Lock,
+  LogOut,
+  GraduationCap,
+  Filter,
+  CheckCircle2,
+  AlertCircle,
+  ExternalLink,
+  X,
+  Upload,
+  FolderEdit,
+  Settings,
+  ClipboardList,
+  Download,
+  BookA,
+  Sparkles,
+  Award,
+  Heart,
+  RotateCcw,
+  Globe,
+  ChevronDown,
+  Flame,
+  Star,
+  Check,
+  Zap,
+  Image as ImageIcon,
+  Eye,
+  LayoutDashboard
 } from 'lucide-react';
 
-const LANGUAGE_OPTIONS = [
-  { code: 'KU', wiki: 'ku', nativeName: 'Kurdî' },
-  { code: 'DE', wiki: 'de', nativeName: 'Deutsch' },
-  { code: 'TR', wiki: 'tr', nativeName: 'Türkçe' },
-  { code: 'EN', wiki: 'en', nativeName: 'English' },
-  { code: 'FR', wiki: 'fr', nativeName: 'Français' },
-  { code: 'ES', wiki: 'es', nativeName: 'Español' },
-  { code: 'IT', wiki: 'it', nativeName: 'Italiano' }
-];
+// =========================================================================
+// SUPABASE BAĞLANTI AYARLARI (Kendi bilgilerinizi burada koruyun)
+// =========================================================================
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const LOCALE_TRANSLATIONS = {
-  KU: {
-    nav_site: 'Malper (Sîte)',
-    nav_learn: 'Hînbûn / Lîstik',
-    nav_ferheng: 'Ferheng',
-    nav_admin: 'Panela Rêveber (Admin)',
-    all_categories_label: 'HEMÛ BEŞ (TÜMÜ)',
-    hero_badge: 'Çavkaniyên Perwerdehiyê yên Kurdî',
-    hero_title: 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
-    hero_subtitle: 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
-    search_placeholder: 'Li ders, mijar an materyalan bigere...',
-    ferheng_search_placeholder: 'Bi her zimanî peyvekê binivîse (Mînak: doctor, Arzt, doktor, bijîşk)...',
-    ferheng_search_btn: 'Lê Bigere',
-    ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.'
-  },
-  DE: {
-    nav_site: 'Startseite',
-    nav_learn: 'Lernen / Spiele',
-    nav_ferheng: 'Wörterbuch',
-    nav_admin: 'Admin-Bereich',
-    all_categories_label: 'ALLE BEREICHE',
-    hero_badge: 'Kurdische Bildungsressourcen',
-    hero_title: 'Lernen, Forschen und Entwickeln auf Kurdisch',
-    hero_subtitle: 'Videos, Dokumente, Lehrerhandbücher und Lernmaterialien für Lehrkräfte und Lernende.',
-    search_placeholder: 'Nach Lektionen, Themen oder Materialien suchen...',
-    ferheng_search_placeholder: 'Wort auf Deutsch oder Kurdisch eingeben (z. B. Arzt, Buch, doctor)...',
-    ferheng_search_btn: 'Suchen',
-    ferheng_empty_text: 'Das gesuchte Wort wurde nicht gefunden.'
-  },
-  TR: {
-    nav_site: 'Ana Sayfa',
-    nav_learn: 'Öğrenme / Oyun',
-    nav_ferheng: 'Sözlük (Ferheng)',
-    nav_admin: 'Yönetim Paneli',
-    all_categories_label: 'TÜM BÖLÜMLER',
-    hero_badge: 'Kürtçe Eğitim Kaynakları',
-    hero_title: 'Kürtçe Öğrenme, Araştırma ve Gelişim',
-    hero_subtitle: 'Öğretmenler ve öğrenciler için videolar, belgeler, öğretmen rehberleri ve eğitim materyalleri.',
-    search_placeholder: 'Ders, konu veya materyal ara...',
-    ferheng_search_placeholder: 'Herhangi bir dilde kelime yazın (Örnek: doktor, doctor, Arzt, ziman)...',
-    ferheng_search_btn: 'Ara',
-    ferheng_empty_text: 'Aradığınız kelime bulunamadı.'
-  },
-  EN: {
-    nav_site: 'Home',
-    nav_learn: 'Learn / Games',
-    nav_ferheng: 'Dictionary',
-    nav_admin: 'Admin Panel',
-    all_categories_label: 'ALL SUBJECTS',
-    hero_badge: 'Kurdish Educational Resources',
-    hero_title: 'Learn, Explore, and Grow in Kurdish',
-    hero_subtitle: 'Videos, documents, teacher guides, and learning materials for educators and students.',
-    search_placeholder: 'Search lessons, topics, or materials...',
-    ferheng_search_placeholder: 'Type a word in English or any language (e.g. doctor, book, water)...',
-    ferheng_search_btn: 'Search',
-    ferheng_empty_text: 'The word you searched for was not found.'
-  },
-  FR: {
-    nav_site: 'Accueil',
-    nav_learn: 'Apprendre / Jeux',
-    nav_ferheng: 'Dictionnaire',
-    nav_admin: 'Administration',
-    all_categories_label: 'TOUTES LES MATIÈRES',
-    hero_badge: 'Ressources Éducatives Kurdes',
-    hero_title: 'Apprendre, Explorer et Progresser en Kurde',
-    hero_subtitle: 'Vidéos, documents, guides pédagogiques et supports éducatifs pour enseignants et élèves.',
-    search_placeholder: 'Rechercher des cours, sujets ou supports...',
-    ferheng_search_placeholder: 'Écrivez un mot en français ou kurde (ex. médecin, livre, doctor)...',
-    ferheng_search_btn: 'Rechercher',
-    ferheng_empty_text: 'Le mot recherché est introuvable.'
-  },
-  ES: {
-    nav_site: 'Inicio',
-    nav_learn: 'Aprender / Juegos',
-    nav_ferheng: 'Diccionario',
-    nav_admin: 'Panel Admin',
-    all_categories_label: 'TODAS LAS ÁREAS',
-    hero_badge: 'Recursos Educativos en Kurdo',
-    hero_title: 'Aprender, Investigar y Crecer en Kurdo',
-    hero_subtitle: 'Videos, documentos, guías docentes y materiales educativos para profesores y estudiantes.',
-    search_placeholder: 'Buscar lecciones, temas o materiales...',
-    ferheng_search_placeholder: 'Escribe una palabra en español o kurdo (ej. médico, libro, doctor)...',
-    ferheng_search_btn: 'Buscar',
-    ferheng_empty_text: 'No se encontró la palabra buscada.'
-  },
-  IT: {
-    nav_site: 'Home',
-    nav_learn: 'Impara / Giochi',
-    nav_ferheng: 'Dizionario',
-    nav_admin: 'Pannello Admin',
-    all_categories_label: 'TUTTE LE MATERIE',
-    hero_badge: 'Risorse Educative in Curdo',
-    hero_title: 'Imparare, Esplorare e Crescere in Curdo',
-    hero_subtitle: 'Video, documenti, guide per insegnanti e materiali didattici per docenti e studenti.',
-    search_placeholder: 'Cerca lezioni, argomenti o materiali...',
-    ferheng_search_placeholder: 'Scrivi una parola in italiano o curdo (es. medico, libro, doctor)...',
-    ferheng_search_btn: 'Cerca',
-    ferheng_empty_text: 'La parola cercata non è stata trovata.'
-  }
-};
+const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'kurdiklass2026';
 
 const DEFAULT_CATEGORIES = [
-  { slug: 'zanist', name: 'ZANIST', description: 'Fîzîk, kîmya, biyolojî û xweza', sort_order: 1 },
-  { slug: 'birkari', name: 'BÎRKARÎ', description: 'Hejmêr, geometrî û mantiq', sort_order: 2 },
-  { slug: 'ziman-weje', name: 'ZIMAN û WÊJEYA KURDÎ', description: 'Rêziman, çîrok, helbest û xwendin', sort_order: 3 },
-  { slug: 'zarok', name: 'ZAROK', description: 'Pêşdibistan, lîstik û fêrbûna bingehîn', sort_order: 4 },
-  { slug: 'huner', name: 'HUNER', description: 'Muzîk, wêne, şano û çand', sort_order: 5 },
-  { slug: 'teknoloji', name: 'TEKNOLOJÎ', description: 'Bîrkarî, bernameçêkirin û zanista dîjîtal', sort_order: 6 }
+  { slug: 'zanist', name: 'ZANIST', sort_order: 1 },
+  { slug: 'birkari', name: 'BÎRKARÎ', sort_order: 2 },
+  { slug: 'ziman-u-wejeya-kurdi', name: 'ZIMAN û WÊJEYA KURDÎ', sort_order: 3 },
+  { slug: 'zarok', name: 'ZAROK', sort_order: 4 },
+  { slug: 'huner', name: 'HUNER', sort_order: 5 },
+  { slug: 'teknoloji', name: 'TEKNOLOJÎ', sort_order: 6 }
 ];
 
-const DEFAULT_UI_TEXTS = {
+const LANGUAGE_OPTIONS = [
+  { code: 'KU', nativeName: 'Kurmancî' },
+  { code: 'TR', nativeName: 'Türkçe' },
+  { code: 'EN', nativeName: 'English' }
+];
+
+const DEFAULT_UI = {
   brand_first: 'Kurdi',
   brand_second: 'Klass',
-  nav_site: 'Malper (Sîte)',
+  nav_site: 'Malper',
   nav_learn: 'Hînbûn / Lîstik',
   nav_ferheng: 'Ferheng',
-  nav_admin: 'Panela Rêveber (Admin)',
-  all_categories_label: 'HEMÛ BEŞ (TÜMÜ)',
-  hero_badge: 'Çavkaniyên Perwerdehiyê yên Kurdî',
-  hero_title: 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
-  hero_subtitle: 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
-  search_placeholder: 'Li ders, mijar an materyalan bigere...',
-  filter_title: 'Parzûn (Filtre)',
+  nav_admin: 'Rêveber',
+  all_categories_label: 'HEMÛ BEŞ',
+  hero_badge: 'ÇAVKANIYÊN PERWERDEHIYÊ',
+  hero_title: 'Navenda Fêrbûn û Materyalên Kurdî',
+  hero_subtitle: 'Vîdyo, belge, lîstik û rêberên mamosteyan ji bo hemû astan.',
+  search_placeholder: 'Li ders, mijar an peyvekê bigere...',
+  tab_content: 'Naveroka Dersê',
+  tab_guide: 'Rêbera Mamosteyan',
+  btn_open_material: 'Materyalê Veke',
+  guide_heading: 'Plana Dersê û Rêbera Mamosteyan',
+  guide_download_btn: 'PDFya Rêberê Daxe',
+  guide_empty_text: 'Ji bo vê dersê hîn nivîsa rêberê nehatiye zêdekirin.',
+  meta_level_prefix: 'Ast:',
+  meta_grade_prefix: 'Pol:',
+  filter_title: 'Parzûn (Fîltre)',
   filter_level_label: 'Ast (Seviye)',
   filter_level_all: 'Hemû Ast',
+  filter_media_label: 'Cureyê Materyalê',
+  filter_media_all: 'Hemû Cure',
   level_1: 'Destpêk',
   level_2: 'Navîn',
   level_3: 'Pêşketî',
   grade_1: 'Pêşdibistan',
   grade_2: 'Dibistana Seretayî',
   grade_3: 'Dibistana Navîn',
-  grade_4: 'Lîse',
-  filter_media_label: 'Cureyê Materyalê',
-  filter_media_all: 'Hemû Cure',
+  grade_4: 'Lîse / Mezinan',
   media_video: 'Vîdyo',
-  media_pdf: 'Belge / PDF',
+  media_document: 'Belge / PDF',
   media_audio: 'Deng / Podcast',
-  media_interactive: 'Çalakiya Interaktîf',
-  list_all_title: 'Hemû Materyalên Perwerdehiyê',
-  list_count_suffix: 'materyal hat dîtin',
+  media_interactive: 'Lîstik / Çalakî',
+  list_all_title: 'Hemû Ders û Materyal',
+  list_count_suffix: 'materyal hatin dîtin',
   loading_text: 'Materyal tên barkirin...',
-  empty_title: 'Hêj di vê beşê de materyal tune ye',
-  empty_subtitle: 'Ji bo zêdekirina dersa yekem derbasî Panela Rêveber (Admin) bibin.',
-  empty_button: 'Materyala Yekem Zêde Bike',
-  card_guide_badge: 'Rêbera Mamosteyan',
-  tab_content: 'Naveroka Dersê (Ders İçeriği)',
-  tab_guide: 'Rêbera Mamosteyan (Öğretmen Rehberi)',
-  btn_open_material: 'Materyalê Veke / Daxe',
-  guide_heading: 'Plana Dersê û Pêşniyarên ji bo Mamosteyan',
-  guide_download_btn: 'Pela Rêberê Daxe (PDF)',
-  guide_empty_text: 'Ji bo vê dersê pela rêberê li jor hatiye barkirin.',
-  meta_level_prefix: 'Ast:',
-  meta_grade_prefix: 'Pola Perwerdehiyê:',
-  footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.',
-
-  ferheng_search_placeholder: 'Bi her zimanî peyvekê binivîse (Mînak: doctor, Arzt, doktor, bijîşk)...',
-  ferheng_search_btn: 'Lê Bigere',
+  empty_title: 'Hîn materyal nehatiye dîtin',
+  empty_subtitle: 'Tu dikarî ji Panela Rêveber materyalên nû li vê beşê zêde bikî.',
+  empty_button: 'Materyal Zêde Bike',
+  card_guide_badge: 'RÊBER',
+  footer_text: 'Platforma Perwerdehiya Vekirî ya Kurdî • KurdiKlass',
+  ferheng_search_placeholder: 'Peyvekê bi Kurmancî an Tirkî binivîse...',
+  ferheng_search_btn: 'Bigere',
   ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.',
-
-  learn_title: 'Fêrbûna Kurmancî — Lîstik û Rahênan',
-  learn_subtitle: 'Bi gavên kurt û lîstikên nivîskî (bê deng) Kurmancî hîn bibe!',
-  learn_xp_label: 'Pûan (XP)',
-  learn_units_heading: 'Beşên Fêrbûnê Hilbijêre (Asta 1):',
-  learn_empty_units: 'Hêj pirs nehatine zêdekirin. Ji Panela Rêveber pirsan zêde bikin.',
+  learn_title: 'Rêwîtiya Fêrbûna Kurmancî',
+  learn_subtitle: 'Bi lîstikên kurt û kêfxweş gav bi gav Kurmancî fêr bibe!',
+  learn_xp_label: 'Pûan',
+  learn_empty_units: 'Hîn lîstik nehatine zêdekirin. Ji Panela Rêveber paketa destpêkê bar bike.',
   learn_stage_prefix: 'Qonax',
-  learn_question_count_suffix: 'pirs / lîstik',
-  learn_type_sentence: 'Peyvan Rêz Bike (Cümle Kurma)',
-  learn_type_choice: 'Vebijêrka Rast Hilbijêre (Çoktan Seçmeli)',
-  learn_sentence_placeholder: 'Ji bo avakirina hevokê li peyvên jêrîn bitikîne...',
-  learn_correct_msg: 'Aferîn! Bersiva te rast e (+10 XP)',
+  learn_question_count_suffix: 'lîstik',
+  learn_win_title: 'Pîroz be! Te ev qonax bi serkeftî qedand!',
+  learn_lose_title: 'Dilên te qediyan! Careke din biceribîne.',
+  learn_replay_btn: 'Dîsa Bilîze',
+  learn_back_units_btn: 'Vegere Qonaxan',
+  learn_type_choice: 'Vebijêrka Rast',
+  learn_type_sentence: 'Hevokê Saz Bike',
+  learn_type_match: 'Peyvan Bighîne Hev',
+  learn_type_fill: 'Valahiyê Tije Bike',
+  learn_sentence_placeholder: 'Li peyvên jêrîn bitikîne da ku hevokê rêz bikî...',
+  learn_correct_msg: 'Gelek baş e! Bersiva te rast e.',
   learn_wrong_prefix: 'Bersiva rast:',
   learn_check_btn: 'Kontrol Bike',
-  learn_next_btn: 'Berdewam Bike (Sonraki)',
-  learn_win_title: 'Pîroz be! Ev beş qediya!',
-  learn_lose_title: 'Dilên te qediyan! Dîsa biceribîne',
-  learn_total_xp_prefix: 'Pûanê te yê giştî:',
-  learn_replay_btn: 'Dîsa Bilîze',
-  learn_back_units_btn: 'Vegere Beşan'
+  learn_next_btn: 'Berdewam Bike'
 };
 
 const UI_FIELD_LABELS = [
-  { key: 'brand_first', label: 'Logo İlk Kelime (Kurdi)' },
-  { key: 'brand_second', label: 'Logo İkinci Kelime (Klass)' },
-  { key: 'nav_site', label: 'Üst Menü: Site Butonu' },
-  { key: 'nav_learn', label: 'Üst Menü: Hînbûn / Lîstik Butonu' },
-  { key: 'nav_ferheng', label: 'Üst Menü: Ferheng (Sözlük) Butonu' },
-  { key: 'nav_admin', label: 'Üst Menü: Admin Butonu' },
-  { key: 'all_categories_label', label: 'Kategori Şeridi: Tümü Butonu' },
-  { key: 'hero_badge', label: 'Ana Sayfa Üst Rozet Yazısı' },
-  { key: 'hero_title', label: 'Ana Sayfa Büyük Başlık' },
-  { key: 'hero_subtitle', label: 'Ana Sayfa Alt Açıklama' },
-  { key: 'search_placeholder', label: 'Arama Kutusu İpucu Yazısı' },
-  { key: 'ferheng_search_placeholder', label: 'Ferheng: Arama Kutusu İpucu' },
-  { key: 'ferheng_search_btn', label: 'Ferheng: Ara Butonu Yazısı' },
-  { key: 'ferheng_empty_text', label: 'Ferheng: Kelime Bulunamadı Uyarısı' },
-  { key: 'learn_title', label: 'Hînbûn / Lîstik: Büyük Başlık' },
-  { key: 'learn_subtitle', label: 'Hînbûn / Lîstik: Alt Açıklama' },
-  { key: 'learn_xp_label', label: 'Hînbûn / Lîstik: Puan (XP) Etiketi' },
-  { key: 'learn_units_heading', label: 'Hînbûn / Lîstik: Ünite Seçim Başlığı' },
-  { key: 'learn_empty_units', label: 'Hînbûn / Lîstik: Soru Yokken Çıkan Uyarı' },
-  { key: 'learn_stage_prefix', label: 'Hînbûn / Lîstik: Aşama Ön Eki (Qonax)' },
-  { key: 'learn_question_count_suffix', label: 'Hînbûn / Lîstik: Soru Sayısı Son Eki' },
-  { key: 'learn_type_sentence', label: 'Hînbûn / Lîstik: Cümle Kurma Etiketi' },
-  { key: 'learn_type_choice', label: 'Hînbûn / Lîstik: Çoktan Seçmeli Etiketi' },
-  { key: 'learn_sentence_placeholder', label: 'Hînbûn / Lîstik: Kelime Seçme İpucu' },
-  { key: 'learn_correct_msg', label: 'Hînbûn / Lîstik: Doğru Cevap Tebrik Yazısı' },
-  { key: 'learn_wrong_prefix', label: 'Hînbûn / Lîstik: Yanlış Cevap Ön Eki' },
-  { key: 'learn_check_btn', label: 'Hînbûn / Lîstik: Kontrol Et Butonu' },
-  { key: 'learn_next_btn', label: 'Hînbûn / Lîstik: Sonraki Soru Butonu' },
-  { key: 'learn_win_title', label: 'Hînbûn / Lîstik: Bölüm Tamamlandı Başlığı' },
-  { key: 'learn_lose_title', label: 'Hînbûn / Lîstik: Canlar Bitti Başlığı' },
-  { key: 'learn_total_xp_prefix', label: 'Hînbûn / Lîstik: Toplam Puan Yazısı' },
-  { key: 'learn_replay_btn', label: 'Hînbûn / Lîstik: Tekrar Oyna Butonu' },
-  { key: 'learn_back_units_btn', label: 'Hînbûn / Lîstik: Ünitelere Dön Butonu' },
-  { key: 'filter_title', label: 'Sol Panel: Filtre Başlığı' },
-  { key: 'filter_level_label', label: 'Filtre: Seviye Başlığı' },
-  { key: 'filter_level_all', label: 'Filtre: Tüm Seviyeler Seçeneği' },
-  { key: 'level_1', label: 'Seviye 1 (Başlangıç)' },
-  { key: 'level_2', label: 'Seviye 2 (Orta)' },
-  { key: 'level_3', label: 'Seviye 3 (İleri)' },
-  { key: 'grade_1', label: 'Sınıf Düzeyi 1 (Okul Öncesi)' },
-  { key: 'grade_2', label: 'Sınıf Düzeyi 2 (İlkokul)' },
-  { key: 'grade_3', label: 'Sınıf Düzeyi 3 (Ortaokul)' },
-  { key: 'grade_4', label: 'Sınıf Düzeyi 4 (Lise)' },
-  { key: 'filter_media_label', label: 'Filtre: Materyal Türü Başlığı' },
-  { key: 'filter_media_all', label: 'Filtre: Tüm Türler Seçeneği' },
-  { key: 'media_video', label: 'Materyal Türü: Video' },
-  { key: 'media_pdf', label: 'Materyal Türü: Belge / PDF' },
-  { key: 'media_audio', label: 'Materyal Türü: Ses / Podcast' },
-  { key: 'media_interactive', label: 'Materyal Türü: İnteraktif Etkinlik' },
-  { key: 'list_all_title', label: 'Ders Listesi Ana Başlığı' },
-  { key: 'list_count_suffix', label: 'Ders Sayısı Sonundaki Yazı' },
-  { key: 'loading_text', label: 'Yükleniyor Yazısı' },
-  { key: 'empty_title', label: 'Boş Liste Ana Başlığı' },
-  { key: 'empty_subtitle', label: 'Boş Liste Alt Açıklaması' },
-  { key: 'empty_button', label: 'Boş Liste Buton Yazısı' },
-  { key: 'card_guide_badge', label: 'Ders Kartı: Öğretmen Rehberi Rozeti' },
-  { key: 'tab_content', label: 'Ders Detay: İçerik Sekmesi' },
-  { key: 'tab_guide', label: 'Ders Detay: Öğretmen Rehberi Sekmesi' },
-  { key: 'btn_open_material', label: 'Ders Detay: Materyal Aç/İndir Butonu' },
-  { key: 'guide_heading', label: 'Öğretmen Rehberi Kutusu Başlığı' },
-  { key: 'guide_download_btn', label: 'Öğretmen Rehberi PDF İndir Butonu' },
-  { key: 'guide_empty_text', label: 'Öğretmen Rehberi Sadece PDF Varsa Çıkan Yazı' },
-  { key: 'meta_level_prefix', label: 'Ders Detay: Seviye Etiketi' },
-  { key: 'meta_grade_prefix', label: 'Ders Detay: Sınıf Etiketi' },
-  { key: 'footer_text', label: 'En Alt Kısım (Footer) Yazısı' }
+  { key: 'brand_first', label: 'Navê Malperê (Beşa 1)' },
+  { key: 'brand_second', label: 'Navê Malperê (Beşa 2)' },
+  { key: 'nav_site', label: 'Bişkojka Malperê' },
+  { key: 'nav_learn', label: 'Bişkojka Hînbûn / Lîstik' },
+  { key: 'nav_ferheng', label: 'Bişkojka Ferhengê' },
+  { key: 'nav_admin', label: 'Bişkojka Rêveber' },
+  { key: 'all_categories_label', label: 'Bişkojka Hemû Beş' },
+  { key: 'hero_badge', label: 'Nîşana Jorîn (Hero Badge)' },
+  { key: 'hero_title', label: 'Sernavê Sereke (Hero Title)' },
+  { key: 'hero_subtitle', label: 'Binnivîsa Sereke (Hero Subtitle)' },
+  { key: 'search_placeholder', label: 'Nivîsa Qutiya Lêgerînê' },
+  { key: 'learn_title', label: 'Sernavê Hînbûn / Lîstik' },
+  { key: 'learn_subtitle', label: 'Binnivîsa Hînbûn / Lîstik' },
+  { key: 'footer_text', label: 'Nivîsa Jêrîn (Footer)' }
 ];
 
-const ADMIN_PASS = 'kurdiklass2026';
+const STARTER_GAMES = [
+  {
+    unit_title: 'Beşa 1: Silav û Nasîn',
+    exercise_type: 'match',
+    question_text: 'Peyvên Kurmancî bi wateyên wan ên Tirkî re bighîne hev:',
+    options: ['Silav=Merhaba', 'Spas=Teşekkürler', 'Belê=Evet', 'Na=Hayır'],
+    correct_answer: '4',
+    explanation: 'Silav (Merhaba) û Spas (Teşekkürler) peyvên herî bingehîn ên rojane ne.'
+  },
+  {
+    unit_title: 'Beşa 1: Silav û Nasîn',
+    exercise_type: 'choice',
+    question_text: 'Dema tu sibehê kesekî dibînî, tu çi dibêjî?',
+    options: ['Rojbaş', 'Şevbaş', 'Êvarbaş', 'Bi xatirê te'],
+    correct_answer: 'Rojbaş',
+    explanation: 'Rojbaş ji bo silavdayîna sibeh û nîvro tê bikaranîn.'
+  },
+  {
+    unit_title: 'Beşa 1: Silav û Nasîn',
+    exercise_type: 'sentence',
+    question_text: 'Peyvan rêz bike û vê hevokê saz bike: "Ben okula gidiyorum."',
+    options: ['Ez', 'diçim', 'dibistanê.', 'tu', 'malê'],
+    correct_answer: 'Ez diçim dibistanê.',
+    explanation: 'Di Kurmancî de lêker (diçim) berî cihê çûnê (dibistanê) tê.'
+  },
+  {
+    unit_title: 'Beşa 2: Malbat û Hejmar',
+    exercise_type: 'fill_blank',
+    question_text: 'Valahiyê tije bike: "Navê _____ Azad e." (Benim adım Azad.)',
+    options: ['min', 'te', 'wî', 'me'],
+    correct_answer: 'min',
+    explanation: 'Cînavka "min" wateya "benim" dide: Navê min = Benim adım.'
+  },
+  {
+    unit_title: 'Beşa 2: Malbat û Hejmar',
+    exercise_type: 'match',
+    question_text: 'Endamên malbatê bi hev re bighîne:',
+    options: ['Dayik=Anne', 'Bav=Baba', 'Xwişk=Kız kardeş', 'Bira=Erkek kardeş'],
+    correct_answer: '4',
+    explanation: 'Dayik (anne), Bav (baba), Xwişk (kız kardeş), Bira (erkek kardeş).'
+  }
+];
 
 export default function App() {
-  const [lessons, setLessons] = useState([]);
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  const [rawUi, setRawUi] = useState(DEFAULT_UI_TEXTS);
+  const [viewMode, setViewMode] = useState('student');
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('kk_lang') || 'KU');
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langDropdownRef = useRef(null);
 
+  const [rawUi, setRawUi] = useState(DEFAULT_UI);
+  const ui = rawUi;
+
+  // Dersler & Kategoriler
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('student');
-  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
-  const [settingsMsg, setSettingsMsg] = useState('');
-
-  const [ferhengWords, setFerhengWords] = useState([]);
-  const [ferhengQuery, setFerhengQuery] = useState('');
-  const [selectedLetter, setSelectedLetter] = useState('all');
-  const [externalEntries, setExternalEntries] = useState([]);
-  const [searchingDict, setSearchingDict] = useState(false);
-  const [selectedWordDetail, setSelectedWordDetail] = useState(null);
-  const [syncingProgress, setSyncingProgress] = useState('');
-
-  const [editingWordId, setEditingWordId] = useState(null);
-  const [wordForm, setWordForm] = useState({
-    word: '',
-    part_of_speech: 'navdêr',
-    meaning_tr: '',
-    meaning_ku: '',
-    example_sentence: ''
-  });
-  const [wordMsg, setWordMsg] = useState('');
-
-  const [exercises, setExercises] = useState([]);
-  const [selectedUnit, setSelectedUnit] = useState(null);
-  const [currentExIndex, setCurrentExIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState('');
-  const [builtWords, setBuiltWords] = useState([]);
-  const [answerState, setAnswerState] = useState(null);
-  const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
-  const [hearts, setHearts] = useState(5);
-  const [unitCompleted, setUnitCompleted] = useState(false);
-
-  const [editingExId, setEditingExId] = useState(null);
-  const [uploadingExImg, setUploadingExImg] = useState(false);
-  const [exForm, setExForm] = useState({
-    unit_title: 'Asta 1 - Beşa 1: Alfabeya Kurmancî',
-    exercise_type: 'choice',
-    question_text: '',
-    options_raw: '',
-    correct_answer: '',
-    explanation: '',
-    image_url: ''
-  });
-  const [exMsg, setExMsg] = useState('');
-
-  const [newCatName, setNewCatName] = useState('');
-  const [catMsg, setCatMsg] = useState('');
-
-  const [passwordInput, setPasswordInput] = useState('');
-  const [authError, setAuthError] = useState('');
-
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedMedia, setSelectedMedia] = useState('all');
@@ -336,8 +210,17 @@ export default function App() {
   const [activeLesson, setActiveLesson] = useState(null);
   const [lessonTab, setLessonTab] = useState('content');
 
+  // Admin & Form State
+  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [uploadingField, setUploadingField] = useState('');
+  const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
+  const [catMsg, setCatMsg] = useState('');
+  const [newCatName, setNewCatName] = useState('');
+  const [settingsMsg, setSettingsMsg] = useState('');
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -345,42 +228,70 @@ export default function App() {
     media_type: 'video',
     media_url: '',
     thumbnail_url: '',
-    level: 'Destpêk',
-    grade_level: 'Dibistana Seretayî',
+    level: DEFAULT_UI.level_1,
+    grade_level: DEFAULT_UI.grade_2,
     teacher_guide: '',
     guide_pdf_url: ''
   });
-  const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
 
-  const ui = {
-    ...rawUi,
-    ...(selectedLang !== 'KU' ? LOCALE_TRANSLATIONS[selectedLang] || {} : {})
-  };
+  // Ferheng State
+  const [ferhengWords, setFerhengWords] = useState([]);
+  const [externalDictResults, setExternalDictResults] = useState([]);
+  const [searchingDict, setSearchingDict] = useState(false);
+  const [ferhengQuery, setFerhengQuery] = useState('');
+  const [selectedLetter, setSelectedLetter] = useState('all');
+  const [selectedWordDetail, setSelectedWordDetail] = useState(null);
+  const [editingWordId, setEditingWordId] = useState(null);
+  const [wordMsg, setWordMsg] = useState('');
+  const [syncingProgress, setSyncingProgress] = useState('');
+  const [wordForm, setWordForm] = useState({
+    word: '',
+    part_of_speech: 'navdêr',
+    meaning_tr: '',
+    meaning_ku: '',
+    example_sentence: ''
+  });
 
-  const handleSelectLanguage = (code) => {
-    setSelectedLang(code);
-    localStorage.setItem('kk_lang', code);
-    setLangMenuOpen(false);
-  };
+  // Duolingo Hînbûn / Lîstik State
+  const [exercises, setExercises] = useState([]);
+  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [currentExIndex, setCurrentExIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState('');
+  const [builtWords, setBuiltWords] = useState([]);
+  const [answerState, setAnswerState] = useState(null);
+  const [unitCompleted, setUnitCompleted] = useState(false);
+  const [hearts, setHearts] = useState(5);
+  const [comboCount, setComboCount] = useState(0);
+  const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
+  const [streakDays, setStreakDays] = useState(() => Number(localStorage.getItem('kk_streak') || 1));
+  const [completedUnits, setCompletedUnits] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_completed_units') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
-        setLangMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // Eşleştirme (Match) oyunu state
+  const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
+  const [matchLeftSelected, setMatchLeftSelected] = useState(null);
+  const [matchRightSelected, setMatchRightSelected] = useState(null);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [matchWrongFlash, setMatchWrongFlash] = useState(false);
 
-  const dynamicLevels = [ui.level_1, ui.level_2, ui.level_3];
-  const dynamicGrades = [ui.grade_1, ui.grade_2, ui.grade_3, ui.grade_4];
-  const dynamicMediaTypes = [
-    { id: 'video', label: ui.media_video, icon: Video },
-    { id: 'pdf', label: ui.media_pdf, icon: FileText },
-    { id: 'audio', label: ui.media_audio, icon: Headphones },
-    { id: 'interactive', label: ui.media_interactive, icon: MonitorPlay }
-  ];
+  // Admin Lîstik Form State
+  const [editingExId, setEditingExId] = useState(null);
+  const [exMsg, setExMsg] = useState('');
+  const [uploadingExImg, setUploadingExImg] = useState(false);
+  const [exForm, setExForm] = useState({
+    unit_title: 'Beşa 1: Silav û Nasîn',
+    exercise_type: 'choice',
+    question_text: '',
+    options_raw: '',
+    correct_answer: '',
+    explanation: '',
+    image_url: ''
+  });
 
   const kurdishAlphabet = [
     'A', 'B', 'C', 'Ç', 'D', 'E', 'Ê', 'F', 'G', 'H', 'I', 'Î',
@@ -388,504 +299,122 @@ export default function App() {
     'U', 'Û', 'V', 'W', 'X', 'Y', 'Z'
   ];
 
+  const dynamicLevels = [ui.level_1, ui.level_2, ui.level_3];
+  const dynamicGrades = [ui.grade_1, ui.grade_2, ui.grade_3, ui.grade_4];
+  const dynamicMediaTypes = [
+    { id: 'video', label: ui.media_video, icon: Video },
+    { id: 'document', label: ui.media_document, icon: FileText },
+    { id: 'audio', label: ui.media_audio, icon: Headphones },
+    { id: 'interactive', label: ui.media_interactive, icon: BookOpen }
+  ];
+
   useEffect(() => {
-    fetchLessons();
-    fetchSiteSettings();
     fetchCategories();
+    fetchSiteSettings();
+    fetchLessons();
+    fetchDictionary();
     fetchExercises();
-    fetchFerheng();
   }, []);
 
   useEffect(() => {
-    if (viewMode !== 'ferheng') return;
-
-    const timer = setTimeout(() => {
-      const term =
-        ferhengQuery.trim() ||
-        (selectedLetter !== 'all' ? selectedLetter.toLocaleLowerCase('ku') : '');
-      if (term) {
-        fetchMultilingualToKurdishDictionary(term, selectedLang);
-      } else {
-        setExternalEntries([]);
+    const handleOutsideClick = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setLangMenuOpen(false);
       }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [viewMode, ferhengQuery, selectedLetter, selectedLang]);
-
-  const fetchFerheng = async () => {
-    let allRows = [];
-    let from = 0;
-    const step = 1000;
-
-    while (true) {
-      const { data, error } = await supabase
-        .from('ferheng')
-        .select('*')
-        .order('word', { ascending: true })
-        .range(from, from + step - 1);
-
-      if (error || !data || data.length === 0) break;
-      allRows = [...allRows, ...data];
-      if (data.length < step) break;
-      from += step;
-    }
-
-    setFerhengWords(allRows);
-  };
-
-  // Yabancı dil Wiktionary sayfalarından Kürtçe (Kurmancî) karşılıklarını çıkarır
-  const extractKurdishFromForeignWikitext = (wikitext, sourceWiki = 'en') => {
-    if (!wikitext) return { kuWords: [], pos: 'navdêr' };
-
-    let pos = 'navdêr';
-    const lower = wikitext.toLowerCase();
-    if (lower.includes('=== verb ===') || lower.includes('=== fiil ===') || lower.includes('=== verbe ===') || lower.includes('=== verbo ===')) {
-      pos = 'lêker';
-    } else if (lower.includes('=== adjective ===') || lower.includes('=== sıfat ===') || lower.includes('=== adjektiv ===') || lower.includes('=== adjectif ===') || lower.includes('=== adjetivo ===') || lower.includes('=== aggettivo ===')) {
-      pos = 'rengdêr';
-    } else if (lower.includes('=== adverb ===') || lower.includes('=== zarf ===') || lower.includes('=== adverbe ===') || lower.includes('=== adverbio ===') || lower.includes('=== avverbio ===')) {
-      pos = 'hoker';
-    }
-
-    const found = new Set();
-
-    // 1. Genel çeviri şablonları: {{t|kmr|bijîşk}}, {{t+|kmr|bijîşk}}, {{t|ku|bijîşk}}, {{Ü|kmr|bijîşk}}, {{trad|ku|...}}, {{trad-|kmr|...}}
-    const templateRegex = /\{\{(?:t\+?|tt\+?|Ü|trad[-+]?|traducción|traduzione)\|(?:kmr|ku)\|([^|}]+)(?:\|[^}]*)?\}\}/gi;
-    for (const m of wikitext.matchAll(templateRegex)) {
-      const clean = m[1].replace(/\[\[|\]\]/g, '').trim();
-      if (clean && !clean.includes(':')) found.add(clean);
-    }
-
-    // 2. Satır bazlı Kürtçe / Kurmancî çeviri listeleri (* Kurdish: ... / * Kurdisch: ... / * Kürtçe: ... / * Kurde: ... / * Kurdo: ... / * Curdo: ...)
-    const lineRegex = /(?:Kurdish|Northern Kurdish|Kurmanji|Kurdisch|Kurmandschi|Kürtçe|Kurmanci|Kurde|Kurmandji|Kurdo|Curdo)[^:\n]*:\s*([^\n]+)/gi;
-    for (const m of wikitext.matchAll(lineRegex)) {
-      const line = m[1];
-      // Şablon içindeki kelimeler
-      for (const tm of line.matchAll(/\{\{(?:t\+?|tt\+?|Ü|trad[-+]?)\|(?:kmr|ku)\|([^|}]+)(?:\|[^}]*)?\}\}/gi)) {
-        const clean = tm[1].trim();
-        if (clean) found.add(clean);
-      }
-      // Link içindeki kelimeler: [[bijîşk]] veya [[bijîşk#Kurdish|bijîşk]]
-      for (const lm of line.matchAll(/\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/g)) {
-        const clean = lm[1].trim();
-        if (clean && !clean.includes(':') && clean.toLowerCase() !== 'kurdish' && clean.toLowerCase() !== 'kurmanji') {
-          found.add(clean);
-        }
-      }
-    }
-
-    // 3. Başlık bazlı Kürtçe bölümleri (== Kürtçe == veya == Kurdish ==)
-    const sectionRegex = /={2,4}\s*(?:Kürtçe|Kurdish|Northern Kurdish|Kurdisch|Kurde|Kurdo|Curdo)\s*={2,4}([\s\S]*?)(?:\n={2,4}[^=]|$)/gi;
-    for (const sm of wikitext.matchAll(sectionRegex)) {
-      const secBody = sm[1];
-      for (const defM of secBody.matchAll(/^#\s*(?:\{\{[^}]+\}\}\s*)*\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/gm)) {
-        const clean = defM[1].trim();
-        if (clean && !clean.includes(':')) found.add(clean);
-      }
-    }
-
-    return {
-      kuWords: Array.from(found).slice(0, 6),
-      pos
     };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  const handleSelectLanguage = (code) => {
+    setSelectedLang(code);
+    localStorage.setItem('kk_lang', code);
+    setLangMenuOpen(false);
   };
 
-  // Wîkîferheng (ku.wiktionary) sayfasından tanımları ve yabancı dil çevirilerini çıkarır
-  const parseKurdishWikitext = (wikitext, targetWikiCode = 'en') => {
-    if (!wikitext) return { tr: '', targetMeaning: '', pos: 'navdêr' };
-
-    let pos = 'navdêr';
-    const lowerAll = wikitext.toLowerCase();
-    if (lowerAll.includes('lêker') || lowerAll.includes('=== fiil ===')) pos = 'lêker';
-    else if (lowerAll.includes('rengdêr') || lowerAll.includes('=== sıfat ===')) pos = 'rengdêr';
-    else if (lowerAll.includes('hoker') || lowerAll.includes('=== zarf ===')) pos = 'hoker';
-    else if (lowerAll.includes('cînavk') || lowerAll.includes('=== zamir ===')) pos = 'cînavk';
-    else if (lowerAll.includes('hejmar') || lowerAll.includes('=== sayı ===')) pos = 'hejmar';
-    else if (lowerAll.includes('baneşan') || lowerAll.includes('=== ünlem ===')) pos = 'baneşan';
-
-    const extractByWikiCode = (code) => {
-      const regex = new RegExp(`\\{\\{[Ww]\\|${code}\\|([^|}]+)(?:\\|[^}]*)?\\}\\}`, 'g');
-      const matches = [...wikitext.matchAll(regex)]
-        .map((m) => m[1].trim())
-        .filter(Boolean);
-      return matches.length > 0 ? [...new Set(matches)].slice(0, 5).join(', ') : '';
-    };
-
-    let tr = extractByWikiCode('tr');
-    if (!tr) {
-      const trSectionMatch = wikitext.match(/={2,4}\s*Tirkî\s*={2,4}([\s\S]*?)(?:\n={2,4}[^=]|$)/i);
-      if (trSectionMatch && trSectionMatch[1]) {
-        const linkMatches = [...trSectionMatch[1].matchAll(/\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/g)]
-          .map((m) => m[1].trim())
-          .filter((w) => !w.includes(':'));
-        if (linkMatches.length > 0) {
-          tr = [...new Set(linkMatches)].slice(0, 4).join(', ');
-        }
-      }
+  // =========================================================================
+  // FERHENG FONKSİYONLARI
+  // =========================================================================
+  const fetchDictionary = async () => {
+    const { data, error } = await supabase
+      .from('dictionary')
+      .select('*')
+      .order('word', { ascending: true })
+      .limit(1000);
+    if (!error && data) {
+      setFerhengWords(data);
     }
-
-    let targetMeaning = '';
-    if (targetWikiCode && targetWikiCode !== 'ku' && targetWikiCode !== 'tr') {
-      targetMeaning = extractByWikiCode(targetWikiCode);
-    }
-
-    return { tr, targetMeaning, pos };
   };
 
-  // Seçili dil veya herhangi bir yabancı dilden Kürtçe-Kurmancî karşılığı bulan çok dilli arama motoru
-  const fetchMultilingualToKurdishDictionary = async (queryText, activeLangCode = 'KU') => {
-    const rawQ = queryText.trim();
-    const cleanQuery = rawQ.toLowerCase();
-    if (!cleanQuery) return;
+  const handleDictionarySearchSubmit = async (e) => {
+    e.preventDefault();
+    const q = ferhengQuery.trim();
+    if (!q) return;
+
     setSearchingDict(true);
-
-    const activeLangObj = LANGUAGE_OPTIONS.find((l) => l.code === activeLangCode);
-    const activeWiki = activeLangObj ? activeLangObj.wiki : 'ku';
-
-    // Taranacak yabancı diller: Önce kullanıcının seçtiği dil, ardından diğer tüm desteklenen diller
-    const foreignWikis = [
-      ...(activeWiki !== 'ku' ? [activeWiki] : []),
-      ...['en', 'de', 'tr', 'fr', 'es', 'it'].filter((w) => w !== activeWiki)
-    ];
-
     try {
-      const resultsMap = new Map();
-
-      // 1. ADIM: Yabancı dillerdeki Wiktionary sayfalarından (en, de, tr, fr, es, it) doğrudan Kürtçe-Kurmancî karşılıklarını çek
-      // Örn: "doctor" -> en.wiktionary'de "bijîşk, doktor" olarak döner!
-      const foreignFetches = foreignWikis.map(async (wikiCode) => {
-        try {
-          // Hem küçük harfli hem ilk harfi büyük (Almanca isimler için: Arzt, Buch) başlıkları sorgula
-          const capitalized = rawQ.charAt(0).toUpperCase() + rawQ.slice(1);
-          const titlesParam =
-            rawQ === capitalized ? rawQ : `${rawQ}|${capitalized}`;
-
-          const url = `https://${wikiCode}.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(
-            titlesParam
-          )}&redirects=1&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
-
-          const res = await fetch(url);
-          const data = await res.json();
-          const pages = Object.values(data?.query?.pages || {});
-
-          for (const p of pages) {
-            if (!p || p.missing) continue;
-            const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-            const extracted = extractKurdishFromForeignWikitext(content, wikiCode);
-
-            if (extracted.kuWords.length > 0) {
-              const langLabel =
-                LANGUAGE_OPTIONS.find((l) => l.wiki === wikiCode)?.nativeName || wikiCode.toUpperCase();
-
-              // Her bulunan Kurmancî kelimeyi ana başlık (Kurdî) olarak ekle ki kullanıcı net şekilde Kürtçe karşılığını görsün
-              extracted.kuWords.forEach((kuWord, idx) => {
-                const key = `ku-ans-${kuWord.toLowerCase()}`;
-                if (!resultsMap.has(key)) {
-                  resultsMap.set(key, {
-                    id: `ext-${wikiCode}-${p.pageid}-${idx}`,
-                    word: kuWord,
-                    part_of_speech: extracted.pos,
-                    meaning_tr: `${p.title} (${langLabel})`,
-                    meaning_ku: `${langLabel} “${p.title}” → bi Kurdî (Kurmancî): ${extracted.kuWords.join(', ')}`,
-                    example_sentence: '',
-                    isPriorityMatch: true
-                  });
-                }
-              });
-            }
-          }
-        } catch {
-          // Tek bir dil servisi yanıt vermezse diğerlerini engelleme
-        }
-      });
-
-      // 2. ADIM: Wîkîferheng (ku.wiktionary) üzerinde hem Kürtçe kelimeleri hem de yabancı dil çeviri şablonlarını (örn. "W|en|doctor") ara
-      const kuPrefixUrl = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
-        cleanQuery
-      )}&gpsnamespace=0&gpslimit=15&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
-
-      const kuReverseSearchUrl = `https://ku.wiktionary.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
-        `"${cleanQuery}"`
-      )}&gsrnamespace=0&gsrlimit=15&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
-
-      const [kuPrefixRes, kuReverseRes] = await Promise.all([
-        fetch(kuPrefixUrl),
-        fetch(kuReverseSearchUrl),
-        ...foreignFetches
-      ]);
-
-      const [kuPrefixData, kuReverseData] = await Promise.all([
-        kuPrefixRes.json(),
-        kuReverseRes.json()
-      ]);
-
-      // Ters aramadan gelen (örneğin içinde doctor geçen Kürtçe maddeler: bijîşk, doktor...)
-      const reversePages = Object.values(kuReverseData?.query?.pages || {}).sort(
-        (a, b) => (a.index || 0) - (b.index || 0)
-      );
-      for (const p of reversePages) {
-        if (!p || !p.title || p.title.includes(':')) continue;
-        const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-
-        // Gerçekten çeviri şablonunda geçip geçmediğini kontrol et
-        const hasExactTranslation = new RegExp(
-          `\\{\\{[Ww]\\|[a-z]{2,3}\\|${cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\||\\}\\})`,
-          'i'
-        ).test(content);
-
-        if (hasExactTranslation) {
-          const parsed = parseKurdishWikitext(content, activeWiki === 'ku' ? 'en' : activeWiki);
-          const key = `ku-ans-${p.title.toLowerCase()}`;
-          if (!resultsMap.has(key)) {
-            resultsMap.set(key, {
-              id: `kurev-${p.pageid}`,
-              word: p.title,
-              part_of_speech: parsed.pos,
-              meaning_tr: parsed.targetMeaning || parsed.tr || rawQ,
-              meaning_ku: parsed.tr && parsed.targetMeaning ? `${parsed.targetMeaning} • ${parsed.tr}` : '',
-              example_sentence: '',
-              isPriorityMatch: true
-            });
-          }
-        }
-      }
-
-      // Doğrudan Kürtçe aramadan gelen maddeler (örn. "bijîşk" veya "ziman" yazıldığında)
-      const prefixPages = Object.values(kuPrefixData?.query?.pages || {}).sort(
-        (a, b) => (a.index || 0) - (b.index || 0)
-      );
-      for (const p of prefixPages) {
-        if (!p || !p.title || p.title.includes(':')) continue;
-        const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-        const parsed = parseKurdishWikitext(content, activeWiki === 'ku' ? 'tr' : activeWiki);
-        const key = `ku-ans-${p.title.toLowerCase()}`;
-
-        const displayTranslation =
-          activeWiki !== 'ku' && activeWiki !== 'tr' && parsed.targetMeaning
-            ? `${parsed.targetMeaning}${parsed.tr ? ` (${parsed.tr})` : ''}`
-            : parsed.tr || parsed.targetMeaning;
-
-        if (!resultsMap.has(key) && displayTranslation) {
-          resultsMap.set(key, {
-            id: `kupref-${p.pageid}`,
-            word: p.title,
-            part_of_speech: parsed.pos,
-            meaning_tr: displayTranslation,
-            meaning_ku: '',
-            example_sentence: '',
-            isPriorityMatch: p.title.toLowerCase() === cleanQuery
-          });
-        }
-      }
-
-      setExternalEntries(Array.from(resultsMap.values()));
+      const url = `https://ku.wiktionary.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
+      const res = await fetch(url);
+      const json = await res.json();
+      const hits = json?.query?.search || [];
+      const mapped = hits.map((h, idx) => ({
+        id: `wiki-${idx}-${h.pageid}`,
+        word: h.title,
+        part_of_speech: 'wîkîferheng',
+        meaning_tr: h.snippet.replace(/<[^>]+>/g, ''),
+        meaning_ku: '',
+        example_sentence: '',
+        isPriorityMatch: h.title.toLowerCase() === q.toLowerCase()
+      }));
+      setExternalDictResults(mapped);
     } catch {
-      setExternalEntries([]);
+      setExternalDictResults([]);
     }
-
     setSearchingDict(false);
   };
 
-  const handleDictionarySearchSubmit = (e) => {
-    e.preventDefault();
-    if (ferhengQuery.trim()) {
-      fetchMultilingualToKurdishDictionary(ferhengQuery.trim(), selectedLang);
-    }
-  };
-
   const handleBulkImportDictionary = async () => {
-    setSyncingProgress('Jêderên vekirî tên girêdan (tr.wiktionary + ku.wiktionary)...');
-    let totalAdded = 0;
-    const existingSet = new Set(ferhengWords.map((w) => w.word?.toLowerCase().trim()));
-
-    let trContinue = null;
-    let trBatchCount = 0;
-    do {
-      trBatchCount += 1;
-      setSyncingProgress(
-        `Beşa 1 (Vikisözlük Kurdî-Tirkî) — Paket ${trBatchCount}... (${totalAdded} peyv hatin zêdekirin)`
-      );
-
-      try {
-        const params = new URLSearchParams({
-          action: 'query',
-          generator: 'categorymembers',
-          gcmtitle: 'Kategori:Kürtçe sözcükler',
-          gcmnamespace: '0',
-          gcmlimit: '50',
-          prop: 'revisions',
-          rvprop: 'content',
-          rvslots: 'main',
-          format: 'json',
-          origin: '*'
-        });
-        if (trContinue) params.set('gcmcontinue', trContinue);
-
-        const res = await fetch(`https://tr.wiktionary.org/w/api.php?${params.toString()}`);
-        const data = await res.json();
-        trContinue = data?.continue?.gcmcontinue || null;
-
-        const pages = Object.values(data?.query?.pages || {});
-        const batchToInsert = [];
-
-        for (const p of pages) {
-          if (!p || !p.title || p.title.includes(':')) continue;
-          const key = p.title.toLowerCase().trim();
-          if (existingSet.has(key)) continue;
-
-          const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-          const parsed = parseKurdishWikitext(content, 'tr');
-
-          let fallbackTr = parsed.tr;
-          if (!fallbackTr) {
-            const kuSec = content.match(/==\s*Kürtçe\s*==([\s\S]*?)(?:\n==[^=]|$)/i);
-            if (kuSec && kuSec[1]) {
-              const lineMatch = kuSec[1].match(/^#\s*(.+)$/m);
-              if (lineMatch) {
-                fallbackTr = lineMatch[1]
-                  .replace(/\{\{[^}]+\}\}/g, '')
-                  .replace(/\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/g, '$1')
-                  .replace(/['’]+/g, '')
-                  .trim();
-              }
-            }
-          }
-
-          if (fallbackTr) {
-            existingSet.add(key);
-            batchToInsert.push({
-              word: p.title.trim(),
-              part_of_speech: parsed.pos || 'navdêr',
-              meaning_tr: fallbackTr.slice(0, 250),
-              meaning_ku: '',
-              example_sentence: ''
-            });
-          }
-        }
-
-        if (batchToInsert.length > 0) {
-          const { error } = await supabase.from('ferheng').insert(batchToInsert);
-          if (!error) {
-            totalAdded += batchToInsert.length;
-          }
-        }
-      } catch {
-        break;
-      }
-    } while (trContinue);
-
-    let kuContinue = null;
-    let kuBatchCount = 0;
-    do {
-      kuBatchCount += 1;
-      setSyncingProgress(
-        `Beşa 2 (Wîkîferheng Kurmancî) — Paket ${kuBatchCount}... (${totalAdded} peyv hatin zêdekirin)`
-      );
-
-      try {
-        const params = new URLSearchParams({
-          action: 'query',
-          generator: 'categorymembers',
-          gcmtitle: 'Kategorî:Kurmancî',
-          gcmnamespace: '0',
-          gcmlimit: '50',
-          prop: 'revisions',
-          rvprop: 'content',
-          rvslots: 'main',
-          format: 'json',
-          origin: '*'
-        });
-        if (kuContinue) params.set('gcmcontinue', kuContinue);
-
-        const res = await fetch(`https://ku.wiktionary.org/w/api.php?${params.toString()}`);
-        const data = await res.json();
-        kuContinue = data?.continue?.gcmcontinue || null;
-
-        const pages = Object.values(data?.query?.pages || {});
-        const batchToInsert = [];
-
-        for (const p of pages) {
-          if (!p || !p.title || p.title.includes(':')) continue;
-          const key = p.title.toLowerCase().trim();
-          if (existingSet.has(key)) continue;
-
-          const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-          const parsed = parseKurdishWikitext(content, 'tr');
-
-          let kuMeaning = '';
-          const kuDefMatch = content.match(/^#\s*(.+)$/m);
-          if (kuDefMatch) {
-            kuMeaning = kuDefMatch[1]
-              .replace(/\{\{[^}]+\}\}/g, '')
-              .replace(/\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/g, '$1')
-              .replace(/['’]+/g, '')
-              .trim();
-          }
-
-          if (parsed.tr || kuMeaning) {
-            existingSet.add(key);
-            batchToInsert.push({
-              word: p.title.trim(),
-              part_of_speech: parsed.pos || 'navdêr',
-              meaning_tr: (parsed.tr || kuMeaning).slice(0, 250),
-              meaning_ku: kuMeaning.slice(0, 400),
-              example_sentence: ''
-            });
-          }
-        }
-
-        if (batchToInsert.length > 0) {
-          const { error } = await supabase.from('ferheng').insert(batchToInsert);
-          if (!error) {
-            totalAdded += batchToInsert.length;
-          }
-        }
-      } catch {
-        break;
-      }
-    } while (kuContinue);
-
-    await fetchFerheng();
-    setSyncingProgress(`Temam bû! Bi giştî ${totalAdded} peyvên nû li Ferhengê hatin zêdekirin.`);
+    setSyncingProgress('Peyvên bingehîn tên barkirin...');
+    const sampleWords = [
+      { word: 'av', part_of_speech: 'navdêr', meaning_tr: 'su', meaning_ku: 'Şileya bingehîn a jiyanê.', example_sentence: 'Av jiyan e.' },
+      { word: 'nan', part_of_speech: 'navdêr', meaning_tr: 'ekmek', meaning_ku: 'Xwarina bingehîn a ji ardê.', example_sentence: 'Nanê germ xweş e.' },
+      { word: 'roj', part_of_speech: 'navdêr', meaning_tr: 'güneş / gün', meaning_ku: 'Stêrka ku ronahiyê dide cîhanê.', example_sentence: 'Îro roj gelekî germ e.' },
+      { word: 'pirtûk', part_of_speech: 'navdêr', meaning_tr: 'kitap', meaning_ku: 'Berhema nivîskî ya xwendinê.', example_sentence: 'Ez her roj pirtûkekê dixwînim.' },
+      { word: 'dibistan', part_of_speech: 'navdêr', meaning_tr: 'okul', meaning_ku: 'Saziya perwerdehiyê.', example_sentence: 'Zarok diçin dibistanê.' }
+    ];
+    const { error } = await supabase.from('dictionary').insert(sampleWords);
+    if (error) {
+      setSyncingProgress('Çewtî: ' + error.message);
+    } else {
+      setSyncingProgress('Peyv bi serkeftî hatin zêdekirin!');
+      fetchDictionary();
+    }
+    setTimeout(() => setSyncingProgress(''), 4000);
   };
 
   const handleSaveWord = async (e) => {
     e.preventDefault();
     if (!wordForm.word.trim() || !wordForm.meaning_tr.trim()) return;
 
-    const payload = {
-      word: wordForm.word.trim(),
-      part_of_speech: wordForm.part_of_speech.trim(),
-      meaning_tr: wordForm.meaning_tr.trim(),
-      meaning_ku: wordForm.meaning_ku.trim(),
-      example_sentence: wordForm.example_sentence.trim()
-    };
-
     if (editingWordId) {
       const { error } = await supabase
-        .from('ferheng')
-        .update(payload)
+        .from('dictionary')
+        .update(wordForm)
         .eq('id', editingWordId);
-
-      if (error) {
-        setWordMsg('Çewtî: ' + error.message);
-      } else {
-        setWordMsg('Peyv bi serkeftî hat nûkirin!');
+      if (!error) {
+        setWordMsg('Peyv hat nûkirin!');
         resetWordForm();
-        fetchFerheng();
+        fetchDictionary();
       }
     } else {
-      const { error } = await supabase.from('ferheng').insert([payload]);
-      if (error) {
-        setWordMsg('Çewtî: ' + error.message);
-      } else {
-        setWordMsg('Peyva nû li Ferhengê hat zêdekirin!');
+      const { error } = await supabase.from('dictionary').insert([wordForm]);
+      if (!error) {
+        setWordMsg('Peyva nû hat zêdekirin!');
         resetWordForm();
-        fetchFerheng();
+        fetchDictionary();
       }
     }
-    setTimeout(() => setWordMsg(''), 4000);
+    setTimeout(() => setWordMsg(''), 3500);
   };
 
   const startEditingWord = (item) => {
@@ -912,28 +441,21 @@ export default function App() {
 
   const handleDeleteWord = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê peyvê jê bibî?')) return;
-    const { error } = await supabase.from('ferheng').delete().eq('id', id);
-    if (!error) fetchFerheng();
+    const { error } = await supabase.from('dictionary').delete().eq('id', id);
+    if (!error) fetchDictionary();
   };
 
   const mergedDictionary = (() => {
     const q = ferhengQuery.trim().toLowerCase();
-
-    // Eğer yabancı dilden direkt Kurmancî karşılığı bulunduysa (ör: doctor -> bijîşk), öncelikli göster
-    const priorityExternal = externalEntries.filter((e) => e.isPriorityMatch);
-    const priorityWords = new Set(priorityExternal.map((e) => e.word?.toLowerCase()));
-
-    const localFiltered = ferhengWords.filter(
-      (w) => !priorityWords.has(w.word?.toLowerCase())
+    const localFiltered = ferhengWords.map((w) => ({
+      ...w,
+      isPriorityMatch: Boolean(q && w.word?.toLowerCase() === q)
+    }));
+    const localSet = new Set(localFiltered.map((w) => w.word?.toLowerCase()));
+    const otherExternal = externalDictResults.filter(
+      (ext) => !localSet.has(ext.word?.toLowerCase())
     );
-    const otherExternal = externalEntries.filter(
-      (e) =>
-        !e.isPriorityMatch &&
-        !localFiltered.some((w) => w.word?.toLowerCase() === e.word?.toLowerCase())
-    );
-
-    const combined = [...priorityExternal, ...localFiltered, ...otherExternal];
-
+    const combined = [...localFiltered, ...otherExternal];
     if (!q) return combined;
 
     return combined.sort((a, b) => {
@@ -962,6 +484,9 @@ export default function App() {
     return matchesSearch && matchesLetter;
   });
 
+  // =========================================================================
+  // DUOLINGO TARZI HÎNBÛN / LÎSTIK MOTORU
+  // =========================================================================
   const fetchExercises = async () => {
     const { data, error } = await supabase
       .from('kurmanci_exercises')
@@ -971,6 +496,22 @@ export default function App() {
     if (!error && data) {
       setExercises(data);
     }
+  };
+
+  const handleLoadStarterGames = async () => {
+    setExMsg('Paketa lîstikên Duolingo tê barkirin...');
+    const rows = STARTER_GAMES.map((g, idx) => ({
+      ...g,
+      sort_order: exercises.length + idx + 1
+    }));
+    const { error } = await supabase.from('kurmanci_exercises').insert(rows);
+    if (error) {
+      setExMsg('Çewtî: ' + error.message);
+    } else {
+      setExMsg('5 lîstikên înteraktîf (Eşleştirme, Cümle Kurma, Boşluk Doldurma) hatin zêdekirin!');
+      fetchExercises();
+    }
+    setTimeout(() => setExMsg(''), 5000);
   };
 
   const handleExImageUpload = async (event) => {
@@ -1005,8 +546,18 @@ export default function App() {
       .map((item) => item.trim())
       .filter(Boolean);
 
-    if (!exForm.question_text.trim() || parsedOptions.length < 2 || !exForm.correct_answer.trim()) {
-      setExMsg('Ji kerema xwe pirs, herî kêm 2 vebijêrk (bi bêhnokê veqetandî) û bersiva rast binivîse.');
+    if (!exForm.question_text.trim() || parsedOptions.length < 2) {
+      setExMsg('Ji kerema xwe pirs û herî kêm 2 vebijêrk (bi bêhnokê veqetandî) binivîse.');
+      return;
+    }
+
+    const finalCorrect =
+      exForm.exercise_type === 'match'
+        ? String(parsedOptions.length)
+        : exForm.correct_answer.trim();
+
+    if (exForm.exercise_type !== 'match' && !finalCorrect) {
+      setExMsg('Ji kerema xwe bersiva rast binivîse.');
       return;
     }
 
@@ -1015,7 +566,7 @@ export default function App() {
       exercise_type: exForm.exercise_type,
       question_text: exForm.question_text.trim(),
       options: parsedOptions,
-      correct_answer: exForm.correct_answer.trim(),
+      correct_answer: finalCorrect,
       explanation: exForm.explanation.trim(),
       image_url: exForm.image_url.trim()
     };
@@ -1029,7 +580,7 @@ export default function App() {
       if (error) {
         setExMsg('Çewtî: ' + error.message);
       } else {
-        setExMsg('Pirs bi serkeftî hat nûkirin!');
+        setExMsg('Lîstik bi serkeftî hat nûkirin!');
         resetExForm();
         fetchExercises();
       }
@@ -1041,7 +592,7 @@ export default function App() {
       if (error) {
         setExMsg('Çewtî: ' + error.message);
       } else {
-        setExMsg('Pirsa nû li beşa Hînbûn / Lîstik hat zêdekirin!');
+        setExMsg('Lîstika nû li beşa Hînbûn / Lîstik hat zêdekirin!');
         resetExForm();
         fetchExercises();
       }
@@ -1065,7 +616,7 @@ export default function App() {
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
-      unit_title: 'Asta 1 - Beşa 1: Alfabeya Kurmancî',
+      unit_title: 'Beşa 1: Silav û Nasîn',
       exercise_type: 'choice',
       question_text: '',
       options_raw: '',
@@ -1076,7 +627,7 @@ export default function App() {
   };
 
   const handleDeleteExercise = async (id) => {
-    if (!window.confirm('Tu piştrast î ku dixwazî vê pirsê jê bibî?')) return;
+    if (!window.confirm('Tu piştrast î ku dixwazî vê lîstikê jê bibî?')) return;
     const { error } = await supabase.from('kurmanci_exercises').delete().eq('id', id);
     if (!error) fetchExercises();
   };
@@ -1087,12 +638,82 @@ export default function App() {
     : [];
   const currentEx = unitExercises[currentExIndex];
 
+  const parsedMatchPairs = (() => {
+    if (!currentEx || currentEx.exercise_type !== 'match') return [];
+    return (currentEx.options || [])
+      .map((pairStr, idx) => {
+        const parts = pairStr.split('=');
+        if (parts.length < 2) return null;
+        return {
+          id: idx,
+          left: parts[0].trim(),
+          right: parts.slice(1).join('=').trim()
+        };
+      })
+      .filter(Boolean);
+  })();
+
+  useEffect(() => {
+    if (currentEx?.exercise_type === 'match') {
+      const pairs = (currentEx.options || [])
+        .map((pairStr, idx) => {
+          const parts = pairStr.split('=');
+          if (parts.length < 2) return null;
+          return { id: idx, right: parts.slice(1).join('=').trim() };
+        })
+        .filter(Boolean);
+      const shuffled = [...pairs].sort(() => Math.random() - 0.5);
+      setShuffledRightOptions(shuffled);
+      setMatchLeftSelected(null);
+      setMatchRightSelected(null);
+      setMatchedPairs([]);
+      setMatchWrongFlash(false);
+    }
+  }, [currentEx?.id]);
+
+  const handleMatchSelect = (side, pairId) => {
+    if (answerState || matchedPairs.includes(pairId)) return;
+
+    const nextLeft = side === 'left' ? pairId : matchLeftSelected;
+    const nextRight = side === 'right' ? pairId : matchRightSelected;
+
+    setMatchLeftSelected(nextLeft);
+    setMatchRightSelected(nextRight);
+
+    if (nextLeft !== null && nextRight !== null) {
+      if (nextLeft === nextRight) {
+        const updated = [...matchedPairs, nextLeft];
+        setMatchedPairs(updated);
+        setMatchLeftSelected(null);
+        setMatchRightSelected(null);
+
+        if (updated.length === parsedMatchPairs.length) {
+          setAnswerState('correct');
+          const nextXp = xpPoints + 15;
+          setXpPoints(nextXp);
+          setComboCount((c) => c + 1);
+          localStorage.setItem('kk_xp', String(nextXp));
+        }
+      } else {
+        setMatchWrongFlash(true);
+        setHearts((prev) => Math.max(0, prev - 1));
+        setComboCount(0);
+        setTimeout(() => {
+          setMatchLeftSelected(null);
+          setMatchRightSelected(null);
+          setMatchWrongFlash(false);
+        }, 550);
+      }
+    }
+  };
+
   const startUnit = (unitName) => {
     setSelectedUnit(unitName);
     setCurrentExIndex(0);
     setSelectedOption('');
     setBuiltWords([]);
     setAnswerState(null);
+    setComboCount(0);
     setHearts(5);
     setUnitCompleted(false);
   };
@@ -1108,7 +729,7 @@ export default function App() {
   };
 
   const checkExerciseAnswer = () => {
-    if (!currentEx) return;
+    if (!currentEx || currentEx.exercise_type === 'match') return;
     const userAnswer =
       currentEx.exercise_type === 'sentence'
         ? builtWords.map((w) => w.word).join(' ').trim()
@@ -1118,11 +739,14 @@ export default function App() {
 
     if (userAnswer.toLowerCase() === currentEx.correct_answer.trim().toLowerCase()) {
       setAnswerState('correct');
-      const nextXp = xpPoints + 10;
+      const bonus = comboCount >= 2 ? 15 : 10;
+      const nextXp = xpPoints + bonus;
       setXpPoints(nextXp);
+      setComboCount((c) => c + 1);
       localStorage.setItem('kk_xp', String(nextXp));
     } else {
       setAnswerState('wrong');
+      setComboCount(0);
       setHearts((prev) => Math.max(0, prev - 1));
     }
   };
@@ -1135,9 +759,20 @@ export default function App() {
       setAnswerState(null);
     } else {
       setUnitCompleted(true);
+      if (selectedUnit && !completedUnits.includes(selectedUnit)) {
+        const updatedUnits = [...completedUnits, selectedUnit];
+        setCompletedUnits(updatedUnits);
+        localStorage.setItem('kk_completed_units', JSON.stringify(updatedUnits));
+        const nextStreak = streakDays + 1;
+        setStreakDays(nextStreak);
+        localStorage.setItem('kk_streak', String(nextStreak));
+      }
     }
   };
 
+  // =========================================================================
+  // KATEGORİLER, AYARLAR VE DERSLER
+  // =========================================================================
   const fetchCategories = async () => {
     const { data, error } = await supabase
       .from('categories')
@@ -1171,15 +806,16 @@ export default function App() {
     e.preventDefault();
     if (!newCatName.trim()) return;
 
-    const generatedSlug = newCatName
-      .toLowerCase()
-      .replace(/î/g, 'i')
-      .replace(/ê/g, 'e')
-      .replace(/û/g, 'u')
-      .replace(/ş/g, 's')
-      .replace(/ç/g, 'c')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || `cat-${Date.now()}`;
+    const generatedSlug =
+      newCatName
+        .toLowerCase()
+        .replace(/î/g, 'i')
+        .replace(/ê/g, 'e')
+        .replace(/û/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ç/g, 'c')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || `cat-${Date.now()}`;
 
     const newCat = {
       slug: `${generatedSlug}-${Math.floor(100 + Math.random() * 900)}`,
@@ -1707,62 +1343,102 @@ export default function App() {
             </div>
           </div>
         ) : viewMode === 'learn' ? (
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 text-white mb-6 shadow-md flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-extrabold">{ui.learn_title}</h1>
-                <p className="text-emerald-100 text-sm mt-1">
-                  {ui.learn_subtitle}
-                </p>
+          <div className="max-w-2xl mx-auto">
+            {/* DUOLINGO ÜST DURUM ÇUBUĞU: SERİ (STREAK) + XP + CAN */}
+            <div className="bg-white border-2 border-slate-200 rounded-2xl px-4 py-3 mb-6 shadow-sm flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-black">
+                  <Flame className="w-5 h-5 fill-amber-500" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase">Rêze (Serî)</div>
+                  <div className="text-sm font-black text-amber-600">{streakDays} Roj</div>
+                </div>
               </div>
-              <div className="bg-white/20 px-4 py-2 rounded-xl text-center">
-                <div className="text-xs uppercase font-bold text-emerald-100">{ui.learn_xp_label}</div>
-                <div className="text-2xl font-black flex items-center gap-1">
-                  <Award className="w-5 h-5 text-amber-300" />
-                  <span>{xpPoints}</span>
+
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-black">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase">{ui.learn_xp_label}</div>
+                  <div className="text-sm font-black text-sky-600">{xpPoints} XP</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-black">
+                  <Heart className="w-5 h-5 fill-rose-500" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase">Dil</div>
+                  <div className="text-sm font-black text-rose-600">{hearts} / 5</div>
                 </div>
               </div>
             </div>
 
             {!selectedUnit ? (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-slate-800">{ui.learn_units_heading}</h2>
+              /* DUOLINGO DİKEY ZİKZAK ÖĞRENME YOLU (LEARNING PATH) */
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-3xl p-6 text-white shadow-[0_6px_0_rgb(21,128,61)]">
+                  <span className="text-xs font-black uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full">
+                    BEŞA 1 • KURMANCÎ
+                  </span>
+                  <h1 className="text-2xl font-black mt-2">{ui.learn_title}</h1>
+                  <p className="text-emerald-50 text-sm mt-1">{ui.learn_subtitle}</p>
+                </div>
+
                 {unitList.length === 0 ? (
-                  <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-500">
-                    {ui.learn_empty_units}
+                  <div className="bg-white p-8 rounded-3xl border-2 border-slate-200 text-center space-y-3">
+                    <p className="text-slate-600 font-semibold">{ui.learn_empty_units}</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="relative py-6 flex flex-col items-center space-y-10">
                     {unitList.map((unitName, idx) => {
                       const unitItems = exercises.filter((e) => e.unit_title === unitName);
-                      const previewImg = unitItems.find((e) => e.image_url)?.image_url;
+                      const isDone = completedUnits.includes(unitName);
+                      const isNext =
+                        !isDone &&
+                        (idx === 0 || completedUnits.includes(unitList[idx - 1]));
+
+                      const offsets = ['translate-x-0', '-translate-x-10', 'translate-x-0', 'translate-x-10'];
+                      const offsetClass = offsets[idx % offsets.length];
+
                       return (
                         <div
                           key={unitName}
-                          onClick={() => startUnit(unitName)}
-                          className="bg-white border-2 border-slate-200 hover:border-emerald-500 rounded-2xl overflow-hidden cursor-pointer transition shadow-sm hover:shadow-md flex flex-col"
+                          className={`relative flex flex-col items-center transition-transform ${offsetClass}`}
                         >
-                          {previewImg && (
-                            <div className="h-32 w-full bg-slate-100 overflow-hidden">
-                              <img
-                                src={previewImg}
-                                alt={unitName}
-                                className="w-full h-full object-cover"
-                              />
+                          {isNext && (
+                            <div className="mb-2 bg-white border-2 border-emerald-500 text-emerald-600 font-black text-xs px-3.5 py-1 rounded-xl shadow-md animate-bounce uppercase tracking-wider">
+                              DEST PÊ BIKE!
                             </div>
                           )}
-                          <div className="p-5 flex items-center justify-between gap-3">
-                            <div>
-                              <span className="text-xs font-extrabold uppercase text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-                                {ui.learn_stage_prefix} {idx + 1}
-                              </span>
-                              <h3 className="text-base font-bold text-slate-900 mt-2">{unitName}</h3>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {unitItems.length} {ui.learn_question_count_suffix}
-                              </p>
+
+                          <button
+                            type="button"
+                            onClick={() => startUnit(unitName)}
+                            className={`w-20 h-20 rounded-full flex items-center justify-center transition active:translate-y-1 ${
+                              isDone
+                                ? 'bg-amber-400 text-amber-950 shadow-[0_6px_0_rgb(217,119,6)] hover:bg-amber-300'
+                                : isNext
+                                ? 'bg-emerald-500 text-white shadow-[0_6px_0_rgb(21,128,61)] hover:bg-emerald-400 ring-8 ring-emerald-500/20'
+                                : 'bg-slate-200 text-slate-600 shadow-[0_6px_0_rgb(148,163,184)] hover:bg-slate-300'
+                            }`}
+                          >
+                            {isDone ? (
+                              <Check className="w-9 h-9 stroke-[3]" />
+                            ) : (
+                              <Star className="w-9 h-9 fill-current" />
+                            )}
+                          </button>
+
+                          <div className="mt-3 text-center max-w-[220px]">
+                            <div className="text-xs font-black uppercase text-emerald-700">
+                              {ui.learn_stage_prefix} {idx + 1} • {unitItems.length} {ui.learn_question_count_suffix}
                             </div>
-                            <div className="w-10 h-10 shrink-0 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                              <ArrowRight className="w-5 h-5" />
+                            <div className="text-sm font-extrabold text-slate-800 mt-0.5">
+                              {unitName}
                             </div>
                           </div>
                         </div>
@@ -1772,175 +1448,293 @@ export default function App() {
                 )}
               </div>
             ) : unitCompleted || hearts === 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-md space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                  <Award className="w-9 h-9" />
+              /* DERS SONU ÖDÜL EKRANI */
+              <div className="bg-white rounded-3xl border-2 border-slate-200 p-8 text-center shadow-lg space-y-5">
+                <div
+                  className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${
+                    hearts === 0
+                      ? 'bg-rose-100 text-rose-600'
+                      : 'bg-amber-100 text-amber-500'
+                  }`}
+                >
+                  <Award className="w-11 h-11" />
                 </div>
-                <h2 className="text-2xl font-extrabold text-slate-900">
+
+                <h2 className="text-2xl font-black text-slate-900">
                   {hearts === 0 ? ui.learn_lose_title : ui.learn_win_title}
                 </h2>
-                <p className="text-slate-600 text-sm">
-                  {ui.learn_total_xp_prefix} <strong>{xpPoints} XP</strong>
-                </p>
-                <div className="flex items-center justify-center gap-3 pt-2">
+
+                <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3">
+                    <div className="text-xs font-bold text-amber-700 uppercase">XP</div>
+                    <div className="text-xl font-black text-amber-600">+{xpPoints}</div>
+                  </div>
+                  <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+                    <div className="text-xs font-bold text-emerald-700 uppercase">Serî</div>
+                    <div className="text-xl font-black text-emerald-600">{streakDays} Roj</div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                   <button
                     onClick={() => startUnit(selectedUnit)}
-                    className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl"
+                    className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-3 rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] active:translate-y-0.5 transition"
                   >
                     <RotateCcw className="w-4 h-4" />
                     <span>{ui.learn_replay_btn}</span>
                   </button>
                   <button
                     onClick={() => setSelectedUnit(null)}
-                    className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-5 py-2.5 rounded-xl"
+                    className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-black px-6 py-3 rounded-2xl shadow-[0_4px_0_rgb(148,163,184)] active:translate-y-0.5 transition"
                   >
                     {ui.learn_back_units_btn}
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-md">
-                <div className="flex items-center gap-4 mb-6">
-                  <button
-                    onClick={() => setSelectedUnit(null)}
-                    className="text-slate-400 hover:text-slate-700"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                  <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500 transition-all duration-300"
-                      style={{
-                        width: `${((currentExIndex + 1) / unitExercises.length) * 100}%`
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-1 text-red-600 font-extrabold text-sm">
-                    <Heart className="w-5 h-5 fill-red-600" />
-                    <span>{hearts}</span>
-                  </div>
-                </div>
+              /* AKTİF DUOLINGO OYUN ARENASI */
+              <div className="bg-white rounded-3xl border-2 border-slate-200 overflow-hidden shadow-lg">
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <button
+                      onClick={() => setSelectedUnit(null)}
+                      className="text-slate-400 hover:text-slate-700 p-1"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
 
-                <span className="text-xs font-bold uppercase text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded">
-                  {currentEx?.exercise_type === 'sentence'
-                    ? ui.learn_type_sentence
-                    : ui.learn_type_choice}
-                </span>
-
-                {currentEx?.image_url && (
-                  <div className="mt-4 mb-4 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 h-48 sm:h-56">
-                    <img
-                      src={currentEx.image_url}
-                      alt={currentEx.question_text}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-
-                <h2 className="text-xl font-bold text-slate-900 mt-3 mb-6">
-                  {currentEx?.question_text}
-                </h2>
-
-                {currentEx?.exercise_type === 'sentence' ? (
-                  <div className="space-y-6">
-                    <div className="min-h-[64px] p-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-wrap gap-2 items-center">
-                      {builtWords.length === 0 ? (
-                        <span className="text-xs text-slate-400">
-                          {ui.learn_sentence_placeholder}
-                        </span>
-                      ) : (
-                        builtWords.map((item) => (
-                          <button
-                            key={item.idx}
-                            type="button"
-                            onClick={() => toggleSentenceWord(item.word, item.idx)}
-                            className="bg-emerald-600 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow-sm"
-                          >
-                            {item.word}
-                          </button>
-                        ))
-                      )}
+                    <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                      <div
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${((currentExIndex + (answerState === 'correct' ? 1 : 0)) / unitExercises.length) * 100}%`
+                        }}
+                      />
                     </div>
 
-                    <div className="flex flex-wrap gap-2.5">
-                      {(currentEx.options || []).map((word, idx) => {
-                        const isUsed = builtWords.some((item) => item.idx === idx);
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            disabled={isUsed || Boolean(answerState)}
-                            onClick={() => toggleSentenceWord(word, idx)}
-                            className={`px-4 py-2.5 rounded-xl font-bold text-sm border-2 transition ${
-                              isUsed
-                                ? 'bg-slate-100 text-slate-300 border-slate-200'
-                                : 'bg-white text-slate-800 border-slate-300 hover:border-emerald-500 shadow-sm'
+                    {comboCount >= 2 && (
+                      <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1 rounded-full">
+                        <Zap className="w-3.5 h-3.5 fill-amber-500" />
+                        <span>{comboCount}x</span>
+                      </span>
+                    )}
+
+                    <div className="flex items-center gap-1 text-rose-600 font-black text-base">
+                      <Heart className="w-5 h-5 fill-rose-500" />
+                      <span>{hearts}</span>
+                    </div>
+                  </div>
+
+                  <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>
+                      {currentEx?.exercise_type === 'match'
+                        ? ui.learn_type_match
+                        : currentEx?.exercise_type === 'fill_blank'
+                        ? ui.learn_type_fill
+                        : currentEx?.exercise_type === 'sentence'
+                        ? ui.learn_type_sentence
+                        : ui.learn_type_choice}
+                    </span>
+                  </span>
+
+                  {currentEx?.image_url && (
+                    <div className="mt-4 mb-4 rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 h-48 sm:h-56">
+                      <img
+                        src={currentEx.image_url}
+                        alt={currentEx.question_text}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-3 mb-6">
+                    {currentEx?.question_text}
+                  </h2>
+
+                  {currentEx?.exercise_type === 'match' ? (
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-2.5">
+                        {parsedMatchPairs.map((pair) => {
+                          const isMatched = matchedPairs.includes(pair.id);
+                          const isSelected = matchLeftSelected === pair.id;
+                          return (
+                            <button
+                              key={`L-${pair.id}`}
+                              type="button"
+                              disabled={isMatched}
+                              onClick={() => handleMatchSelect('left', pair.id)}
+                              className={`w-full py-3.5 px-4 rounded-2xl font-extrabold text-sm sm:text-base border-2 transition ${
+                                isMatched
+                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-600 opacity-60'
+                                  : isSelected && matchWrongFlash
+                                  ? 'bg-rose-50 border-rose-500 text-rose-700'
+                                  : isSelected
+                                  ? 'bg-sky-50 border-sky-500 text-sky-800 shadow-[0_3px_0_rgb(14,165,233)]'
+                                  : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 shadow-[0_3px_0_rgb(226,232,240)]'
+                              }`}
+                            >
+                              {pair.left}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="space-y-2.5">
+                        {shuffledRightOptions.map((pair) => {
+                          const isMatched = matchedPairs.includes(pair.id);
+                          const isSelected = matchRightSelected === pair.id;
+                          return (
+                            <button
+                              key={`R-${pair.id}`}
+                              type="button"
+                              disabled={isMatched}
+                              onClick={() => handleMatchSelect('right', pair.id)}
+                              className={`w-full py-3.5 px-4 rounded-2xl font-extrabold text-sm sm:text-base border-2 transition ${
+                                isMatched
+                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-600 opacity-60'
+                                  : isSelected && matchWrongFlash
+                                  ? 'bg-rose-50 border-rose-500 text-rose-700'
+                                  : isSelected
+                                  ? 'bg-sky-50 border-sky-500 text-sky-800 shadow-[0_3px_0_rgb(14,165,233)]'
+                                  : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 shadow-[0_3px_0_rgb(226,232,240)]'
+                              }`}
+                            >
+                              {pair.right}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : currentEx?.exercise_type === 'sentence' ? (
+                    <div className="space-y-6">
+                      <div className="min-h-[72px] p-3.5 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-wrap gap-2 items-center">
+                        {builtWords.length === 0 ? (
+                          <span className="text-xs font-semibold text-slate-400">
+                            {ui.learn_sentence_placeholder}
+                          </span>
+                        ) : (
+                          builtWords.map((item) => (
+                            <button
+                              key={item.idx}
+                              type="button"
+                              onClick={() => toggleSentenceWord(item.word, item.idx)}
+                              className="bg-emerald-500 text-white font-extrabold px-4 py-2 rounded-xl text-sm shadow-[0_3px_0_rgb(21,128,61)]"
+                            >
+                              {item.word}
+                            </button>
+                          ))
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2.5 justify-center">
+                        {(currentEx.options || []).map((word, idx) => {
+                          const isUsed = builtWords.some((item) => item.idx === idx);
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              disabled={isUsed || Boolean(answerState)}
+                              onClick={() => toggleSentenceWord(word, idx)}
+                              className={`px-4 py-2.5 rounded-2xl font-extrabold text-sm border-2 transition ${
+                                isUsed
+                                  ? 'bg-slate-100 text-slate-300 border-slate-200'
+                                  : 'bg-white text-slate-800 border-slate-200 hover:border-emerald-400 shadow-[0_3px_0_rgb(226,232,240)] active:translate-y-0.5'
+                              }`}
+                            >
+                              {word}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-3">
+                      {(currentEx?.options || []).map((opt, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          disabled={Boolean(answerState)}
+                          onClick={() => setSelectedOption(opt)}
+                          className={`w-full text-left px-4 py-3.5 rounded-2xl border-2 font-bold text-base flex items-center gap-3 transition ${
+                            selectedOption === opt
+                              ? 'border-sky-500 bg-sky-50 text-sky-900 shadow-[0_3px_0_rgb(14,165,233)]'
+                              : 'border-slate-200 hover:border-slate-300 text-slate-800 shadow-[0_3px_0_rgb(226,232,240)]'
+                          }`}
+                        >
+                          <span
+                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-xs font-black shrink-0 ${
+                              selectedOption === opt
+                                ? 'border-sky-500 bg-sky-500 text-white'
+                                : 'border-slate-300 text-slate-500'
                             }`}
                           >
-                            {word}
-                          </button>
-                        );
-                      })}
+                            {idx + 1}
+                          </span>
+                          <span>{opt}</span>
+                        </button>
+                      ))}
                     </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-3">
-                    {(currentEx?.options || []).map((opt, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        disabled={Boolean(answerState)}
-                        onClick={() => setSelectedOption(opt)}
-                        className={`w-full text-left px-4 py-3.5 rounded-xl border-2 font-semibold text-sm transition ${
-                          selectedOption === opt
-                            ? 'border-emerald-600 bg-emerald-50 text-emerald-900'
-                            : 'border-slate-200 hover:border-slate-300 text-slate-800'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  )}
+                </div>
 
-                <div className="mt-8 pt-5 border-t border-slate-100">
+                <div
+                  className={`p-5 sm:px-8 border-t-2 transition-colors ${
+                    answerState === 'correct'
+                      ? 'bg-emerald-100 border-emerald-300'
+                      : answerState === 'wrong'
+                      ? 'bg-rose-100 border-rose-300'
+                      : 'bg-slate-50 border-slate-200'
+                  }`}
+                >
                   {answerState === 'correct' && (
-                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 mb-4">
-                      <div className="font-extrabold flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <div className="mb-4 text-emerald-900">
+                      <div className="font-black text-lg flex items-center gap-2">
+                        <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                         <span>{ui.learn_correct_msg}</span>
                       </div>
                       {currentEx?.explanation && (
-                        <p className="text-xs mt-1 text-emerald-800">{currentEx.explanation}</p>
+                        <p className="text-sm mt-1 text-emerald-800 font-medium">{currentEx.explanation}</p>
                       )}
                     </div>
                   )}
 
                   {answerState === 'wrong' && (
-                    <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 mb-4">
-                      <div className="font-extrabold flex items-center gap-2">
-                        <AlertCircle className="w-5 h-5 text-red-600" />
+                    <div className="mb-4 text-rose-900">
+                      <div className="font-black text-lg flex items-center gap-2">
+                        <AlertCircle className="w-6 h-6 text-rose-600" />
                         <span>{ui.learn_wrong_prefix} {currentEx?.correct_answer}</span>
                       </div>
                       {currentEx?.explanation && (
-                        <p className="text-xs mt-1 text-red-800">{currentEx.explanation}</p>
+                        <p className="text-sm mt-1 text-rose-800 font-medium">{currentEx.explanation}</p>
                       )}
                     </div>
                   )}
 
                   {!answerState ? (
-                    <button
-                      type="button"
-                      onClick={checkExerciseAnswer}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 rounded-xl transition"
-                    >
-                      {ui.learn_check_btn}
-                    </button>
+                    currentEx?.exercise_type !== 'match' && (
+                      <button
+                        type="button"
+                        onClick={checkExerciseAnswer}
+                        disabled={
+                          currentEx?.exercise_type === 'sentence'
+                            ? builtWords.length === 0
+                            : !selectedOption
+                        }
+                        className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-300 disabled:shadow-none text-white font-black py-3.5 rounded-2xl shadow-[0_4px_0_rgb(21,128,61)] active:translate-y-0.5 transition uppercase tracking-wider"
+                      >
+                        {ui.learn_check_btn}
+                      </button>
+                    )
                   ) : (
                     <button
                       type="button"
                       onClick={goToNextExercise}
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-3 rounded-xl transition"
+                      className={`w-full font-black py-3.5 rounded-2xl text-white uppercase tracking-wider active:translate-y-0.5 transition ${
+                        answerState === 'correct'
+                          ? 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_4px_0_rgb(21,128,61)]'
+                          : 'bg-rose-600 hover:bg-rose-500 shadow-[0_4px_0_rgb(190,18,60)]'
+                      }`}
                     >
                       {ui.learn_next_btn}
                     </button>
@@ -2304,6 +2098,214 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* HÎNBÛN / LÎSTİK YÖNETİMİ */}
+                <div className="bg-white rounded-2xl border-2 border-emerald-300 p-6 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-emerald-600" />
+                      <span>
+                        {editingExId
+                          ? 'Lîstika Hînbûnê Sererast Bike'
+                          : 'Hînbûn / Lîstik — Lîstikên Duolingo Zêde Bike û Biguherîne'}
+                      </span>
+                    </h2>
+
+                    <button
+                      type="button"
+                      onClick={handleLoadStarterGames}
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
+                    >
+                      + Paketa Destpêkê ya Lîstikan Bar Bike (Duolingo)
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-500 mb-4">
+                    Cureyên lîstikan: <strong>Çoktan Seçmeli</strong>, <strong>Kelime Sıralama</strong>, <strong>Eşleştirme</strong> (Mînak: <code>Silav=Merhaba, Spas=Teşekkürler</code>) û <strong>Boşluk Doldurma</strong>.
+                  </p>
+
+                  {exMsg && (
+                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
+                      {exMsg}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Navê Beşê / Qonaxê (Ünite Adı)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={exForm.unit_title}
+                        onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
+                        placeholder="Mînak: Beşa 1: Silav û Nasîn"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Cureyê Lîstikê (Oyun Türü)
+                      </label>
+                      <select
+                        value={exForm.exercise_type}
+                        onChange={(e) => setExForm({ ...exForm, exercise_type: e.target.value })}
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                      >
+                        <option value="choice">Çoktan Seçmeli (Vebijêrka Rast)</option>
+                        <option value="sentence">Kelime Sıralama / Cümle Kurma (Peyvan Rêz Bike)</option>
+                        <option value="match">Eşleştirme Oyunu (Peyvan Bighîne Hev)</option>
+                        <option value="fill_blank">Boşluk Doldurma (Valahiyê Tije Bike)</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Pirs an Rênîşander (Soru / Talimat Metni)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={exForm.question_text}
+                        onChange={(e) => setExForm({ ...exForm, question_text: e.target.value })}
+                        placeholder="Mînak: Peyvên Kurmancî bi wateyên wan re bighîne hev:"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Wêneyê Lîstikê (Görsel Yükle / URL - Opsiyonel)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={exForm.image_url}
+                          onChange={(e) => setExForm({ ...exForm, image_url: e.target.value })}
+                          placeholder="https://... an jî wêne bar bike ->"
+                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                        />
+                        <label className="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                          <ImageIcon className="w-4 h-4" />
+                          <span>{uploadingExImg ? 'Tê barkirin...' : 'Wêne Bar Bike'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleExImageUpload}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        {exForm.exercise_type === 'match'
+                          ? 'Cotên Peyvan (Virgülle ayırın: Kürtçe=Karşılığı)'
+                          : 'Vebijêrk an Peyv (Virgülle ayırın)'}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={exForm.options_raw}
+                        onChange={(e) => setExForm({ ...exForm, options_raw: e.target.value })}
+                        placeholder={
+                          exForm.exercise_type === 'match'
+                            ? 'Silav=Merhaba, Spas=Teşekkürler, Belê=Evet, Na=Hayır'
+                            : 'Ez, diçim, dibistanê., tu, malê'
+                        }
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                      />
+                    </div>
+
+                    {exForm.exercise_type !== 'match' && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-600 mb-1">
+                          Bersiva Rast (Tam Doğru Cevap)
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={exForm.correct_answer}
+                          onChange={(e) => setExForm({ ...exForm, correct_answer: e.target.value })}
+                          placeholder="Ez diçim dibistanê."
+                          className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        />
+                      </div>
+                    )}
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Ravekirin (Cevap Sonrası Açıklama - Opsiyonel)
+                      </label>
+                      <input
+                        type="text"
+                        value={exForm.explanation}
+                        onChange={(e) => setExForm({ ...exForm, explanation: e.target.value })}
+                        placeholder="Kısa dilbilgisi veya kelime notu..."
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2 flex items-center gap-3">
+                      <button
+                        type="submit"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
+                      >
+                        {editingExId ? 'Guhertina Lîstikê Tomar Bike' : '+ Lîstika Nû Zêde Bike'}
+                      </button>
+                      {editingExId && (
+                        <button
+                          type="button"
+                          onClick={resetExForm}
+                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm"
+                        >
+                          Betal Bike
+                        </button>
+                      )}
+                    </div>
+                  </form>
+
+                  <div className="space-y-2 max-h-64 overflow-y-auto border-t border-slate-100 pt-4">
+                    {exercises.map((ex) => (
+                      <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          {ex.image_url && (
+                            <img
+                              src={ex.image_url}
+                              alt=""
+                              className="w-9 h-9 rounded object-cover shrink-0 border border-slate-200"
+                            />
+                          )}
+                          <div className="truncate">
+                            <span className="text-xs font-bold text-emerald-700 mr-2">[{ex.unit_title}]</span>
+                            <span className="font-medium text-slate-800">{ex.question_text}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => startEditingExercise(ex)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-medium"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Sererast</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteExercise(ex.id)}
+                            className="text-red-600 hover:text-red-800 p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* DERS EKLEME FORMU */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5 text-red-600" />
@@ -2518,6 +2520,7 @@ export default function App() {
                   </form>
                 </div>
 
+                {/* FERHENG YÖNETİMİ */}
                 <div className="bg-white rounded-2xl border border-sky-300 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -2676,191 +2679,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-emerald-200 p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-emerald-600" />
-                    <span>
-                      {editingExId
-                        ? 'Pirsa Hînbûn / Lîstik Sererast Bike'
-                        : 'Pirsên Fêrbûna Kurmancî / Lîstik (Ekle ve Düzenle)'}
-                    </span>
-                  </h2>
-                  <p className="text-xs text-slate-500 mb-4">
-                    Ji bo beşa Hînbûn / Lîstik pirsên nû bi wêne zêde bike an pirsên heyî sererast bike.
-                  </p>
-
-                  {exMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
-                      {exMsg}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSaveExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Navê Beşê / Qonaxê (Ünite Adı)
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={exForm.unit_title}
-                        onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="Mînak: Asta 1 - Beşa 1: Alfabeya Kurmancî"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Cureyê Lîstikê (Soru Türü)
-                      </label>
-                      <select
-                        value={exForm.exercise_type}
-                        onChange={(e) => setExForm({ ...exForm, exercise_type: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      >
-                        <option value="choice">Çoktan Seçmeli (Vebijêrka Rast)</option>
-                        <option value="sentence">Kelime Sıralama / Cümle Kurma (Peyvan Rêz Bike)</option>
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Pirs (Soru Metni)
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={exForm.question_text}
-                        onChange={(e) => setExForm({ ...exForm, question_text: e.target.value })}
-                        placeholder="Mînak: Hevokê rast rêz bike: 'Ben okula gidiyorum.'"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Wêneyê Pirsê (Konu Görseli Yükle / URL - Opsiyonel)
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={exForm.image_url}
-                          onChange={(e) => setExForm({ ...exForm, image_url: e.target.value })}
-                          placeholder="https://... an jî wêne bar bike ->"
-                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                        />
-                        <label className="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
-                          <ImageIcon className="w-4 h-4" />
-                          <span>{uploadingExImg ? 'Tê barkirin...' : 'Wêne Bar Bike'}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleExImageUpload}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Vebijêrk an Peyv (Virgülle ayırın)
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={exForm.options_raw}
-                        onChange={(e) => setExForm({ ...exForm, options_raw: e.target.value })}
-                        placeholder="Ez, diçim, dibistanê., tu, malê"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Bersiva Rast (Tam Doğru Cevap)
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={exForm.correct_answer}
-                        onChange={(e) => setExForm({ ...exForm, correct_answer: e.target.value })}
-                        placeholder="Ez diçim dibistanê."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Ravekirin (Cevap Sonrası Açıklama - Opsiyonel)
-                      </label>
-                      <input
-                        type="text"
-                        value={exForm.explanation}
-                        onChange={(e) => setExForm({ ...exForm, explanation: e.target.value })}
-                        placeholder="Kısa dilbilgisi veya kelime notu..."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2 flex items-center gap-3">
-                      <button
-                        type="submit"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
-                      >
-                        {editingExId ? 'Guhertina Pirsê Tomar Bike' : '+ Pirsa Nû Zêde Bike'}
-                      </button>
-                      {editingExId && (
-                        <button
-                          type="button"
-                          onClick={resetExForm}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm"
-                        >
-                          Betal Bike
-                        </button>
-                      )}
-                    </div>
-                  </form>
-
-                  <div className="space-y-2 max-h-64 overflow-y-auto border-t border-slate-100 pt-4">
-                    {exercises.map((ex) => (
-                      <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          {ex.image_url && (
-                            <img
-                              src={ex.image_url}
-                              alt=""
-                              className="w-9 h-9 rounded object-cover shrink-0 border border-slate-200"
-                            />
-                          )}
-                          <div className="truncate">
-                            <span className="text-xs font-bold text-emerald-700 mr-2">[{ex.unit_title}]</span>
-                            <span className="font-medium text-slate-800">{ex.question_text}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => startEditingExercise(ex)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-medium"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            <span>Sererast</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteExercise(ex.id)}
-                            className="text-red-600 hover:text-red-800 p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+                {/* KAYITLI MATERYALLER */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4">
                     Materyalên Tomarkirî ({lessons.length})
@@ -2909,6 +2728,7 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* KATEGORİ YÖNETİMİ */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <FolderEdit className="w-5 h-5 text-red-600" />
@@ -2967,6 +2787,7 @@ export default function App() {
                   </form>
                 </div>
 
+                {/* TÜM SİTE YAZILARI */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-red-600" />
