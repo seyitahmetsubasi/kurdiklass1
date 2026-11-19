@@ -34,7 +34,8 @@ import {
   Zap,
   Image as ImageIcon,
   Eye,
-  LayoutDashboard
+  LayoutDashboard,
+  Volume2
 } from 'lucide-react';
 
 // =========================================================================
@@ -286,6 +287,7 @@ export default function App() {
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('kk_lang') || 'KU');
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langDropdownRef = useRef(null);
+  const audioPlayerRef = useRef(null);
 
   const [rawUi, setRawUi] = useState(DEFAULT_UI);
   const ui = rawUi;
@@ -353,6 +355,7 @@ export default function App() {
   const [unitCompleted, setUnitCompleted] = useState(false);
   const [hearts, setHearts] = useState(5);
   const [comboCount, setComboCount] = useState(0);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
   const [streakDays, setStreakDays] = useState(() => Number(localStorage.getItem('kk_streak') || 1));
   const [completedUnits, setCompletedUnits] = useState(() => {
@@ -374,6 +377,7 @@ export default function App() {
   const [editingExId, setEditingExId] = useState(null);
   const [exMsg, setExMsg] = useState('');
   const [uploadingExImg, setUploadingExImg] = useState(false);
+  const [uploadingExAudio, setUploadingExAudio] = useState(false);
   const [exForm, setExForm] = useState({
     unit_title: 'ZAROK: Lîstika Hevnasînê',
     exercise_type: 'choice',
@@ -381,7 +385,8 @@ export default function App() {
     options_raw: '',
     correct_answer: '',
     explanation: '',
-    image_url: ''
+    image_url: '',
+    audio_url: ''
   });
 
   const kurdishAlphabet = [
@@ -581,7 +586,7 @@ export default function App() {
   })();
 
   // =========================================================================
-  // HÎNBÛN / LÎSTIK MOTORU
+  // HÎNBÛN / LÎSTIK MOTORU (SESLİ + GÖRSELLİ)
   // =========================================================================
   const fetchExercises = async () => {
     const { data, error } = await supabase
@@ -635,6 +640,31 @@ export default function App() {
     setUploadingExImg(false);
   };
 
+  const handleExAudioUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingExAudio(true);
+    const fileExt = file.name.split('.').pop();
+    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `exercise_audio/${safeName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('materyal')
+      .upload(filePath, file);
+
+    if (!uploadError) {
+      const { data: publicData } = supabase.storage
+        .from('materyal')
+        .getPublicUrl(filePath);
+
+      if (publicData?.publicUrl) {
+        setExForm((prev) => ({ ...prev, audio_url: publicData.publicUrl }));
+      }
+    }
+    setUploadingExAudio(false);
+  };
+
   const handleSaveExercise = async (e) => {
     e.preventDefault();
     const parsedOptions = exForm.options_raw
@@ -664,7 +694,8 @@ export default function App() {
       options: parsedOptions,
       correct_answer: finalCorrect,
       explanation: exForm.explanation.trim(),
-      image_url: exForm.image_url.trim()
+      image_url: exForm.image_url.trim(),
+      audio_url: exForm.audio_url.trim()
     };
 
     if (editingExId) {
@@ -705,7 +736,8 @@ export default function App() {
       options_raw: Array.isArray(ex.options) ? ex.options.join(', ') : '',
       correct_answer: ex.correct_answer || '',
       explanation: ex.explanation || '',
-      image_url: ex.image_url || ''
+      image_url: ex.image_url || '',
+      audio_url: ex.audio_url || ''
     });
   };
 
@@ -718,7 +750,8 @@ export default function App() {
       options_raw: '',
       correct_answer: '',
       explanation: '',
-      image_url: ''
+      image_url: '',
+      audio_url: ''
     });
   };
 
@@ -733,6 +766,36 @@ export default function App() {
     ? exercises.filter((ex) => ex.unit_title === selectedUnit)
     : [];
   const currentEx = unitExercises[currentExIndex];
+
+  const playCurrentAudio = (url) => {
+    if (!url) return;
+    try {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      const audio = new Audio(url);
+      audioPlayerRef.current = audio;
+      setIsPlayingAudio(true);
+      audio.onended = () => setIsPlayingAudio(false);
+      audio.onerror = () => setIsPlayingAudio(false);
+      audio.play().catch(() => setIsPlayingAudio(false));
+    } catch {
+      setIsPlayingAudio(false);
+    }
+  };
+
+  useEffect(() => {
+    setIsPlayingAudio(false);
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+    }
+    if (currentEx?.audio_url && viewMode === 'learn' && selectedUnit && !unitCompleted) {
+      const timer = setTimeout(() => {
+        playCurrentAudio(currentEx.audio_url);
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [currentEx?.id, viewMode, selectedUnit, unitCompleted]);
 
   const parsedMatchPairs = (() => {
     if (!currentEx || currentEx.exercise_type !== 'match') return [];
@@ -1678,6 +1741,23 @@ export default function App() {
                     </span>
                   </span>
 
+                  {currentEx?.audio_url && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => playCurrentAudio(currentEx.audio_url)}
+                        className={`inline-flex items-center gap-3 px-5 py-3 rounded-2xl font-black text-white transition active:translate-y-0.5 ${
+                          isPlayingAudio
+                            ? 'bg-sky-600 shadow-[0_4px_0_rgb(3,105,161)] ring-4 ring-sky-200'
+                            : 'bg-sky-500 hover:bg-sky-400 shadow-[0_4px_0_rgb(2,132,199)]'
+                        }`}
+                      >
+                        <Volume2 className={`w-6 h-6 ${isPlayingAudio ? 'animate-pulse' : ''}`} />
+                        <span>Guhdarî Bike</span>
+                      </button>
+                    </div>
+                  )}
+
                   {currentEx?.image_url && (
                     <div className="mt-4 mb-4 rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-50 h-48 sm:h-56">
                       <img
@@ -2310,12 +2390,37 @@ export default function App() {
                         required
                         value={exForm.question_text}
                         onChange={(e) => setExForm({ ...exForm, question_text: e.target.value })}
-                        placeholder="Peyvên dijwate bi hev re bighîne:"
+                        placeholder="Guhdarî bike û bersiva rast bibîne:"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
 
-                    <div className="md:col-span-2">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Dengê Lîstikê (Vebijarkî)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={exForm.audio_url}
+                          onChange={(e) => setExForm({ ...exForm, audio_url: e.target.value })}
+                          placeholder="https://... an jî deng bar bike ->"
+                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                        />
+                        <label className="cursor-pointer bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                          <Volume2 className="w-4 h-4" />
+                          <span>{uploadingExAudio ? 'Tê barkirin...' : 'Deng Bar Bike'}</span>
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            className="hidden"
+                            onChange={handleExAudioUpload}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Wêneyê Lîstikê (Vebijarkî)
                       </label>
@@ -2412,6 +2517,11 @@ export default function App() {
                     {exercises.map((ex) => (
                       <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
                         <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          {ex.audio_url && (
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-sky-100 text-sky-700 shrink-0">
+                              <Volume2 className="w-4 h-4" />
+                            </span>
+                          )}
                           {ex.image_url && (
                             <img
                               src={ex.image_url}
