@@ -57,8 +57,13 @@ const DEFAULT_CATEGORIES = [
 
 const LANGUAGE_OPTIONS = [
   { code: 'KU', nativeName: 'Kurmancî' },
+  { code: 'ZZA', nativeName: 'Zazakî' },
+  { code: 'CKB', nativeName: 'Soranî' },
   { code: 'TR', nativeName: 'Türkçe' },
-  { code: 'EN', nativeName: 'English' }
+  { code: 'EN', nativeName: 'English' },
+  { code: 'DE', nativeName: 'Deutsch' },
+  { code: 'FR', nativeName: 'Français' },
+  { code: 'IT', nativeName: 'Italiano' }
 ];
 
 const normalizeKurdish = (str = '') =>
