@@ -6,7 +6,7 @@ import {
   GraduationCap, CheckCircle2, AlertCircle, ExternalLink, Lock,
   Upload, LogOut, ClipboardList, Download, Settings, FolderEdit,
   Sparkles, Award, ArrowRight, RotateCcw, Heart, Image as ImageIcon,
-  BookA, Globe
+  BookA, Globe, BookmarkPlus
 } from 'lucide-react';
 
 const DEFAULT_CATEGORIES = [
@@ -64,11 +64,11 @@ const DEFAULT_UI_TEXTS = {
   footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.',
 
   // Ferheng (Sözlük) Yazıları
-  ferheng_title: 'Ferhenga KurdiKlass (Kurmancî ↔ Tirkî)',
-  ferheng_subtitle: 'Li peyvên Kurdî û wateyên wan bigere an jî di Wîkîferhengê de kontrol bike.',
-  ferheng_search_placeholder: 'Peyvekê binivîse (Mînak: pirtûk, kitap, mamoste)...',
-  ferheng_wiki_btn: 'Di Wîkîferhengê de Lê Bigere',
-  ferheng_empty_text: 'Ev peyv di ferhenga navxweyî de nehat dîtin. Tu dikarî li jor di Wîkîferhengê de bigerî.',
+  ferheng_title: 'Ferhenga KurdiKlass û Wîkîferheng',
+  ferheng_subtitle: 'Hemû peyvên Wîkîferhengê û ferhenga taybet a KurdiKlass di yek cihî de!',
+  ferheng_search_placeholder: 'Peyvekê binivîse (Mînak: pirtûk, av, roj, zanist)...',
+  ferheng_wiki_btn: 'Wîkîferhengê Nû Bike',
+  ferheng_empty_text: 'Ji bo lêgerînê peyvekê binivîse an li tîpekê bitikîne.',
 
   // Hînbûn / Lîstik Yazıları
   learn_title: 'Fêrbûna Kurmancî — Lîstik û Rahênan',
@@ -107,8 +107,8 @@ const UI_FIELD_LABELS = [
   { key: 'ferheng_title', label: 'Ferheng: Büyük Başlık' },
   { key: 'ferheng_subtitle', label: 'Ferheng: Alt Açıklama' },
   { key: 'ferheng_search_placeholder', label: 'Ferheng: Arama Kutusu İpucu' },
-  { key: 'ferheng_wiki_btn', label: 'Ferheng: Wîkîferheng Arama Butonu' },
-  { key: 'ferheng_empty_text', label: 'Ferheng: Kelime Bulunamadı Uyarısı' },
+  { key: 'ferheng_wiki_btn', label: 'Ferheng: Wîkîferheng Yenile Butonu' },
+  { key: 'ferheng_empty_text', label: 'Ferheng: Uyarı Yazısı' },
   { key: 'learn_title', label: 'Hînbûn / Lîstik: Büyük Başlık' },
   { key: 'learn_subtitle', label: 'Hînbûn / Lîstik: Alt Açıklama' },
   { key: 'learn_xp_label', label: 'Hînbûn / Lîstik: Puan (XP) Etiketi' },
@@ -173,12 +173,13 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
   const [settingsMsg, setSettingsMsg] = useState('');
 
-  // Ferheng (Sözlük) State'leri
+  // Ferheng (Sözlük + Canlı Wîkîferheng) State'leri
   const [ferhengWords, setFerhengWords] = useState([]);
   const [ferhengQuery, setFerhengQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState('all');
-  const [wikiResult, setWikiResult] = useState(null);
+  const [wikiEntries, setWikiEntries] = useState([]);
   const [wikiLoading, setWikiLoading] = useState(false);
+  const [importNotice, setImportNotice] = useState('');
 
   // Admin Ferheng Formu State'leri
   const [editingWordId, setEditingWordId] = useState(null);
@@ -272,6 +273,20 @@ export default function App() {
     fetchFerheng();
   }, []);
 
+  // Wîkîferheng canlı arama/listeleme tetikleyicisi
+  useEffect(() => {
+    if (viewMode !== 'ferheng') return;
+
+    const timer = setTimeout(() => {
+      const searchPrefix =
+        ferhengQuery.trim() ||
+        (selectedLetter !== 'all' ? selectedLetter.toLocaleLowerCase('ku') : 'a');
+      fetchWikiferhengLive(searchPrefix);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [viewMode, ferhengQuery, selectedLetter]);
+
   const fetchFerheng = async () => {
     const { data, error } = await supabase
       .from('ferheng')
@@ -283,41 +298,52 @@ export default function App() {
     }
   };
 
-  const searchWikiferheng = async () => {
-    const term = ferhengQuery.trim().toLowerCase();
-    if (!term) return;
+  const fetchWikiferhengLive = async (prefixOrTerm) => {
+    const query = prefixOrTerm.trim();
+    if (!query) return;
     setWikiLoading(true);
-    setWikiResult(null);
 
     try {
-      const response = await fetch(
-        `https://ku.wiktionary.org/w/api.php?action=query&prop=extracts&exintro=true&explaintext=true&titles=${encodeURIComponent(term)}&format=json&origin=*`
-      );
-      const data = await response.json();
-      const pages = data?.query?.pages || {};
-      const firstPage = Object.values(pages)[0];
+      const url = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
+        query
+      )}&gpsnamespace=0&gpslimit=24&prop=extracts&exintro=true&explaintext=true&exsentences=3&format=json&origin=*`;
 
-      if (firstPage && !firstPage.missing && firstPage.extract) {
-        setWikiResult({
-          title: firstPage.title,
-          extract: firstPage.extract,
-          url: `https://ku.wiktionary.org/wiki/${encodeURIComponent(term)}`
-        });
-      } else {
-        setWikiResult({
-          title: term,
-          extract: null,
-          url: `https://ku.wiktionary.org/wiki/${encodeURIComponent(term)}`
-        });
-      }
+      const response = await fetch(url);
+      const data = await response.json();
+      const pagesObj = data?.query?.pages || {};
+
+      const list = Object.values(pagesObj)
+        .filter((p) => p && p.title)
+        .sort((a, b) => (a.index || 0) - (b.index || 0))
+        .map((p) => ({
+          pageid: p.pageid,
+          title: p.title,
+          extract: p.extract || '',
+          url: `https://ku.wiktionary.org/wiki/${encodeURIComponent(p.title)}`
+        }));
+
+      setWikiEntries(list);
     } catch {
-      setWikiResult({
-        title: term,
-        extract: null,
-        url: `https://ku.wiktionary.org/wiki/${encodeURIComponent(term)}`
-      });
+      setWikiEntries([]);
     }
     setWikiLoading(false);
+  };
+
+  const handleImportWikiEntry = async (entry) => {
+    const payload = {
+      word: entry.title,
+      part_of_speech: 'Wîkîferheng',
+      meaning_tr: entry.extract ? entry.extract.slice(0, 180) : entry.title,
+      meaning_ku: entry.extract || '',
+      example_sentence: ''
+    };
+
+    const { error } = await supabase.from('ferheng').insert([payload]);
+    if (!error) {
+      setImportNotice(`"${entry.title}" li ferhenga KurdiKlass hat tomarkirin!`);
+      fetchFerheng();
+      setTimeout(() => setImportNotice(''), 3500);
+    }
   };
 
   const handleSaveWord = async (e) => {
@@ -969,12 +995,12 @@ export default function App() {
       {/* ANA İÇERİK ALANI */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'ferheng' ? (
-          /* ================= FERHENG (KÜRTÇE SÖZLÜK) MODÜLÜ ================= */
-          <div className="max-w-4xl mx-auto space-y-6">
+          /* ================= FERHENG (KÜRTÇE SÖZLÜK + WÎKÎFERHENG CANLI) ================= */
+          <div className="max-w-5xl mx-auto space-y-6">
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-6 sm:p-8 text-slate-950 shadow-md">
               <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider bg-white/40 w-fit px-3 py-1 rounded-full mb-2">
-                <BookA className="w-4 h-4" />
-                <span>Ferhenga Dîjîtal</span>
+                <Globe className="w-4 h-4" />
+                <span>Wîkîferheng + Ferhenga KurdiKlass</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black">{ui.ferheng_title}</h1>
               <p className="text-slate-900/90 text-sm mt-1 mb-5">{ui.ferheng_subtitle}</p>
@@ -985,26 +1011,33 @@ export default function App() {
                   <input
                     type="text"
                     value={ferhengQuery}
-                    onChange={(e) => {
-                      setFerhengQuery(e.target.value);
-                      setWikiResult(null);
-                    }}
+                    onChange={(e) => setFerhengQuery(e.target.value)}
                     placeholder={ui.ferheng_search_placeholder}
                     className="w-full pl-11 pr-4 py-3 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-amber-300 shadow-inner"
                   />
                 </div>
-                {ferhengQuery.trim() && (
-                  <button
-                    type="button"
-                    onClick={searchWikiferheng}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl flex items-center justify-center gap-2 whitespace-nowrap transition"
-                  >
-                    <Globe className="w-4 h-4 text-amber-400" />
-                    <span>{wikiLoading ? 'Tê lêgerîn...' : ui.ferheng_wiki_btn}</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    fetchWikiferhengLive(
+                      ferhengQuery.trim() ||
+                        (selectedLetter !== 'all' ? selectedLetter.toLocaleLowerCase('ku') : 'a')
+                    )
+                  }
+                  className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl flex items-center justify-center gap-2 whitespace-nowrap transition"
+                >
+                  <Globe className="w-4 h-4 text-amber-400" />
+                  <span>{wikiLoading ? 'Tê barkirin...' : ui.ferheng_wiki_btn}</span>
+                </button>
               </div>
             </div>
+
+            {importNotice && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>{importNotice}</span>
+              </div>
+            )}
 
             {/* ALFABE FİLTRESİ */}
             <div className="bg-white p-3 rounded-xl border border-slate-200 flex flex-wrap gap-1.5 justify-center">
@@ -1033,67 +1066,113 @@ export default function App() {
               ))}
             </div>
 
-            {/* WÎKÎFERHENG CANLI SONUÇ KUTUSU */}
-            {wikiResult && (
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold uppercase text-blue-700 flex items-center gap-1.5">
-                    <Globe className="w-4 h-4" />
-                    <span>Encama Wîkîferhengê: {wikiResult.title}</span>
-                  </span>
-                  <a
-                    href={wikiResult.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-bold text-blue-700 hover:underline flex items-center gap-1"
-                  >
-                    <span>Li Wîkîferhengê Veke</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+            {/* 1. BÖLÜM: KURDİKLASS ÖZEL SÖZLÜK KAYITLARI */}
+            {filteredFerheng.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                  <BookA className="w-5 h-5 text-red-600" />
+                  <span>Ferhenga KurdiKlass ({filteredFerheng.length})</span>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredFerheng.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-amber-400 transition space-y-2"
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <h3 className="text-xl font-extrabold text-red-700">{item.word}</h3>
+                        {item.part_of_speech && (
+                          <span className="text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                            {item.part_of_speech}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-base font-bold text-slate-900">
+                        🇹🇷 {item.meaning_tr}
+                      </p>
+                      {item.meaning_ku && (
+                        <p className="text-xs text-slate-600">
+                          <strong>Wate (Kurdî):</strong> {item.meaning_ku}
+                        </p>
+                      )}
+                      {item.example_sentence && (
+                        <div className="bg-slate-50 border-l-4 border-amber-400 px-3 py-2 rounded text-xs text-slate-700 italic mt-2">
+                          “{item.example_sentence}”
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <p className="text-sm text-slate-800 whitespace-pre-line">
-                  {wikiResult.extract || 'Ji bo vê peyvê rûpela Wîkîferhengê li jor dikare were vekirin.'}
-                </p>
               </div>
             )}
 
-            {/* KELİME KARTLARI LİSTESİ */}
-            {filteredFerheng.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 text-slate-600 text-sm">
-                {ui.ferheng_empty_text}
+            {/* 2. BÖLÜM: WÎKÎFERHENG CANLI SONUÇLARI */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-blue-600" />
+                  <span>Peyvên Wîkîferhengê ({wikiEntries.length})</span>
+                </h2>
+                {wikiLoading && (
+                  <span className="text-xs font-semibold text-blue-600">Ji Wîkîferhengê tê barkirin...</span>
+                )}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredFerheng.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-amber-400 transition space-y-2"
-                  >
-                    <div className="flex items-baseline justify-between gap-2">
-                      <h3 className="text-xl font-extrabold text-red-700">{item.word}</h3>
-                      {item.part_of_speech && (
-                        <span className="text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                          {item.part_of_speech}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-base font-bold text-slate-900">
-                      🇹🇷 {item.meaning_tr}
-                    </p>
-                    {item.meaning_ku && (
-                      <p className="text-xs text-slate-600">
-                        <strong>Wate (Kurdî):</strong> {item.meaning_ku}
-                      </p>
-                    )}
-                    {item.example_sentence && (
-                      <div className="bg-slate-50 border-l-4 border-amber-400 px-3 py-2 rounded text-xs text-slate-700 italic mt-2">
-                        “{item.example_sentence}”
+
+              {wikiEntries.length === 0 && !wikiLoading ? (
+                <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 text-slate-500 text-sm">
+                  {ui.ferheng_empty_text}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {wikiEntries.map((entry) => {
+                    const alreadySaved = ferhengWords.some(
+                      (w) => w.word?.toLowerCase() === entry.title.toLowerCase()
+                    );
+                    return (
+                      <div
+                        key={entry.pageid}
+                        className="bg-white rounded-2xl border border-blue-100 p-5 shadow-sm hover:border-blue-300 transition flex flex-col justify-between gap-3"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="text-lg font-extrabold text-slate-900">{entry.title}</h3>
+                            <span className="text-[11px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                              Wîkîferheng
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 leading-relaxed line-clamp-4 whitespace-pre-line">
+                            {entry.extract || 'Ji bo hûrgiliyên vê peyvê rûpela Wîkîferhengê veke.'}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                          <a
+                            href={entry.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline"
+                          >
+                            <span>Li Wîkîferhengê Veke</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+
+                          {isAdmin && !alreadySaved && (
+                            <button
+                              type="button"
+                              onClick={() => handleImportWikiEntry(entry)}
+                              className="inline-flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-bold px-2.5 py-1 rounded-lg transition"
+                            >
+                              <BookmarkPlus className="w-3.5 h-3.5" />
+                              <span>Li Ferhenga Min Zêde Bike</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         ) : viewMode === 'learn' ? (
           /* ================= KURMANCÎ ÖĞRENME / LÎSTİK MODÜLÜ ================= */
