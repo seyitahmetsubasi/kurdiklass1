@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
 import {
   Search, BookOpen, Video, FileText, Headphones, MonitorPlay,
@@ -6,8 +6,119 @@ import {
   GraduationCap, CheckCircle2, AlertCircle, ExternalLink, Lock,
   Upload, LogOut, ClipboardList, Download, Settings, FolderEdit,
   Sparkles, Award, ArrowRight, RotateCcw, Heart, Image as ImageIcon,
-  BookA
+  BookA, ChevronDown
 } from 'lucide-react';
+
+const LANGUAGE_OPTIONS = [
+  { code: 'KU', wiki: 'ku', nativeName: 'Kurdî' },
+  { code: 'DE', wiki: 'de', nativeName: 'Deutsch' },
+  { code: 'TR', wiki: 'tr', nativeName: 'Türkçe' },
+  { code: 'EN', wiki: 'en', nativeName: 'English' },
+  { code: 'FR', wiki: 'fr', nativeName: 'Français' },
+  { code: 'ES', wiki: 'es', nativeName: 'Español' },
+  { code: 'IT', wiki: 'it', nativeName: 'Italiano' }
+];
+
+const LOCALE_TRANSLATIONS = {
+  KU: {
+    nav_site: 'Malper (Sîte)',
+    nav_learn: 'Hînbûn / Lîstik',
+    nav_ferheng: 'Ferheng',
+    nav_admin: 'Panela Rêveber (Admin)',
+    all_categories_label: 'HEMÛ BEŞ (TÜMÜ)',
+    hero_badge: 'Çavkaniyên Perwerdehiyê yên Kurdî',
+    hero_title: 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
+    hero_subtitle: 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
+    search_placeholder: 'Li ders, mijar an materyalan bigere...',
+    ferheng_search_placeholder: 'Li peyvekê bigere (Mînak: ziman, pirtûk, dibistan)...',
+    ferheng_search_btn: 'Lê Bigere',
+    ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.'
+  },
+  DE: {
+    nav_site: 'Startseite',
+    nav_learn: 'Lernen / Spiele',
+    nav_ferheng: 'Wörterbuch',
+    nav_admin: 'Admin-Bereich',
+    all_categories_label: 'ALLE BEREICHE',
+    hero_badge: 'Kurdische Bildungsressourcen',
+    hero_title: 'Lernen, Forschen und Entwickeln auf Kurdisch',
+    hero_subtitle: 'Videos, Dokumente, Lehrerhandbücher und Lernmaterialien für Lehrkräfte und Lernende.',
+    search_placeholder: 'Nach Lektionen, Themen oder Materialien suchen...',
+    ferheng_search_placeholder: 'Wort suchen (z. B. ziman, pirtûk, dibistan)...',
+    ferheng_search_btn: 'Suchen',
+    ferheng_empty_text: 'Das gesuchte Wort wurde nicht gefunden.'
+  },
+  TR: {
+    nav_site: 'Ana Sayfa',
+    nav_learn: 'Öğrenme / Oyun',
+    nav_ferheng: 'Sözlük (Ferheng)',
+    nav_admin: 'Yönetim Paneli',
+    all_categories_label: 'TÜM BÖLÜMLER',
+    hero_badge: 'Kürtçe Eğitim Kaynakları',
+    hero_title: 'Kürtçe Öğrenme, Araştırma ve Gelişim',
+    hero_subtitle: 'Öğretmenler ve öğrenciler için videolar, belgeler, öğretmen rehberleri ve eğitim materyalleri.',
+    search_placeholder: 'Ders, konu veya materyal ara...',
+    ferheng_search_placeholder: 'Kelime ara (Örnek: ziman, pirtûk, dibistan)...',
+    ferheng_search_btn: 'Ara',
+    ferheng_empty_text: 'Aradığınız kelime bulunamadı.'
+  },
+  EN: {
+    nav_site: 'Home',
+    nav_learn: 'Learn / Games',
+    nav_ferheng: 'Dictionary',
+    nav_admin: 'Admin Panel',
+    all_categories_label: 'ALL SUBJECTS',
+    hero_badge: 'Kurdish Educational Resources',
+    hero_title: 'Learn, Explore, and Grow in Kurdish',
+    hero_subtitle: 'Videos, documents, teacher guides, and learning materials for educators and students.',
+    search_placeholder: 'Search lessons, topics, or materials...',
+    ferheng_search_placeholder: 'Search a word (e.g. ziman, pirtûk, dibistan)...',
+    ferheng_search_btn: 'Search',
+    ferheng_empty_text: 'The word you searched for was not found.'
+  },
+  FR: {
+    nav_site: 'Accueil',
+    nav_learn: 'Apprendre / Jeux',
+    nav_ferheng: 'Dictionnaire',
+    nav_admin: 'Administration',
+    all_categories_label: 'TOUTES LES MATIÈRES',
+    hero_badge: 'Ressources Éducatives Kurdes',
+    hero_title: 'Apprendre, Explorer et Progresser en Kurde',
+    hero_subtitle: 'Vidéos, documents, guides pédagogiques et supports éducatifs pour enseignants et élèves.',
+    search_placeholder: 'Rechercher des cours, sujets ou supports...',
+    ferheng_search_placeholder: 'Rechercher un mot (ex. ziman, pirtûk, dibistan)...',
+    ferheng_search_btn: 'Rechercher',
+    ferheng_empty_text: 'Le mot recherché est introuvable.'
+  },
+  ES: {
+    nav_site: 'Inicio',
+    nav_learn: 'Aprender / Juegos',
+    nav_ferheng: 'Diccionario',
+    nav_admin: 'Panel Admin',
+    all_categories_label: 'TODAS LAS ÁREAS',
+    hero_badge: 'Recursos Educativos en Kurdo',
+    hero_title: 'Aprender, Investigar y Crecer en Kurdo',
+    hero_subtitle: 'Videos, documentos, guías docentes y materiales educativos para profesores y estudiantes.',
+    search_placeholder: 'Buscar lecciones, temas o materiales...',
+    ferheng_search_placeholder: 'Buscar una palabra (ej. ziman, pirtûk, dibistan)...',
+    ferheng_search_btn: 'Buscar',
+    ferheng_empty_text: 'No se encontró la palabra buscada.'
+  },
+  IT: {
+    nav_site: 'Home',
+    nav_learn: 'Impara / Giochi',
+    nav_ferheng: 'Dizionario',
+    nav_admin: 'Pannello Admin',
+    all_categories_label: 'TUTTE LE MATERIE',
+    hero_badge: 'Risorse Educative in Curdo',
+    hero_title: 'Imparare, Esplorare e Crescere in Curdo',
+    hero_subtitle: 'Video, documenti, guide per insegnanti e materiali didattici per docenti e studenti.',
+    search_placeholder: 'Cerca lezioni, argomenti o materiali...',
+    ferheng_search_placeholder: 'Cerca una parola (es. ziman, pirtûk, dibistan)...',
+    ferheng_search_btn: 'Cerca',
+    ferheng_empty_text: 'La parola cercata non è stata trovata.'
+  }
+};
 
 const DEFAULT_CATEGORIES = [
   { slug: 'zanist', name: 'ZANIST', description: 'Fîzîk, kîmya, biyolojî û xweza', sort_order: 1 },
@@ -161,7 +272,11 @@ const ADMIN_PASS = 'kurdiklass2026';
 export default function App() {
   const [lessons, setLessons] = useState([]);
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  const [ui, setUi] = useState(DEFAULT_UI_TEXTS);
+  const [rawUi, setRawUi] = useState(DEFAULT_UI_TEXTS);
+  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('kk_lang') || 'KU');
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const langDropdownRef = useRef(null);
+
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('student');
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
@@ -237,6 +352,28 @@ export default function App() {
   });
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
 
+  // Aktif dile göre birleştirilmiş arayüz metinleri
+  const ui = {
+    ...rawUi,
+    ...(selectedLang !== 'KU' ? LOCALE_TRANSLATIONS[selectedLang] || {} : {})
+  };
+
+  const handleSelectLanguage = (code) => {
+    setSelectedLang(code);
+    localStorage.setItem('kk_lang', code);
+    setLangMenuOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setLangMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const dynamicLevels = [ui.level_1, ui.level_2, ui.level_3];
   const dynamicGrades = [ui.grade_1, ui.grade_2, ui.grade_3, ui.grade_4];
   const dynamicMediaTypes = [
@@ -268,16 +405,15 @@ export default function App() {
         ferhengQuery.trim() ||
         (selectedLetter !== 'all' ? selectedLetter.toLocaleLowerCase('ku') : '');
       if (term) {
-        fetchBilingualDictionary(term);
+        fetchBilingualDictionary(term, selectedLang);
       } else {
         setExternalEntries([]);
       }
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [viewMode, ferhengQuery, selectedLetter]);
+  }, [viewMode, ferhengQuery, selectedLetter, selectedLang]);
 
-  // 1.000 satır sınırını aşarak tüm sözlük kelimelerini çeker
   const fetchFerheng = async () => {
     let allRows = [];
     let from = 0;
@@ -299,8 +435,8 @@ export default function App() {
     setFerhengWords(allRows);
   };
 
-  const parseTurkishFromWikitext = (wikitext) => {
-    if (!wikitext) return { tr: '', pos: 'navdêr' };
+  const parseTranslationsFromWikitext = (wikitext, targetWikiCode = 'tr') => {
+    if (!wikitext) return { tr: '', targetMeaning: '', pos: 'navdêr' };
 
     let pos = 'navdêr';
     const lowerAll = wikitext.toLowerCase();
@@ -311,41 +447,54 @@ export default function App() {
     else if (lowerAll.includes('hejmar') || lowerAll.includes('=== sayı ===')) pos = 'hejmar';
     else if (lowerAll.includes('baneşan') || lowerAll.includes('=== ünlem ===')) pos = 'baneşan';
 
-    const wMatches = [...wikitext.matchAll(/\{\{[Ww]\|tr\|([^|}]+)(?:\|[^}]*)?\}\}/g)]
-      .map((m) => m[1].trim())
-      .filter(Boolean);
-
-    if (wMatches.length > 0) {
-      return { tr: [...new Set(wMatches)].slice(0, 4).join(', '), pos };
-    }
-
-    const trSectionMatch = wikitext.match(/={2,4}\s*Tirkî\s*={2,4}([\s\S]*?)(?:\n={2,4}[^=]|$)/i);
-    if (trSectionMatch && trSectionMatch[1]) {
-      const linkMatches = [...trSectionMatch[1].matchAll(/\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/g)]
-        .map((m) => m[1].trim())
-        .filter((w) => !w.includes(':'));
-      if (linkMatches.length > 0) {
-        return { tr: [...new Set(linkMatches)].slice(0, 4).join(', '), pos };
-      }
-    }
-
-    const kuSectionMatch = wikitext.match(/==\s*Kürtçe\s*==([\s\S]*?)(?:\n==[^=]|$)/i);
-    if (kuSectionMatch && kuSectionMatch[1]) {
-      const defMatches = [...kuSectionMatch[1].matchAll(/^#\s*(?:\{\{[^}]+\}\}\s*)*\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/gm)]
+    const extractByWikiCode = (code) => {
+      const regex = new RegExp(`\\{\\{[Ww]\\|${code}\\|([^|}]+)(?:\\|[^}]*)?\\}\\}`, 'g');
+      const matches = [...wikitext.matchAll(regex)]
         .map((m) => m[1].trim())
         .filter(Boolean);
-      if (defMatches.length > 0) {
-        return { tr: [...new Set(defMatches)].slice(0, 4).join(', '), pos };
+      return matches.length > 0 ? [...new Set(matches)].slice(0, 4).join(', ') : '';
+    };
+
+    let tr = extractByWikiCode('tr');
+    if (!tr) {
+      const trSectionMatch = wikitext.match(/={2,4}\s*Tirkî\s*={2,4}([\s\S]*?)(?:\n={2,4}[^=]|$)/i);
+      if (trSectionMatch && trSectionMatch[1]) {
+        const linkMatches = [...trSectionMatch[1].matchAll(/\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/g)]
+          .map((m) => m[1].trim())
+          .filter((w) => !w.includes(':'));
+        if (linkMatches.length > 0) {
+          tr = [...new Set(linkMatches)].slice(0, 4).join(', ');
+        }
       }
     }
 
-    return { tr: '', pos };
+    if (!tr) {
+      const kuSectionMatch = wikitext.match(/==\s*Kürtçe\s*==([\s\S]*?)(?:\n==[^=]|$)/i);
+      if (kuSectionMatch && kuSectionMatch[1]) {
+        const defMatches = [...kuSectionMatch[1].matchAll(/^#\s*(?:\{\{[^}]+\}\}\s*)*\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/gm)]
+          .map((m) => m[1].trim())
+          .filter(Boolean);
+        if (defMatches.length > 0) {
+          tr = [...new Set(defMatches)].slice(0, 4).join(', ');
+        }
+      }
+    }
+
+    let targetMeaning = '';
+    if (targetWikiCode && targetWikiCode !== 'ku' && targetWikiCode !== 'tr') {
+      targetMeaning = extractByWikiCode(targetWikiCode);
+    }
+
+    return { tr, targetMeaning, pos };
   };
 
-  const fetchBilingualDictionary = async (queryText) => {
+  const fetchBilingualDictionary = async (queryText, activeLangCode = 'KU') => {
     const cleanQuery = queryText.trim().toLowerCase();
     if (!cleanQuery) return;
     setSearchingDict(true);
+
+    const langObj = LANGUAGE_OPTIONS.find((l) => l.code === activeLangCode);
+    const targetWiki = langObj ? langObj.wiki : 'tr';
 
     try {
       const kuUrl = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
@@ -365,7 +514,7 @@ export default function App() {
       for (const p of trPages) {
         if (!p || p.missing) continue;
         const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-        const parsed = parseTurkishFromWikitext(content);
+        const parsed = parseTranslationsFromWikitext(content, targetWiki);
         if (parsed.tr) {
           resultsMap.set(p.title.toLowerCase(), {
             id: `tr-${p.pageid}`,
@@ -384,20 +533,24 @@ export default function App() {
       for (const p of kuPages) {
         if (!p || !p.title || p.title.includes(':')) continue;
         const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-        const parsed = parseTurkishFromWikitext(content);
+        const parsed = parseTranslationsFromWikitext(content, targetWiki);
         const key = p.title.toLowerCase();
+        const displayMeaning =
+          targetWiki !== 'ku' && targetWiki !== 'tr' && parsed.targetMeaning
+            ? `${parsed.targetMeaning}${parsed.tr ? ` (${parsed.tr})` : ''}`
+            : parsed.tr;
 
         if (resultsMap.has(key)) {
           const existing = resultsMap.get(key);
-          if (!existing.meaning_tr && parsed.tr) {
-            existing.meaning_tr = parsed.tr;
+          if (displayMeaning) {
+            existing.meaning_tr = displayMeaning;
           }
-        } else if (parsed.tr) {
+        } else if (displayMeaning) {
           resultsMap.set(key, {
             id: `ku-${p.pageid}`,
             word: p.title,
             part_of_speech: parsed.pos,
-            meaning_tr: parsed.tr,
+            meaning_tr: displayMeaning,
             meaning_ku: '',
             example_sentence: ''
           });
@@ -415,11 +568,10 @@ export default function App() {
   const handleDictionarySearchSubmit = (e) => {
     e.preventDefault();
     if (ferhengQuery.trim()) {
-      fetchBilingualDictionary(ferhengQuery.trim());
+      fetchBilingualDictionary(ferhengQuery.trim(), selectedLang);
     }
   };
 
-  // Wîkîferheng + Türkçe Vikisözlük kategorilerinden binlerce Kürtçe kelimeyi sayfalama ile toplu aktarır
   const handleBulkImportDictionary = async () => {
     setSyncingProgress('Jêderên vekirî tên girêdan (tr.wiktionary + ku.wiktionary)...');
     let totalAdded = 0;
@@ -461,7 +613,7 @@ export default function App() {
           if (existingSet.has(key)) continue;
 
           const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-          const parsed = parseTurkishFromWikitext(content);
+          const parsed = parseTranslationsFromWikitext(content, 'tr');
 
           let fallbackTr = parsed.tr;
           if (!fallbackTr) {
@@ -537,7 +689,7 @@ export default function App() {
           if (existingSet.has(key)) continue;
 
           const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-          const parsed = parseTurkishFromWikitext(content);
+          const parsed = parseTranslationsFromWikitext(content, 'tr');
 
           let kuMeaning = '';
           const kuDefMatch = content.match(/^#\s*(.+)$/m);
@@ -926,7 +1078,7 @@ export default function App() {
       .single();
 
     if (data) {
-      setUi((prev) => ({
+      setRawUi((prev) => ({
         ...prev,
         all_categories_label: data.all_categories_label || prev.all_categories_label,
         hero_badge: data.hero_badge || prev.hero_badge,
@@ -945,12 +1097,12 @@ export default function App() {
       .from('site_settings')
       .upsert({
         id: 1,
-        all_categories_label: ui.all_categories_label,
-        hero_badge: ui.hero_badge,
-        hero_title: ui.hero_title,
-        hero_subtitle: ui.hero_subtitle,
-        footer_text: ui.footer_text,
-        ui_texts: ui
+        all_categories_label: rawUi.all_categories_label,
+        hero_badge: rawUi.hero_badge,
+        hero_title: rawUi.hero_title,
+        hero_subtitle: rawUi.hero_subtitle,
+        footer_text: rawUi.footer_text,
+        ui_texts: rawUi
       });
 
     if (error) {
@@ -1082,8 +1234,8 @@ export default function App() {
       media_type: lesson.media_type || 'video',
       media_url: lesson.media_url || '',
       thumbnail_url: lesson.thumbnail_url || '',
-      level: lesson.level || ui.level_1,
-      grade_level: lesson.grade_level || ui.grade_2,
+      level: lesson.level || rawUi.level_1,
+      grade_level: lesson.grade_level || rawUi.grade_2,
       teacher_guide: lesson.teacher_guide || '',
       guide_pdf_url: lesson.guide_pdf_url || ''
     });
@@ -1099,8 +1251,8 @@ export default function App() {
       media_type: 'video',
       media_url: '',
       thumbnail_url: '',
-      level: ui.level_1,
-      grade_level: ui.grade_2,
+      level: rawUi.level_1,
+      grade_level: rawUi.grade_2,
       teacher_guide: '',
       guide_pdf_url: ''
     });
@@ -1139,7 +1291,7 @@ export default function App() {
               setSelectedCategory('all');
               setActiveLesson(null);
             }}
-            className="flex items-center gap-2 cursor-pointer select-none"
+            className="flex items-center gap-2 cursor-pointer select-none shrink-0"
           >
             <div className="bg-white text-red-700 font-black px-2.5 py-1 rounded text-xl tracking-tight">
               KK
@@ -1149,52 +1301,95 @@ export default function App() {
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto">
-            <button
-              onClick={() => setViewMode('student')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
-                viewMode === 'student'
-                  ? 'bg-white text-red-700 shadow-sm'
-                  : 'text-red-100 hover:bg-red-600'
-              }`}
-            >
-              <Eye className="w-4 h-4" />
-              <span>{ui.nav_site}</span>
-            </button>
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
+              <button
+                onClick={() => setViewMode('student')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
+                  viewMode === 'student'
+                    ? 'bg-white text-red-700 shadow-sm'
+                    : 'text-red-100 hover:bg-red-600'
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                <span>{ui.nav_site}</span>
+              </button>
 
-            <button
-              onClick={() => {
-                setViewMode('learn');
-                setSelectedUnit(null);
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
-                viewMode === 'learn'
-                  ? 'bg-emerald-500 text-white shadow-sm'
-                  : 'bg-emerald-600/90 text-white hover:bg-emerald-500'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{ui.nav_learn}</span>
-            </button>
+              <button
+                onClick={() => {
+                  setViewMode('learn');
+                  setSelectedUnit(null);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
+                  viewMode === 'learn'
+                    ? 'bg-emerald-500 text-white shadow-sm'
+                    : 'bg-emerald-600/90 text-white hover:bg-emerald-500'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>{ui.nav_learn}</span>
+              </button>
 
-            <button
-              onClick={() => {
-                setViewMode('ferheng');
-                setSelectedWordDetail(null);
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
-                viewMode === 'ferheng'
-                  ? 'bg-sky-500 text-white shadow-sm'
-                  : 'bg-sky-600/90 text-white hover:bg-sky-500'
-              }`}
-            >
-              <BookA className="w-4 h-4" />
-              <span>{ui.nav_ferheng}</span>
-            </button>
+              <button
+                onClick={() => {
+                  setViewMode('ferheng');
+                  setSelectedWordDetail(null);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
+                  viewMode === 'ferheng'
+                    ? 'bg-sky-500 text-white shadow-sm'
+                    : 'bg-sky-600/90 text-white hover:bg-sky-500'
+                }`}
+              >
+                <BookA className="w-4 h-4" />
+                <span>{ui.nav_ferheng}</span>
+              </button>
+            </div>
+
+            {/* AÇILIR DİL SEÇİCİ MENÜSÜ (GÖRSELDEKİ KU v TASARIMI) */}
+            <div className="relative shrink-0" ref={langDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setLangMenuOpen((prev) => !prev)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-extrabold tracking-wide bg-red-800/80 hover:bg-red-900 text-white border border-red-500/40 transition"
+              >
+                <span>{selectedLang}</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-150 ${
+                    langMenuOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {langMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-neutral-900/95 backdrop-blur-md text-white shadow-2xl border border-neutral-700/80 py-1.5 z-50">
+                  {LANGUAGE_OPTIONS.map((lang) => {
+                    const isActive = selectedLang === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => handleSelectLanguage(lang.code)}
+                        className={`w-full px-4 py-2.5 flex items-center justify-between text-left transition ${
+                          isActive
+                            ? 'bg-neutral-800 text-white font-extrabold'
+                            : 'text-neutral-200 hover:bg-neutral-800/70 font-semibold'
+                        }`}
+                      >
+                        <span className="text-sm">{lang.nativeName}</span>
+                        <span className="text-xs font-bold tracking-wider text-neutral-400">
+                          {lang.code}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             <button
               onClick={() => setViewMode('admin')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 transition ${
                 viewMode === 'admin'
                   ? 'bg-slate-900 text-white shadow-sm'
                   : 'bg-red-800 text-white hover:bg-red-900'
@@ -2659,8 +2854,8 @@ export default function App() {
                         </label>
                         <input
                           type="text"
-                          value={ui[field.key] || ''}
-                          onChange={(e) => setUi({ ...ui, [field.key]: e.target.value })}
+                          value={rawUi[field.key] || ''}
+                          onChange={(e) => setRawUi({ ...rawUi, [field.key]: e.target.value })}
                           className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
                         />
                       </div>
