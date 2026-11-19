@@ -65,8 +65,7 @@ const DEFAULT_UI_TEXTS = {
 
   // Ferheng (Sözlük) Yazıları
   ferheng_search_placeholder: 'Li peyvekê bigere (Mînak: ziman, pirtûk, dibistan)...',
-  ferheng_search_btn: 'Lê Bigere (Ara)',
-  ferheng_all_words_title: 'Hemû Peyv (Bütün Kelimeler)',
+  ferheng_search_btn: 'Lê Bigere',
   ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.',
 
   // Hînbûn / Lîstik Yazıları
@@ -105,7 +104,6 @@ const UI_FIELD_LABELS = [
   { key: 'search_placeholder', label: 'Arama Kutusu İpucu Yazısı' },
   { key: 'ferheng_search_placeholder', label: 'Ferheng: Arama Kutusu İpucu' },
   { key: 'ferheng_search_btn', label: 'Ferheng: Ara Butonu Yazısı' },
-  { key: 'ferheng_all_words_title', label: 'Ferheng: Bütün Kelimeler Başlığı' },
   { key: 'ferheng_empty_text', label: 'Ferheng: Kelime Bulunamadı Uyarısı' },
   { key: 'learn_title', label: 'Hînbûn / Lîstik: Büyük Başlık' },
   { key: 'learn_subtitle', label: 'Hînbûn / Lîstik: Alt Açıklama' },
@@ -160,17 +158,6 @@ const UI_FIELD_LABELS = [
   { key: 'footer_text', label: 'En Alt Kısım (Footer) Yazısı' }
 ];
 
-const POS_CATEGORIES = [
-  { id: 'all', label: 'Hemû (Hepsi)', match: [] },
-  { id: 'isim', label: 'Navdêr (İsim)', match: ['navdêr', 'isim'] },
-  { id: 'fiil', label: 'Lêker (Fiil)', match: ['lêker', 'fiil'] },
-  { id: 'sifat', label: 'Rengdêr (Sıfat)', match: ['rengdêr', 'sıfat', 'sifat'] },
-  { id: 'zarf', label: 'Hoker (Zarf)', match: ['hoker', 'zarf'] },
-  { id: 'zamir', label: 'Cînavk (Zamir)', match: ['cînavk', 'zamir'] },
-  { id: 'sayi', label: 'Hejmar (Sayı)', match: ['hejmar', 'sayı', 'sayi'] },
-  { id: 'unlem', label: 'Baneşan (Ünlem)', match: ['baneşan', 'ünlem', 'unlem'] }
-];
-
 const ADMIN_PASS = 'kurdiklass2026';
 
 export default function App() {
@@ -182,14 +169,14 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
   const [settingsMsg, setSettingsMsg] = useState('');
 
-  // Ferheng State'leri (Tek birleşik sözlük görünümü)
+  // Ferheng State'leri
   const [ferhengWords, setFerhengWords] = useState([]);
   const [ferhengQuery, setFerhengQuery] = useState('');
-  const [selectedPos, setSelectedPos] = useState('all');
   const [selectedLetter, setSelectedLetter] = useState('all');
   const [externalEntries, setExternalEntries] = useState([]);
   const [searchingDict, setSearchingDict] = useState(false);
   const [selectedWordDetail, setSelectedWordDetail] = useState(null);
+  const [syncingProgress, setSyncingProgress] = useState('');
 
   // Admin Ferheng Formu State'leri
   const [editingWordId, setEditingWordId] = useState(null);
@@ -283,7 +270,7 @@ export default function App() {
     fetchFerheng();
   }, []);
 
-  // Arama veya harf seçildiğinde arka planda sessizce kelime getirir (harici kaynak adı gösterilmez)
+  // Yazarken veya harf seçilince arka planda Türkçe karşılıklarıyla birlikte çeker
   useEffect(() => {
     if (viewMode !== 'ferheng') return;
 
@@ -292,7 +279,7 @@ export default function App() {
         ferhengQuery.trim() ||
         (selectedLetter !== 'all' ? selectedLetter.toLocaleLowerCase('ku') : '');
       if (term) {
-        fetchDictionaryBackground(term);
+        fetchBilingualDictionary(term);
       } else {
         setExternalEntries([]);
       }
@@ -312,65 +299,188 @@ export default function App() {
     }
   };
 
-  const detectPartOfSpeech = (text) => {
-    const lower = (text || '').toLowerCase();
-    if (lower.includes('navdêr')) return 'navdêr';
-    if (lower.includes('lêker')) return 'lêker';
-    if (lower.includes('rengdêr')) return 'rengdêr';
-    if (lower.includes('hoker')) return 'hoker';
-    if (lower.includes('cînavk')) return 'cînavk';
-    if (lower.includes('hejmar')) return 'hejmar';
-    if (lower.includes('baneşan')) return 'baneşan';
-    return 'navdêr';
+  // Wikitext içinden Türkçe karşılıkları ve kelime türünü ayıklayan fonksiyon
+  const parseTurkishFromWikitext = (wikitext) => {
+    if (!wikitext) return { tr: '', pos: 'navdêr' };
+
+    let pos = 'navdêr';
+    const lowerAll = wikitext.toLowerCase();
+    if (lowerAll.includes('lêker') || lowerAll.includes('=== fiil ===')) pos = 'lêker';
+    else if (lowerAll.includes('rengdêr') || lowerAll.includes('=== sıfat ===')) pos = 'rengdêr';
+    else if (lowerAll.includes('hoker') || lowerAll.includes('=== zarf ===')) pos = 'hoker';
+    else if (lowerAll.includes('cînavk') || lowerAll.includes('=== zamir ===')) pos = 'cînavk';
+    else if (lowerAll.includes('hejmar') || lowerAll.includes('=== sayı ===')) pos = 'hejmar';
+    else if (lowerAll.includes('baneşan') || lowerAll.includes('=== ünlem ===')) pos = 'baneşan';
+
+    // 1. {{W|tr|dil}} veya {{w|tr|dil}} şablonlarını yakala
+    const wMatches = [...wikitext.matchAll(/\{\{[Ww]\|tr\|([^|}]+)(?:\|[^}]*)?\}\}/g)]
+      .map((m) => m[1].trim())
+      .filter(Boolean);
+
+    if (wMatches.length > 0) {
+      return { tr: [...new Set(wMatches)].slice(0, 4).join(', '), pos };
+    }
+
+    // 2. == Tirkî == veya === Tirkî === altındaki * [[dil]] maddelerini yakala
+    const trSectionMatch = wikitext.match(/={2,4}\s*Tirkî\s*={2,4}([\s\S]*?)(?:\n={2,4}[^=]|$)/i);
+    if (trSectionMatch && trSectionMatch[1]) {
+      const linkMatches = [...trSectionMatch[1].matchAll(/\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/g)]
+        .map((m) => m[1].trim())
+        .filter((w) => !w.includes(':'));
+      if (linkMatches.length > 0) {
+        return { tr: [...new Set(linkMatches)].slice(0, 4).join(', '), pos };
+      }
+    }
+
+    // 3. Türkçe Vikisözlük (Kürtçe başlığı altındaki # [[dil]] maddeleri)
+    const kuSectionMatch = wikitext.match(/==\s*Kürtçe\s*==([\s\S]*?)(?:\n==[^=]|$)/i);
+    if (kuSectionMatch && kuSectionMatch[1]) {
+      const defMatches = [...kuSectionMatch[1].matchAll(/^#\s*(?:\{\{[^}]+\}\}\s*)*\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/gm)]
+        .map((m) => m[1].trim())
+        .filter(Boolean);
+      if (defMatches.length > 0) {
+        return { tr: [...new Set(defMatches)].slice(0, 4).join(', '), pos };
+      }
+    }
+
+    return { tr: '', pos };
   };
 
-  const cleanExtractMeaning = (extract) => {
-    if (!extract) return '';
-    const lines = extract
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l && !l.startsWith('==') && l.length > 2);
-    return lines[0] || '';
-  };
-
-  const fetchDictionaryBackground = async (queryText) => {
-    const cleanQuery = queryText.trim();
+  const fetchBilingualDictionary = async (queryText) => {
+    const cleanQuery = queryText.trim().toLowerCase();
     if (!cleanQuery) return;
     setSearchingDict(true);
 
     try {
-      const url = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
+      // 1) Kürtçe sözlükten öneki uyan kelimeleri ve ham içeriklerini çek
+      const kuUrl = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
         cleanQuery
-      )}&gpsnamespace=0&gpslimit=25&prop=extracts&exintro=true&explaintext=true&exsentences=4&format=json&origin=*`;
+      )}&gpsnamespace=0&gpslimit=20&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
 
-      const response = await fetch(url);
-      const data = await response.json();
-      const pagesObj = data?.query?.pages || {};
+      // 2) Türkçe sözlükten doğrudan tam karşılığı çek (ör. ziman -> dil)
+      const trUrl = `https://tr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(
+        cleanQuery
+      )}&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
 
-      const mapped = Object.values(pagesObj)
-        .filter((p) => p && p.title && !p.title.includes(':'))
-        .sort((a, b) => (a.index || 0) - (b.index || 0))
-        .map((p) => ({
-          id: `ext-${p.pageid}`,
-          word: p.title,
-          part_of_speech: detectPartOfSpeech(p.extract),
-          meaning_tr: cleanExtractMeaning(p.extract),
-          meaning_ku: p.extract || '',
-          example_sentence: ''
-        }));
+      const [kuRes, trRes] = await Promise.all([fetch(kuUrl), fetch(trUrl)]);
+      const [kuData, trData] = await Promise.all([kuRes.json(), trRes.json()]);
 
-      setExternalEntries(mapped);
+      const resultsMap = new Map();
+
+      // Önce Türkçe sözlükteki tam eşleşmeyi işle (ör. ziman -> dil)
+      const trPages = Object.values(trData?.query?.pages || {});
+      for (const p of trPages) {
+        if (!p || p.missing) continue;
+        const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
+        const parsed = parseTurkishFromWikitext(content);
+        if (parsed.tr) {
+          resultsMap.set(p.title.toLowerCase(), {
+            id: `tr-${p.pageid}`,
+            word: p.title,
+            part_of_speech: parsed.pos,
+            meaning_tr: parsed.tr,
+            meaning_ku: '',
+            example_sentence: ''
+          });
+        }
+      }
+
+      // Ardından Kürtçe sözlükteki kelimeleri ve Türkçe karşılıklarını işle
+      const kuPages = Object.values(kuData?.query?.pages || {}).sort(
+        (a, b) => (a.index || 0) - (b.index || 0)
+      );
+      for (const p of kuPages) {
+        if (!p || !p.title || p.title.includes(':')) continue;
+        const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
+        const parsed = parseTurkishFromWikitext(content);
+        const key = p.title.toLowerCase();
+
+        if (resultsMap.has(key)) {
+          const existing = resultsMap.get(key);
+          if (!existing.meaning_tr && parsed.tr) {
+            existing.meaning_tr = parsed.tr;
+          }
+        } else if (parsed.tr) {
+          resultsMap.set(key, {
+            id: `ku-${p.pageid}`,
+            word: p.title,
+            part_of_speech: parsed.pos,
+            meaning_tr: parsed.tr,
+            meaning_ku: '',
+            example_sentence: ''
+          });
+        }
+      }
+
+      setExternalEntries(Array.from(resultsMap.values()));
     } catch {
       setExternalEntries([]);
     }
+
     setSearchingDict(false);
   };
 
   const handleDictionarySearchSubmit = (e) => {
     e.preventDefault();
     if (ferhengQuery.trim()) {
-      fetchDictionaryBackground(ferhengQuery.trim());
+      fetchBilingualDictionary(ferhengQuery.trim());
     }
+  };
+
+  // Açık sözlük kaynaklarındaki Kürtçe kelimeleri topluca kendi veritabanınıza aktarma
+  const handleBulkImportDictionary = async () => {
+    setSyncingProgress('Peyvên Kurdî ji çavkaniya vekirî tên kişandin...');
+    let totalAdded = 0;
+    const existingSet = new Set(ferhengWords.map((w) => w.word?.toLowerCase()));
+
+    for (const letter of kurdishAlphabet) {
+      const lowerLetter = letter.toLocaleLowerCase('ku');
+      setSyncingProgress(`Tîpa "${letter}" tê barkirin... (${totalAdded} peyv hatin zêdekirin)`);
+
+      try {
+        const url = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
+          lowerLetter
+        )}&gpsnamespace=0&gpslimit=40&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+        const pages = Object.values(data?.query?.pages || {});
+
+        const batchToInsert = [];
+        for (const p of pages) {
+          if (!p || !p.title || p.title.includes(':')) continue;
+          const key = p.title.toLowerCase();
+          if (existingSet.has(key)) continue;
+
+          const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
+          const parsed = parseTurkishFromWikitext(content);
+
+          if (parsed.tr) {
+            existingSet.add(key);
+            batchToInsert.push({
+              word: p.title,
+              part_of_speech: parsed.pos,
+              meaning_tr: parsed.tr,
+              meaning_ku: '',
+              example_sentence: ''
+            });
+          }
+        }
+
+        if (batchToInsert.length > 0) {
+          const { error } = await supabase.from('ferheng').insert(batchToInsert);
+          if (!error) {
+            totalAdded += batchToInsert.length;
+          }
+        }
+      } catch {
+        // Diğer harfe devam et
+      }
+    }
+
+    await fetchFerheng();
+    setSyncingProgress(`Temam bû! Bi giştî ${totalAdded} peyvên nû li Ferhengê hatin zêdekirin.`);
+    setTimeout(() => setSyncingProgress(''), 6000);
   };
 
   const handleSaveWord = async (e) => {
@@ -439,25 +549,24 @@ export default function App() {
     if (!error) fetchFerheng();
   };
 
-  // Kendi kelimeleriniz + arka plan sözlük kelimelerini tek bir listede birleştirme
+  // Kendi kelimeleriniz + canlı sözlük kelimelerini tek listede birleştirme (tam eşleşen kelime en üstte)
   const mergedDictionary = (() => {
+    const q = ferhengQuery.trim().toLowerCase();
     const existingKeys = new Set(ferhengWords.map((w) => w.word?.toLowerCase()));
     const extra = externalEntries.filter((e) => !existingKeys.has(e.word?.toLowerCase()));
-    return [...ferhengWords, ...extra];
+    const combined = [...ferhengWords, ...extra];
+
+    if (!q) return combined;
+
+    return combined.sort((a, b) => {
+      const aExact = a.word?.toLowerCase() === q ? 0 : 1;
+      const bExact = b.word?.toLowerCase() === q ? 0 : 1;
+      if (aExact !== bExact) return aExact - bExact;
+      const aStarts = a.word?.toLowerCase().startsWith(q) ? 0 : 1;
+      const bStarts = b.word?.toLowerCase().startsWith(q) ? 0 : 1;
+      return aStarts - bStarts;
+    });
   })();
-
-  const matchesPosCategory = (itemPos, catId) => {
-    if (catId === 'all') return true;
-    const cat = POS_CATEGORIES.find((c) => c.id === catId);
-    if (!cat) return true;
-    const lowerPos = (itemPos || '').toLowerCase();
-    return cat.match.some((m) => lowerPos.includes(m));
-  };
-
-  const getPosCount = (catId) => {
-    if (catId === 'all') return mergedDictionary.length;
-    return mergedDictionary.filter((item) => matchesPosCategory(item.part_of_speech, catId)).length;
-  };
 
   const filteredDictionary = mergedDictionary.filter((item) => {
     const q = ferhengQuery.trim().toLowerCase();
@@ -466,11 +575,10 @@ export default function App() {
       item.word?.toLowerCase().includes(q) ||
       item.meaning_tr?.toLowerCase().includes(q) ||
       item.meaning_ku?.toLowerCase().includes(q);
-    const matchesPos = matchesPosCategory(item.part_of_speech, selectedPos);
     const matchesLetter =
       selectedLetter === 'all' ||
       item.word?.toLocaleUpperCase('ku').startsWith(selectedLetter);
-    return matchesSearch && matchesPos && matchesLetter;
+    return matchesSearch && matchesLetter;
   });
 
   const fetchExercises = async () => {
@@ -1048,7 +1156,7 @@ export default function App() {
         {viewMode === 'ferheng' ? (
           /* ================= FERHENG (SÖZLÜK MODÜLÜ) ================= */
           <div className="max-w-4xl mx-auto bg-slate-900 text-white rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800 space-y-6">
-            {/* TEK ARAMA ÇUBUĞU VE SADECE "ARA" BUTONU */}
+            {/* ARAMA ÇUBUĞU VE SADECE "LÊ BIGERE" BUTONU */}
             <form onSubmit={handleDictionarySearchSubmit} className="flex gap-2.5">
               <div className="relative flex-1">
                 <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
@@ -1120,7 +1228,7 @@ export default function App() {
               </div>
             )}
 
-            {/* SONUÇ LİSTESİ (GÖRSELDEKİ SATIR YAPISI) */}
+            {/* SONUÇ LİSTESİ (KÜRTÇE KELİME + ALTINDA TÜRKÇE KARŞILIĞI + SAĞDA TÜR ROZETİ) */}
             <div className="divide-y divide-slate-800 bg-slate-950/50 rounded-2xl border border-slate-800 overflow-hidden">
               {searchingDict && filteredDictionary.length === 0 ? (
                 <div className="p-6 text-center text-sm text-slate-400">
@@ -1131,7 +1239,7 @@ export default function App() {
                   {ui.ferheng_empty_text}
                 </div>
               ) : (
-                filteredDictionary.slice(0, 12).map((item) => (
+                filteredDictionary.slice(0, 20).map((item) => (
                   <div
                     key={item.id}
                     onClick={() => setSelectedWordDetail(item)}
@@ -1141,7 +1249,7 @@ export default function App() {
                       <div className="text-lg font-extrabold text-white truncate">
                         {item.word}
                       </div>
-                      <div className="text-sm text-slate-300 truncate">
+                      <div className="text-sm text-sky-300 font-medium truncate">
                         {item.meaning_tr}
                       </div>
                     </div>
@@ -1152,34 +1260,6 @@ export default function App() {
                   </div>
                 ))
               )}
-            </div>
-
-            {/* BÜTÜN KELİMELER VE TÜR FİLTRE HAPLARI */}
-            <div className="space-y-4 pt-2">
-              <h2 className="text-xl font-extrabold text-white">
-                {ui.ferheng_all_words_title}
-              </h2>
-
-              <div className="flex flex-wrap gap-2">
-                {POS_CATEGORIES.map((cat) => {
-                  const isActive = selectedPos === cat.id;
-                  const count = getPosCount(cat.id);
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedPos(cat.id)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition border ${
-                        isActive
-                          ? 'bg-sky-400 text-slate-950 border-sky-400 shadow'
-                          : 'bg-slate-800/80 text-slate-200 border-slate-700 hover:border-slate-500'
-                      }`}
-                    >
-                      {cat.label} · {count}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             {/* ALFABE HARF ŞERİDİ */}
@@ -2030,19 +2110,33 @@ export default function App() {
                   </form>
                 </div>
 
-                {/* FERHENG (SÖZLÜK) KELİME EKLEME & DÜZENLEME */}
+                {/* FERHENG (SÖZLÜK) KELİME EKLEME, DÜZENLEME VE TOPLU AKTARIM */}
                 <div className="bg-white rounded-2xl border border-sky-300 p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <BookA className="w-5 h-5 text-sky-600" />
-                    <span>
-                      {editingWordId
-                        ? 'Peyva Ferhengê Sererast Bike'
-                        : 'Ferheng — Peyvên Nû Zêde Bike û Biguherîne'}
-                    </span>
-                  </h2>
-                  <p className="text-xs text-slate-500 mb-4">
-                    Peyvên Kurmancî, cureyê wan (navdêr, lêker, rengdêr...), wateyên wan ên bi Tirkî û hevokên mînak ji vir zêde bike.
-                  </p>
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <BookA className="w-5 h-5 text-sky-600" />
+                      <span>
+                        {editingWordId
+                          ? 'Peyva Ferhengê Sererast Bike'
+                          : `Ferheng — Peyvên Nû Zêde Bike û Biguherîne (${ferhengWords.length} peyv)`}
+                      </span>
+                    </h2>
+
+                    <button
+                      type="button"
+                      onClick={handleBulkImportDictionary}
+                      disabled={Boolean(syncingProgress)}
+                      className="bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
+                    >
+                      + Hemû Peyvên Çavkaniya Vekirî Bikişîne Ferhengê
+                    </button>
+                  </div>
+
+                  {syncingProgress && (
+                    <div className="p-3 rounded-xl mb-4 bg-sky-50 text-sky-900 border border-sky-200 text-xs font-bold">
+                      {syncingProgress}
+                    </div>
+                  )}
 
                   {wordMsg && (
                     <div className="p-3 rounded-xl mb-4 bg-sky-50 text-sky-900 border border-sky-200 text-sm font-medium">
