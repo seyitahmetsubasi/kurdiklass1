@@ -325,7 +325,7 @@ export default function App() {
     guide_pdf_url: ''
   });
 
-  // Ferheng State (Canlı Supabase Sorgulama + Toplam Sayı)
+  // Ferheng State
   const [ferhengWords, setFerhengWords] = useState([]);
   const [totalWordCount, setTotalWordCount] = useState(0);
   const [searchingDict, setSearchingDict] = useState(false);
@@ -343,7 +343,7 @@ export default function App() {
     example_sentence: ''
   });
 
-  // Duolingo Hînbûn / Lîstik State
+  // Hînbûn / Lîstik State
   const [exercises, setExercises] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
@@ -424,7 +424,7 @@ export default function App() {
   };
 
   // =========================================================================
-  // CANLI SUPABASE FERHENG FONKSİYONLARI (1000+ KELİME DESTEĞİ)
+  // FERHENG FONKSİYONLARI
   // =========================================================================
   const fetchDictionary = async (searchText = '', letter = 'all') => {
     setSearchingDict(true);
@@ -581,7 +581,7 @@ export default function App() {
   })();
 
   // =========================================================================
-  // DUOLINGO TARZI HÎNBÛN / LÎSTIK MOTORU
+  // HÎNBÛN / LÎSTIK MOTORU
   // =========================================================================
   const fetchExercises = async () => {
     const { data, error } = await supabase
@@ -946,31 +946,34 @@ export default function App() {
       .single();
 
     if (data) {
-      setRawUi((prev) => ({
-        ...prev,
-        all_categories_label: data.all_categories_label || prev.all_categories_label,
-        hero_badge: data.hero_badge || prev.hero_badge,
-        hero_title: data.hero_title || prev.hero_title,
-        hero_subtitle: data.hero_subtitle || prev.hero_subtitle,
-        footer_text: data.footer_text || prev.footer_text,
-        ...(data.ui_texts || {})
-      }));
+      const mergedUi = {
+        ...DEFAULT_UI,
+        all_categories_label: data.all_categories_label || DEFAULT_UI.all_categories_label,
+        hero_badge: data.hero_badge || DEFAULT_UI.hero_badge,
+        hero_title: data.hero_title || DEFAULT_UI.hero_title,
+        hero_subtitle: data.hero_subtitle || DEFAULT_UI.hero_subtitle,
+        footer_text: data.footer_text || DEFAULT_UI.footer_text,
+        ...(data.ui_texts || {}),
+        learn_next_btn: 'Berdewam Bike'
+      };
+      setRawUi(mergedUi);
     }
   };
 
   const handleSaveAllUiTexts = async (e) => {
     e.preventDefault();
     setSettingsMsg('Tê tomarkirin...');
+    const cleanUi = { ...rawUi, learn_next_btn: 'Berdewam Bike' };
     const { error } = await supabase
       .from('site_settings')
       .upsert({
         id: 1,
-        all_categories_label: rawUi.all_categories_label,
-        hero_badge: rawUi.hero_badge,
-        hero_title: rawUi.hero_title,
-        hero_subtitle: rawUi.hero_subtitle,
-        footer_text: rawUi.footer_text,
-        ui_texts: rawUi
+        all_categories_label: cleanUi.all_categories_label,
+        hero_badge: cleanUi.hero_badge,
+        hero_title: cleanUi.hero_title,
+        hero_subtitle: cleanUi.hero_subtitle,
+        footer_text: cleanUi.footer_text,
+        ui_texts: cleanUi
       });
 
     if (error) {
@@ -1873,7 +1876,7 @@ export default function App() {
                           : 'bg-rose-600 hover:bg-rose-500 shadow-[0_4px_0_rgb(190,18,60)]'
                       }`}
                     >
-                      {ui.learn_next_btn}
+                      Berdewam Bike
                     </button>
                   )}
                 </div>
@@ -2257,7 +2260,7 @@ export default function App() {
                       onClick={handleLoadStarterGames}
                       className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
                     >
-                      + Paketa Destpêkê ya Lîstikan (ZAROK + Kurmancî) Bar Bike
+                      + Paketa Destpêkê ya Lîstikan Bar Bike
                     </button>
                   </div>
 
