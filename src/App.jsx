@@ -1,3 +1,5 @@
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://mzsxryxuvyllljvbrzul.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_';
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
