@@ -27,7 +27,6 @@ import {
   Award,
   Heart,
   RotateCcw,
-  Globe,
   ChevronDown,
   Flame,
   Star,
@@ -60,6 +59,39 @@ const LANGUAGE_OPTIONS = [
   { code: 'KU', nativeName: 'Kurmancî' },
   { code: 'TR', nativeName: 'Türkçe' },
   { code: 'EN', nativeName: 'English' }
+];
+
+const normalizeKurdish = (str = '') =>
+  str
+    .toLocaleLowerCase('tr')
+    .replace(/[êéèë]/g, 'e')
+    .replace(/[îíìïı]/g, 'i')
+    .replace(/[ûúùü]/g, 'u')
+    .replace(/[ş]/g, 's')
+    .replace(/[ç]/g, 'c')
+    .trim();
+
+const BUILTIN_DICTIONARY = [
+  { id: 'bi-1', word: 'heval', part_of_speech: 'navdêr', meaning_tr: 'arkadaş, dost', meaning_en: 'friend', meaning_ku: 'Kesê ku mirov pê re dostanî dike.', example_sentence: 'Ew hevalê min ê herî baş e.' },
+  { id: 'bi-2', word: 'bijîşk', part_of_speech: 'navdêr', meaning_tr: 'doktor, hekim', meaning_en: 'doctor', meaning_ku: 'Kesê ku nexweşan derman dike.', example_sentence: 'Bijîşk li nexweşxaneyê dixebite.' },
+  { id: 'bi-3', word: 'silav', part_of_speech: 'navdêr', meaning_tr: 'selam, merhaba', meaning_en: 'hello, greeting', meaning_ku: 'Peyva pêşwazîkirinê.', example_sentence: 'Silav û rêz ji bo we hemûyan.' },
+  { id: 'bi-4', word: 'rojbaş', part_of_speech: 'baneşan', meaning_tr: 'günaydın, iyi günler', meaning_en: 'good morning, good day', meaning_ku: 'Silava sibeh û nîvro.', example_sentence: 'Rojbaş hevalno, hûn çawa ne?' },
+  { id: 'bi-5', word: 'spas', part_of_speech: 'navdêr', meaning_tr: 'teşekkür', meaning_en: 'thank you, thanks', meaning_ku: 'Peyva rêzdarî û minetdariyê.', example_sentence: 'Gelek spas ji bo alîkariya te.' },
+  { id: 'bi-6', word: 'av', part_of_speech: 'navdêr', meaning_tr: 'su', meaning_en: 'water', meaning_ku: 'Şileya bingehîn a jiyanê.', example_sentence: 'Av jiyan e.' },
+  { id: 'bi-7', word: 'nan', part_of_speech: 'navdêr', meaning_tr: 'ekmek', meaning_en: 'bread', meaning_ku: 'Xwarina bingehîn a ji ardê.', example_sentence: 'Nanê germ gelekî xweş e.' },
+  { id: 'bi-8', word: 'pirtûk', part_of_speech: 'navdêr', meaning_tr: 'kitap', meaning_en: 'book', meaning_ku: 'Berhema nivîskî ya xwendinê.', example_sentence: 'Ez her roj pirtûkekê dixwînim.' },
+  { id: 'bi-9', word: 'dibistan', part_of_speech: 'navdêr', meaning_tr: 'okul', meaning_en: 'school', meaning_ku: 'Saziya perwerdehiyê.', example_sentence: 'Zarok sibehê zû diçin dibistanê.' },
+  { id: 'bi-10', word: 'mamoste', part_of_speech: 'navdêr', meaning_tr: 'öğretmen', meaning_en: 'teacher', meaning_ku: 'Kesê ku dersê dide xwendekaran.', example_sentence: 'Mamoste dersa Kurdî dide.' },
+  { id: 'bi-11', word: 'xwendekar', part_of_speech: 'navdêr', meaning_tr: 'öğrenci', meaning_en: 'student', meaning_ku: 'Kesê ku li dibistan an zanîngehê dixwîne.', example_sentence: 'Xwendekar li pirtûkxaneyê ne.' },
+  { id: 'bi-12', word: 'mal', part_of_speech: 'navdêr', meaning_tr: 'ev', meaning_en: 'home, house', meaning_ku: 'Cihê jiyanê yê malbatê.', example_sentence: 'Mala me nêzîkî parkê ye.' },
+  { id: 'bi-13', word: 'malbat', part_of_speech: 'navdêr', meaning_tr: 'aile', meaning_en: 'family', meaning_ku: 'Dayik, bav û zarok bi hev re.', example_sentence: 'Malbata min li Stenbolê dijî.' },
+  { id: 'bi-14', word: 'dayik', part_of_speech: 'navdêr', meaning_tr: 'anne', meaning_en: 'mother', meaning_ku: 'Jina ku zarok aniye dinyayê.', example_sentence: 'Dayika min xwarinên xweş çêdike.' },
+  { id: 'bi-15', word: 'bav', part_of_speech: 'navdêr', meaning_tr: 'baba', meaning_en: 'father', meaning_ku: 'Mêrê ku zarokê wî heye.', example_sentence: 'Bavê min endezyar e.' },
+  { id: 'bi-16', word: 'ziman', part_of_speech: 'navdêr', meaning_tr: 'dil, lisan', meaning_en: 'language, tongue', meaning_ku: 'Amûra axaftin û ragihandinê.', example_sentence: 'Zimanê Kurdî gelekî dewlemend e.' },
+  { id: 'bi-17', word: 'roj', part_of_speech: 'navdêr', meaning_tr: 'güneş, gün', meaning_en: 'sun, day', meaning_ku: 'Stêrka ku ronahiyê dide cîhanê.', example_sentence: 'Îro roj gelekî germ e.' },
+  { id: 'bi-18', word: 'şev', part_of_speech: 'navdêr', meaning_tr: 'gece', meaning_en: 'night', meaning_ku: 'Dema tarî ya piştî rojavabûnê.', example_sentence: 'Şevbaş, xewên xweş.' },
+  { id: 'bi-19', word: 'evîn', part_of_speech: 'navdêr', meaning_tr: 'aşk, sevgi', meaning_en: 'love', meaning_ku: 'Hezkirina kûr.', example_sentence: 'Evîna welat di dilê me de ye.' },
+  { id: 'bi-20', word: 'azadî', part_of_speech: 'navdêr', meaning_tr: 'özgürlük, hürriyet', meaning_en: 'freedom, liberty', meaning_ku: 'Rewşa serbixwebûnê.', example_sentence: 'Azadî mafê her mirovî ye.' }
 ];
 
 const DEFAULT_UI = {
@@ -106,7 +138,7 @@ const DEFAULT_UI = {
   empty_button: 'Materyal Zêde Bike',
   card_guide_badge: 'RÊBER',
   footer_text: 'Platforma Perwerdehiya Vekirî ya Kurdî • KurdiKlass',
-  ferheng_search_placeholder: 'Peyvekê bi Kurmancî an Tirkî binivîse...',
+  ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
   ferheng_search_btn: 'Bigere',
   ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.',
   learn_title: 'Rêwîtiya Fêrbûna Kurmancî',
@@ -151,10 +183,15 @@ const STARTER_GAMES = [
   {
     unit_title: 'Beşa 1: Silav û Nasîn',
     exercise_type: 'match',
-    question_text: 'Peyvên Kurmancî bi wateyên wan ên Tirkî re bighîne hev:',
-    options: ['Silav=Merhaba', 'Spas=Teşekkürler', 'Belê=Evet', 'Na=Hayır'],
+    question_text: 'Peyvên Kurmancî bi ravekirinên wan re bighîne hev:',
+    options: [
+      'Silav=Peyva pêşwazîkirinê',
+      'Spas=Peyva rêzdarî û minetdariyê',
+      'Belê=Bersiva erênî',
+      'Na=Bersiva neyînî'
+    ],
     correct_answer: '4',
-    explanation: 'Silav (Merhaba) û Spas (Teşekkürler) peyvên herî bingehîn ên rojane ne.'
+    explanation: 'Silav, Spas, Belê û Na peyvên herî bingehîn ên axaftina rojane ne.'
   },
   {
     unit_title: 'Beşa 1: Silav û Nasîn',
@@ -167,29 +204,33 @@ const STARTER_GAMES = [
   {
     unit_title: 'Beşa 1: Silav û Nasîn',
     exercise_type: 'sentence',
-    question_text: 'Peyvan rêz bike û vê hevokê saz bike: "Ben okula gidiyorum."',
+    question_text: 'Peyvan li gorî rêzimanê rêz bike û hevokeke rast saz bike:',
     options: ['Ez', 'diçim', 'dibistanê.', 'tu', 'malê'],
     correct_answer: 'Ez diçim dibistanê.',
     explanation: 'Di Kurmancî de lêker (diçim) berî cihê çûnê (dibistanê) tê.'
   },
   {
-    unit_title: 'Beşa 2: Malbat û Hejmar',
+    unit_title: 'Beşa 2: Malbat û Cînavk',
     exercise_type: 'fill_blank',
-    question_text: 'Valahiyê tije bike: "Navê _____ Azad e." (Benim adım Azad.)',
-    options: ['min', 'te', 'wî', 'me'],
+    question_text: 'Valahiyê bi cînavka rast tije bike: "Navê _____ Azad e."',
+    options: ['min', 'ez', 'tu', 'em'],
     correct_answer: 'min',
-    explanation: 'Cînavka "min" wateya "benim" dide: Navê min = Benim adım.'
+    explanation: 'Piştî veqetandeka "-ê" (Navê), cînavka tewandî "min" tê bikaranîn: Navê min.'
   },
   {
-    unit_title: 'Beşa 2: Malbat û Hejmar',
+    unit_title: 'Beşa 2: Malbat û Cînavk',
     exercise_type: 'match',
-    question_text: 'Endamên malbatê bi hev re bighîne:',
-    options: ['Dayik=Anne', 'Bav=Baba', 'Xwişk=Kız kardeş', 'Bira=Erkek kardeş'],
+    question_text: 'Peyvên dijwate bi hev re bighîne:',
+    options: [
+      'Mezin=Biçûk',
+      'Germ=Sar',
+      'Dirêj=Kurt',
+      'Spî=Reş'
+    ],
     correct_answer: '4',
-    explanation: 'Dayik (anne), Bav (baba), Xwişk (kız kardeş), Bira (erkek kardeş).'
+    explanation: 'Mezin û biçûk, germ û sar, dirêj û kurt, spî û reş rengdêrên dijwate ne.'
   }
 ];
-
 export default function App() {
   const [viewMode, setViewMode] = useState('student');
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('kk_lang') || 'KU');
@@ -360,11 +401,10 @@ export default function App() {
       const mapped = hits.map((h, idx) => ({
         id: `wiki-${idx}-${h.pageid}`,
         word: h.title,
-        part_of_speech: 'wîkîferheng',
+        part_of_speech: '',
         meaning_tr: h.snippet.replace(/<[^>]+>/g, ''),
         meaning_ku: '',
-        example_sentence: '',
-        isPriorityMatch: h.title.toLowerCase() === q.toLowerCase()
+        example_sentence: ''
       }));
       setExternalDictResults(mapped);
     } catch {
@@ -375,13 +415,13 @@ export default function App() {
 
   const handleBulkImportDictionary = async () => {
     setSyncingProgress('Peyvên bingehîn tên barkirin...');
-    const sampleWords = [
-      { word: 'av', part_of_speech: 'navdêr', meaning_tr: 'su', meaning_ku: 'Şileya bingehîn a jiyanê.', example_sentence: 'Av jiyan e.' },
-      { word: 'nan', part_of_speech: 'navdêr', meaning_tr: 'ekmek', meaning_ku: 'Xwarina bingehîn a ji ardê.', example_sentence: 'Nanê germ xweş e.' },
-      { word: 'roj', part_of_speech: 'navdêr', meaning_tr: 'güneş / gün', meaning_ku: 'Stêrka ku ronahiyê dide cîhanê.', example_sentence: 'Îro roj gelekî germ e.' },
-      { word: 'pirtûk', part_of_speech: 'navdêr', meaning_tr: 'kitap', meaning_ku: 'Berhema nivîskî ya xwendinê.', example_sentence: 'Ez her roj pirtûkekê dixwînim.' },
-      { word: 'dibistan', part_of_speech: 'navdêr', meaning_tr: 'okul', meaning_ku: 'Saziya perwerdehiyê.', example_sentence: 'Zarok diçin dibistanê.' }
-    ];
+    const sampleWords = BUILTIN_DICTIONARY.map(({ word, part_of_speech, meaning_tr, meaning_ku, example_sentence }) => ({
+      word,
+      part_of_speech,
+      meaning_tr,
+      meaning_ku,
+      example_sentence
+    }));
     const { error } = await supabase.from('dictionary').insert(sampleWords);
     if (error) {
       setSyncingProgress('Çewtî: ' + error.message);
@@ -446,42 +486,55 @@ export default function App() {
   };
 
   const mergedDictionary = (() => {
-    const q = ferhengQuery.trim().toLowerCase();
-    const localFiltered = ferhengWords.map((w) => ({
-      ...w,
-      isPriorityMatch: Boolean(q && w.word?.toLowerCase() === q)
-    }));
-    const localSet = new Set(localFiltered.map((w) => w.word?.toLowerCase()));
-    const otherExternal = externalDictResults.filter(
-      (ext) => !localSet.has(ext.word?.toLowerCase())
-    );
-    const combined = [...localFiltered, ...otherExternal];
-    if (!q) return combined;
+    const rawQ = ferhengQuery.trim();
+    const normQ = normalizeKurdish(rawQ);
 
-    return combined.sort((a, b) => {
-      if (a.isPriorityMatch && !b.isPriorityMatch) return -1;
-      if (!a.isPriorityMatch && b.isPriorityMatch) return 1;
-      const aExact = a.word?.toLowerCase() === q ? 0 : 1;
-      const bExact = b.word?.toLowerCase() === q ? 0 : 1;
-      if (aExact !== bExact) return aExact - bExact;
-      const aStarts = a.word?.toLowerCase().startsWith(q) ? 0 : 1;
-      const bStarts = b.word?.toLowerCase().startsWith(q) ? 0 : 1;
-      return aStarts - bStarts;
-    });
+    const dbList = ferhengWords.map((w) => ({
+      ...w,
+      sourceType: 'db'
+    }));
+
+    const seenWords = new Set(dbList.map((w) => normalizeKurdish(w.word)));
+
+    const builtinList = BUILTIN_DICTIONARY.filter(
+      (b) => !seenWords.has(normalizeKurdish(b.word))
+    );
+    builtinList.forEach((b) => seenWords.add(normalizeKurdish(b.word)));
+
+    const externalList = externalDictResults.filter(
+      (ext) => !seenWords.has(normalizeKurdish(ext.word))
+    );
+
+    const combined = [...dbList, ...builtinList, ...externalList];
+
+    if (!normQ) return combined;
+
+    return combined
+      .map((item) => {
+        const wNorm = normalizeKurdish(item.word || '');
+        const trNorm = normalizeKurdish(item.meaning_tr || '');
+        const enNorm = normalizeKurdish(item.meaning_en || '');
+        const kuNorm = normalizeKurdish(item.meaning_ku || '');
+
+        let score = 0;
+        if (wNorm === normQ) score = 100;
+        else if (trNorm.split(/[,;/]/).map((s) => s.trim()).includes(normQ)) score = 95;
+        else if (enNorm.split(/[,;/]/).map((s) => s.trim()).includes(normQ)) score = 95;
+        else if (wNorm.startsWith(normQ)) score = 80;
+        else if (trNorm.startsWith(normQ) || enNorm.startsWith(normQ)) score = 75;
+        else if (wNorm.includes(normQ)) score = 60;
+        else if (trNorm.includes(normQ) || enNorm.includes(normQ)) score = 50;
+        else if (kuNorm.includes(normQ)) score = 30;
+
+        return { ...item, _score: score };
+      })
+      .filter((item) => item._score > 0)
+      .sort((a, b) => b._score - a._score);
   })();
 
   const filteredDictionary = mergedDictionary.filter((item) => {
-    const q = ferhengQuery.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      item.isPriorityMatch ||
-      item.word?.toLowerCase().includes(q) ||
-      item.meaning_tr?.toLowerCase().includes(q) ||
-      item.meaning_ku?.toLowerCase().includes(q);
-    const matchesLetter =
-      selectedLetter === 'all' ||
-      item.word?.toLocaleUpperCase('ku').startsWith(selectedLetter);
-    return matchesSearch && matchesLetter;
+    if (selectedLetter === 'all') return true;
+    return item.word?.toLocaleUpperCase('ku').startsWith(selectedLetter);
   });
 
   // =========================================================================
@@ -499,7 +552,7 @@ export default function App() {
   };
 
   const handleLoadStarterGames = async () => {
-    setExMsg('Paketa lîstikên Duolingo tê barkirin...');
+    setExMsg('Paketa lîstikên Kurmancî tê barkirin...');
     const rows = STARTER_GAMES.map((g, idx) => ({
       ...g,
       sort_order: exercises.length + idx + 1
@@ -508,7 +561,7 @@ export default function App() {
     if (error) {
       setExMsg('Çewtî: ' + error.message);
     } else {
-      setExMsg('5 lîstikên înteraktîf (Eşleştirme, Cümle Kurma, Boşluk Doldurma) hatin zêdekirin!');
+      setExMsg('5 lîstikên înteraktîf bi Kurmancî hatin zêdekirin!');
       fetchExercises();
     }
     setTimeout(() => setExMsg(''), 5000);
@@ -769,7 +822,6 @@ export default function App() {
       }
     }
   };
-
   // =========================================================================
   // KATEGORİLER, AYARLAR VE DERSLER
   // =========================================================================
@@ -1210,118 +1262,118 @@ export default function App() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'ferheng' ? (
-          <div className="max-w-4xl mx-auto bg-slate-900 text-white rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800 space-y-6">
-            <form onSubmit={handleDictionarySearchSubmit} className="flex gap-2.5">
-              <div className="relative flex-1">
-                <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
-                <input
-                  type="text"
-                  value={ferhengQuery}
-                  onChange={(e) => {
-                    setFerhengQuery(e.target.value);
+          <div className="max-w-3xl mx-auto bg-neutral-950 text-white rounded-3xl p-6 sm:p-10 shadow-2xl border border-neutral-800 space-y-7">
+            <div className="space-y-2">
+              <div className="text-xs font-extrabold tracking-[0.2em] uppercase text-neutral-400">
+                {ui.brand_first}{ui.brand_second} FERHENG
+              </div>
+              <h1 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight text-white">
+                {ui.nav_ferheng}
+              </h1>
+              <p className="text-neutral-400 text-sm sm:text-base">
+                Ferhenga Kurmancî — Peyvên Kurdî, Tirkî û Îngilîzî bibîne (bê tîpên kumikdar jî dixebite).
+              </p>
+            </div>
+
+            <form onSubmit={handleDictionarySearchSubmit} className="relative">
+              <Search className="w-5 h-5 text-neutral-300 absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={ferhengQuery}
+                onChange={(e) => {
+                  setFerhengQuery(e.target.value);
+                  setSelectedWordDetail(null);
+                }}
+                placeholder={ui.ferheng_search_placeholder}
+                className="w-full pl-14 pr-12 py-4 rounded-full bg-neutral-900 border-2 border-white/90 text-white placeholder-neutral-500 focus:outline-none focus:ring-4 focus:ring-white/15 text-lg font-medium transition"
+              />
+              {ferhengQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFerhengQuery('');
+                    setExternalDictResults([]);
                     setSelectedWordDetail(null);
                   }}
-                  placeholder={ui.ferheng_search_placeholder}
-                  className="w-full pl-12 pr-10 py-3 rounded-2xl bg-slate-800/90 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-sky-400 text-base"
-                />
-                {ferhengQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFerhengQuery('');
-                      setSelectedWordDetail(null);
-                    }}
-                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold px-6 py-3 rounded-2xl transition whitespace-nowrap"
-              >
-                {ui.ferheng_search_btn}
-              </button>
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white p-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </form>
 
-            {selectedWordDetail && (
-              <div className="bg-slate-800 border border-sky-500/40 rounded-2xl p-5 space-y-2.5">
-                <div className="flex items-start justify-between gap-2">
+            {ferhengQuery.trim() && filteredDictionary.length > 0 && (
+              <div className="rounded-2xl bg-neutral-900/90 border border-neutral-700 p-5 sm:p-6 space-y-2 shadow-lg">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-2xl font-black text-white">{selectedWordDetail.word}</h2>
-                    <p className="text-sky-300 font-semibold text-base mt-0.5">
-                      {selectedWordDetail.meaning_tr}
-                    </p>
+                    <div className="font-serif text-2xl sm:text-3xl font-bold text-white">
+                      {filteredDictionary[0].word}
+                    </div>
+                    <div className="text-base sm:text-lg text-neutral-200 font-medium mt-1">
+                      {filteredDictionary[0].meaning_tr}
+                      {filteredDictionary[0].meaning_en ? ` • ${filteredDictionary[0].meaning_en}` : ''}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="bg-sky-500 text-slate-950 text-xs font-extrabold px-3 py-1 rounded-lg">
-                      {selectedWordDetail.part_of_speech || 'navdêr'}
+                  {filteredDictionary[0].part_of_speech && (
+                    <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-neutral-800 text-neutral-300 border border-neutral-700">
+                      {filteredDictionary[0].part_of_speech}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedWordDetail(null)}
-                      className="p-1.5 rounded-lg bg-slate-700 text-slate-300 hover:text-white"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                  )}
                 </div>
-                {selectedWordDetail.meaning_ku && (
-                  <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">
-                    {selectedWordDetail.meaning_ku}
+
+                {filteredDictionary[0].meaning_ku && (
+                  <p className="text-sm text-neutral-400 pt-1">
+                    {filteredDictionary[0].meaning_ku}
                   </p>
                 )}
+
+                {filteredDictionary[0].example_sentence && (
+                  <p className="text-xs italic text-neutral-400 border-l-2 border-neutral-600 pl-3 pt-0.5">
+                    “{filteredDictionary[0].example_sentence}”
+                  </p>
+                )}
+              </div>
+            )}
+
+            {selectedWordDetail && (
+              <div className="rounded-2xl bg-neutral-900 border border-neutral-600 p-5 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-serif text-2xl font-bold text-white">
+                      {selectedWordDetail.word}
+                    </h2>
+                    <p className="text-neutral-200 font-medium mt-0.5">
+                      {selectedWordDetail.meaning_tr}
+                      {selectedWordDetail.meaning_en ? ` • ${selectedWordDetail.meaning_en}` : ''}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWordDetail(null)}
+                    className="p-1.5 rounded-lg bg-neutral-800 text-neutral-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                {selectedWordDetail.meaning_ku && (
+                  <p className="text-sm text-neutral-400">{selectedWordDetail.meaning_ku}</p>
+                )}
                 {selectedWordDetail.example_sentence && (
-                  <p className="text-xs italic text-slate-400 border-l-2 border-sky-400 pl-3">
+                  <p className="text-xs italic text-neutral-400 border-l-2 border-neutral-600 pl-3">
                     “{selectedWordDetail.example_sentence}”
                   </p>
                 )}
               </div>
             )}
 
-            <div className="divide-y divide-slate-800 bg-slate-950/50 rounded-2xl border border-slate-800 overflow-hidden">
-              {searchingDict && filteredDictionary.length === 0 ? (
-                <div className="p-6 text-center text-sm text-slate-400">
-                  Tê lêgerîn...
-                </div>
-              ) : filteredDictionary.length === 0 ? (
-                <div className="p-6 text-center text-sm text-slate-400">
-                  {ui.ferheng_empty_text}
-                </div>
-              ) : (
-                filteredDictionary.slice(0, 20).map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => setSelectedWordDetail(item)}
-                    className="px-5 py-4 flex items-center justify-between gap-4 hover:bg-slate-800/70 cursor-pointer transition"
-                  >
-                    <div className="min-w-0">
-                      <div className="text-lg font-extrabold text-white truncate">
-                        {item.word}
-                      </div>
-                      <div className="text-sm text-sky-300 font-medium truncate">
-                        {item.meaning_tr}
-                      </div>
-                    </div>
-
-                    <span className="shrink-0 bg-sky-500 text-slate-950 text-xs font-extrabold px-3 py-1 rounded-lg">
-                      {item.part_of_speech || 'navdêr'}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setSelectedLetter('all')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-extrabold tracking-wider transition ${
+                className={`px-3 py-1 rounded-full text-xs font-bold tracking-wider transition ${
                   selectedLetter === 'all'
-                    ? 'bg-sky-400 text-slate-950'
-                    : 'text-slate-300 hover:text-white'
+                    ? 'bg-white text-neutral-950'
+                    : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
                 }`}
               >
                 HEMÛ
@@ -1331,20 +1383,61 @@ export default function App() {
                   key={letter}
                   type="button"
                   onClick={() => setSelectedLetter(letter)}
-                  className={`w-7 h-7 rounded-lg text-xs font-extrabold transition ${
+                  className={`w-7 h-7 rounded-full text-xs font-bold transition ${
                     selectedLetter === letter
-                      ? 'bg-sky-400 text-slate-950'
-                      : 'text-slate-200 hover:bg-slate-800'
+                      ? 'bg-white text-neutral-950'
+                      : 'text-neutral-400 hover:bg-neutral-900 hover:text-white'
                   }`}
                 >
                   {letter}
                 </button>
               ))}
             </div>
+
+            <div className="space-y-3 pt-1">
+              <h2 className="text-xl font-extrabold text-white tracking-tight">
+                Hemû peyv
+              </h2>
+
+              {searchingDict && filteredDictionary.length === 0 ? (
+                <div className="py-8 text-center text-sm text-neutral-400">
+                  Tê lêgerîn...
+                </div>
+              ) : filteredDictionary.length === 0 ? (
+                <div className="py-8 text-center text-sm text-neutral-400 bg-neutral-900/50 rounded-2xl border border-neutral-800">
+                  {ui.ferheng_empty_text}
+                </div>
+              ) : (
+                <div className="divide-y divide-neutral-800/90 rounded-2xl bg-neutral-900/50 border border-neutral-800 overflow-hidden">
+                  {filteredDictionary.slice(0, 30).map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelectedWordDetail(item)}
+                      className="px-5 py-4 flex items-center justify-between gap-4 hover:bg-neutral-800/70 cursor-pointer transition"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-serif text-lg font-bold text-white truncate">
+                          {item.word}
+                        </div>
+                        <div className="text-sm text-neutral-400 truncate">
+                          {item.meaning_tr}
+                          {item.meaning_en ? ` • ${item.meaning_en}` : ''}
+                        </div>
+                      </div>
+
+                      {item.part_of_speech && (
+                        <span className="shrink-0 text-xs font-semibold text-neutral-400 bg-neutral-800 px-2.5 py-1 rounded-lg">
+                          {item.part_of_speech}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : viewMode === 'learn' ? (
           <div className="max-w-2xl mx-auto">
-            {/* DUOLINGO ÜST DURUM ÇUBUĞU: SERİ (STREAK) + XP + CAN */}
             <div className="bg-white border-2 border-slate-200 rounded-2xl px-4 py-3 mb-6 shadow-sm flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-black">
@@ -1378,7 +1471,6 @@ export default function App() {
             </div>
 
             {!selectedUnit ? (
-              /* DUOLINGO DİKEY ZİKZAK ÖĞRENME YOLU (LEARNING PATH) */
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-3xl p-6 text-white shadow-[0_6px_0_rgb(21,128,61)]">
                   <span className="text-xs font-black uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full">
@@ -1448,7 +1540,6 @@ export default function App() {
                 )}
               </div>
             ) : unitCompleted || hearts === 0 ? (
-              /* DERS SONU ÖDÜL EKRANI */
               <div className="bg-white rounded-3xl border-2 border-slate-200 p-8 text-center shadow-lg space-y-5">
                 <div
                   className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${
@@ -1492,7 +1583,6 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              /* AKTİF DUOLINGO OYUN ARENASI */
               <div className="bg-white rounded-3xl border-2 border-slate-200 overflow-hidden shadow-lg">
                 <div className="p-6 sm:p-8">
                   <div className="flex items-center gap-4 mb-6">
@@ -2106,7 +2196,7 @@ export default function App() {
                       <span>
                         {editingExId
                           ? 'Lîstika Hînbûnê Sererast Bike'
-                          : 'Hînbûn / Lîstik — Lîstikên Duolingo Zêde Bike û Biguherîne'}
+                          : 'Hînbûn / Lîstik — Lîstikan Zêde Bike û Biguherîne'}
                       </span>
                     </h2>
 
@@ -2115,13 +2205,9 @@ export default function App() {
                       onClick={handleLoadStarterGames}
                       className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
                     >
-                      + Paketa Destpêkê ya Lîstikan Bar Bike (Duolingo)
+                      + Paketa Destpêkê ya Lîstikan Bar Bike
                     </button>
                   </div>
-
-                  <p className="text-xs text-slate-500 mb-4">
-                    Cureyên lîstikan: <strong>Çoktan Seçmeli</strong>, <strong>Kelime Sıralama</strong>, <strong>Eşleştirme</strong> (Mînak: <code>Silav=Merhaba, Spas=Teşekkürler</code>) û <strong>Boşluk Doldurma</strong>.
-                  </p>
 
                   {exMsg && (
                     <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
@@ -2132,51 +2218,51 @@ export default function App() {
                   <form onSubmit={handleSaveExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Navê Beşê / Qonaxê (Ünite Adı)
+                        Navê Beşê / Qonaxê
                       </label>
                       <input
                         type="text"
                         required
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="Mînak: Beşa 1: Silav û Nasîn"
+                        placeholder="Beşa 1: Silav û Nasîn"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Cureyê Lîstikê (Oyun Türü)
+                        Cureyê Lîstikê
                       </label>
                       <select
                         value={exForm.exercise_type}
                         onChange={(e) => setExForm({ ...exForm, exercise_type: e.target.value })}
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       >
-                        <option value="choice">Çoktan Seçmeli (Vebijêrka Rast)</option>
-                        <option value="sentence">Kelime Sıralama / Cümle Kurma (Peyvan Rêz Bike)</option>
-                        <option value="match">Eşleştirme Oyunu (Peyvan Bighîne Hev)</option>
-                        <option value="fill_blank">Boşluk Doldurma (Valahiyê Tije Bike)</option>
+                        <option value="choice">Vebijêrka Rast</option>
+                        <option value="sentence">Hevokê Saz Bike</option>
+                        <option value="match">Peyvan Bighîne Hev</option>
+                        <option value="fill_blank">Valahiyê Tije Bike</option>
                       </select>
                     </div>
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Pirs an Rênîşander (Soru / Talimat Metni)
+                        Pirs an Rênîşander
                       </label>
                       <input
                         type="text"
                         required
                         value={exForm.question_text}
                         onChange={(e) => setExForm({ ...exForm, question_text: e.target.value })}
-                        placeholder="Mînak: Peyvên Kurmancî bi wateyên wan re bighîne hev:"
+                        placeholder="Peyvên dijwate bi hev re bighîne:"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Wêneyê Lîstikê (Görsel Yükle / URL - Opsiyonel)
+                        Wêneyê Lîstikê (Vebijarkî)
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -2202,8 +2288,8 @@ export default function App() {
                     <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         {exForm.exercise_type === 'match'
-                          ? 'Cotên Peyvan (Virgülle ayırın: Kürtçe=Karşılığı)'
-                          : 'Vebijêrk an Peyv (Virgülle ayırın)'}
+                          ? 'Cotên Peyvan (Mezin=Biçûk, Germ=Sar)'
+                          : 'Vebijêrk an Peyv (bi bêhnokê veqetandî)'}
                       </label>
                       <input
                         type="text"
@@ -2212,7 +2298,7 @@ export default function App() {
                         onChange={(e) => setExForm({ ...exForm, options_raw: e.target.value })}
                         placeholder={
                           exForm.exercise_type === 'match'
-                            ? 'Silav=Merhaba, Spas=Teşekkürler, Belê=Evet, Na=Hayır'
+                            ? 'Mezin=Biçûk, Germ=Sar, Dirêj=Kurt, Spî=Reş'
                             : 'Ez, diçim, dibistanê., tu, malê'
                         }
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
@@ -2222,7 +2308,7 @@ export default function App() {
                     {exForm.exercise_type !== 'match' && (
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">
-                          Bersiva Rast (Tam Doğru Cevap)
+                          Bersiva Rast
                         </label>
                         <input
                           type="text"
@@ -2237,13 +2323,13 @@ export default function App() {
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Ravekirin (Cevap Sonrası Açıklama - Opsiyonel)
+                        Ravekirin (Vebijarkî)
                       </label>
                       <input
                         type="text"
                         value={exForm.explanation}
                         onChange={(e) => setExForm({ ...exForm, explanation: e.target.value })}
-                        placeholder="Kısa dilbilgisi veya kelime notu..."
+                        placeholder="Ravekirina rêzimanî bi Kurmancî..."
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -2332,7 +2418,7 @@ export default function App() {
                   <form onSubmit={handleSaveLesson} className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Sernavê Dersê (Başlık) *
+                        Sernavê Dersê *
                       </label>
                       <input
                         type="text"
@@ -2376,7 +2462,7 @@ export default function App() {
 
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Lînka Materyalê an Pel Bar Bike (PDF / Deng / Vîdyo)
+                        Lînka Materyalê an Pel Bar Bike
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -2400,7 +2486,7 @@ export default function App() {
 
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Wêneyê Bergê (Kapak Görseli Yükle / URL)
+                        Wêneyê Bergê
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -2425,7 +2511,7 @@ export default function App() {
 
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Ast (Seviye)
+                        Ast
                       </label>
                       <select
                         value={formData.level}
@@ -2440,7 +2526,7 @@ export default function App() {
 
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Pola Perwerdehiyê (Sınıf Düzeyi)
+                        Pola Perwerdehiyê
                       </label>
                       <select
                         value={formData.grade_level}
@@ -2455,7 +2541,7 @@ export default function App() {
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Daxuyanî û Naveroka Dersê (Öğrenci Açıklaması)
+                        Daxuyanî û Naveroka Dersê
                       </label>
                       <textarea
                         rows="3"
@@ -2470,7 +2556,7 @@ export default function App() {
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <label className="text-xs font-extrabold uppercase text-amber-900 flex items-center gap-1.5">
                           <ClipboardList className="w-4 h-4 text-amber-700" />
-                          <span>Rêbera Mamosteyan (Öğretmen Rehberi & Ders Planı - Opsiyonel)</span>
+                          <span>Rêbera Mamosteyan</span>
                         </label>
 
                         <label className="cursor-pointer bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5">
@@ -2528,7 +2614,7 @@ export default function App() {
                       <span>
                         {editingWordId
                           ? 'Peyva Ferhengê Sererast Bike'
-                          : `Ferheng — Peyvên Nû Zêde Bike û Biguherîne (${ferhengWords.length} peyv)`}
+                          : `Ferheng — Peyvên Nû Zêde Bike (${ferhengWords.length} tomarkirî)`}
                       </span>
                     </h2>
 
@@ -2538,7 +2624,7 @@ export default function App() {
                       disabled={Boolean(syncingProgress)}
                       className="bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
                     >
-                      + Hemû Peyvên Çavkaniya Vekirî Bikişîne Ferhengê
+                      + Peyvên Bingehîn Tomar Bike
                     </button>
                   </div>
 
@@ -2564,66 +2650,66 @@ export default function App() {
                         required
                         value={wordForm.word}
                         onChange={(e) => setWordForm({ ...wordForm, word: e.target.value })}
-                        placeholder="Mînak: ziman"
+                        placeholder="Mînak: heval"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Cureyê Peyvê (Kelime Türü)
+                        Cureyê Peyvê
                       </label>
                       <select
                         value={wordForm.part_of_speech}
                         onChange={(e) => setWordForm({ ...wordForm, part_of_speech: e.target.value })}
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       >
-                        <option value="navdêr">navdêr (isim)</option>
-                        <option value="lêker">lêker (fiil)</option>
-                        <option value="rengdêr">rengdêr (sıfat)</option>
-                        <option value="hoker">hoker (zarf)</option>
-                        <option value="cînavk">cînavk (zamir)</option>
-                        <option value="hejmar">hejmar (sayı)</option>
-                        <option value="baneşan">baneşan (ünlem)</option>
+                        <option value="navdêr">navdêr</option>
+                        <option value="lêker">lêker</option>
+                        <option value="rengdêr">rengdêr</option>
+                        <option value="hoker">hoker</option>
+                        <option value="cînavk">cînavk</option>
+                        <option value="hejmar">hejmar</option>
+                        <option value="baneşan">baneşan</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Wateya bi Tirkî (Türkçe Karşılığı) *
+                        Wateya Peyvê *
                       </label>
                       <input
                         type="text"
                         required
                         value={wordForm.meaning_tr}
                         onChange={(e) => setWordForm({ ...wordForm, meaning_tr: e.target.value })}
-                        placeholder="Mînak: dil"
+                        placeholder="arkadaş"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Ravekirina bi Kurdî (Kürtçe Açıklama - Opsiyonel)
+                        Ravekirina bi Kurmancî
                       </label>
                       <input
                         type="text"
                         value={wordForm.meaning_ku}
                         onChange={(e) => setWordForm({ ...wordForm, meaning_ku: e.target.value })}
-                        placeholder="Amûra axaftin û ragihandinê..."
+                        placeholder="Kesê ku mirov pê re dostanî dike."
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Hevoka Mînak (Örnek Cümle - Opsiyonel)
+                        Hevoka Mînak
                       </label>
                       <input
                         type="text"
                         value={wordForm.example_sentence}
                         onChange={(e) => setWordForm({ ...wordForm, example_sentence: e.target.value })}
-                        placeholder="Zimanê Kurdî gelekî dewlemend e."
+                        placeholder="Ew hevalê min ê herî baş e."
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -2732,7 +2818,7 @@ export default function App() {
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <FolderEdit className="w-5 h-5 text-red-600" />
-                    <span>Beş û Sernavên Sereke Biguherîne (Ana Menü Kategorileri)</span>
+                    <span>Beş û Sernavên Sereke Biguherîne</span>
                   </h2>
 
                   {catMsg && (
@@ -2775,7 +2861,7 @@ export default function App() {
                       type="text"
                       value={newCatName}
                       onChange={(e) => setNewCatName(e.target.value)}
-                      placeholder="Navê Beşa Nû (Mînak: DÎROK û ERDNÎGARÎ)"
+                      placeholder="Navê Beşa Nû"
                       className="flex-1 min-w-[220px] border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
                     />
                     <button
@@ -2791,11 +2877,8 @@ export default function App() {
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-red-600" />
-                    <span>Hemû Nivîsên Malperê Biguherîne (Sitedeki Tüm Yazılar)</span>
+                    <span>Hemû Nivîsên Malperê Biguherîne</span>
                   </h2>
-                  <p className="text-xs text-slate-500 mb-5">
-                    Sernav, bişkojk, beşa Ferheng, Hînbûn / Lîstik, parzûn, ast û hemû nivîsên ku li ser malperê xuya dikin ji vir biguherîne.
-                  </p>
 
                   {settingsMsg && (
                     <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
