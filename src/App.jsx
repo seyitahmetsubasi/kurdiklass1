@@ -237,6 +237,129 @@ const STARTER_GAMES = [
     explanation: 'Mezin û biçûk, germ û sar, dirêj û kurt, spî û reş rengdêrên dijwate ne.'
   }
 ];
+
+const BUILTIN_ZAROK_FEKI = [
+  {
+    id: 'feki-1',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍎 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['sêv', 'hinar', 'zebeş', 'hêjîr'],
+    correct_answer: 'sêv',
+    explanation: 'Sêv (Elma)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=21,23'
+  },
+  {
+    id: 'feki-2',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍎 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['hinar', 'gûz', 'alû', 'xox'],
+    correct_answer: 'hinar',
+    explanation: 'Hinar (Nar)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=3,4.5'
+  },
+  {
+    id: 'feki-3',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🌰 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['gûz', 'mişmiş', 'vîşne', 'tirî'],
+    correct_answer: 'gûz',
+    explanation: 'Gûz (Ceviz)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=4.5,6'
+  },
+  {
+    id: 'feki-4',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍑 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['alû', 'hirmî', 'pirteqal', 'sêv'],
+    correct_answer: 'alû',
+    explanation: 'Alû (Erik)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=6,7.5'
+  },
+  {
+    id: 'feki-5',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍑 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['xox', 'zebeş', 'hinar', 'hêjîr'],
+    correct_answer: 'xox',
+    explanation: 'Xox (Şeftali)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=7.5,9'
+  },
+  {
+    id: 'feki-6',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍊 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['mişmiş', 'gûz', 'tirî', 'vîşne'],
+    correct_answer: 'mişmiş',
+    explanation: 'Mişmiş (Kayısı)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=9,10.8'
+  },
+  {
+    id: 'feki-7',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍉 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['zebeş', 'alû', 'hirmî', 'pirteqal'],
+    correct_answer: 'zebeş',
+    explanation: 'Zebeş (Karpuz)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=10.8,12.5'
+  },
+  {
+    id: 'feki-8',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍒 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['vîşne', 'xox', 'sêv', 'hinar'],
+    correct_answer: 'vîşne',
+    explanation: 'Vîşne (Vişne)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=12.5,14.2'
+  },
+  {
+    id: 'feki-9',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍐 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['hirmî', 'mişmiş', 'gûz', 'zebeş'],
+    correct_answer: 'hirmî',
+    explanation: 'Hirmî (Armut)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=14.2,15.8'
+  },
+  {
+    id: 'feki-10',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🫒 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['hêjîr', 'vîşne', 'alû', 'tirî'],
+    correct_answer: 'hêjîr',
+    explanation: 'Hêjîr (İncir)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=15.8,17.5'
+  },
+  {
+    id: 'feki-11',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍊 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['pirteqal', 'hirmî', 'xox', 'sêv'],
+    correct_answer: 'pirteqal',
+    explanation: 'Pirteqal (Portakal)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=17.5,19.3'
+  },
+  {
+    id: 'feki-12',
+    unit_title: 'ZAROK: Fêkî',
+    exercise_type: 'choice',
+    question_text: '🍇 Guhdarî bike! Ev kîjan fêkî ye?',
+    options: ['tirî', 'hêjîr', 'hinar', 'gûz'],
+    correct_answer: 'tirî',
+    explanation: 'Tirî (Üzüm)',
+    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=19.3,21'
+  }
+];
 export default function App() {
   const [viewMode, setViewMode] = useState('student');
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('kk_lang') || 'KU');
@@ -541,7 +664,7 @@ export default function App() {
   })();
 
   // =========================================================================
-  // HÎNBÛN / LÎSTIK MOTORU (SESLİ + GÖRSELLİ + SANİYE ARALIKLI)
+  // HÎNBÛN / LÎSTIK MOTORU (SESLİ + GÖRSELLİ + GARANTİLİ MEYVE OYUNU)
   // =========================================================================
   const fetchExercises = async () => {
     const { data, error } = await supabase
@@ -725,9 +848,17 @@ export default function App() {
     )
   ];
 
-  const unitExercises = selectedUnit
-    ? exercises.filter((ex) => ex.unit_title === selectedUnit)
-    : [];
+  const unitExercises = (() => {
+    if (!selectedUnit) return [];
+    if (selectedUnit === 'ZAROK: Fêkî') {
+      const dbFeki = exercises.filter(
+        (ex) => ex.unit_title === 'ZAROK: Fêkî' && ex.audio_url
+      );
+      return dbFeki.length > 0 ? dbFeki : BUILTIN_ZAROK_FEKI;
+    }
+    return exercises.filter((ex) => ex.unit_title === selectedUnit);
+  })();
+
   const currentEx = unitExercises[currentExIndex];
 
   const playCurrentAudio = (url) => {
@@ -2211,7 +2342,7 @@ export default function App() {
                               setViewMode('learn');
                               const targetUnit = lesson.media_url?.trim()
                                 ? lesson.media_url.trim()
-                                : lesson.title?.includes('Fêkî')
+                                : lesson.title?.toLowerCase().includes('fêkî')
                                 ? 'ZAROK: Fêkî'
                                 : 'ZAROK: Lîstika Hevnasînê';
                               startUnit(targetUnit);
