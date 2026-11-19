@@ -77,6 +77,14 @@ const normalizeKurdish = (str = '') =>
     .replace(/[ç]/g, 'c')
     .trim();
 
+// Supabase .or() / .ilike() filtrelerini bozan karakterleri temizler
+const sanitizeSearch = (str = '') => str.replace(/[,()%*\\]/g, ' ').trim();
+
+const slugify = (str = '') =>
+  normalizeKurdish(str)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || `beş-${Date.now()}`;
+
 const BUILTIN_DICTIONARY = [
   { id: 'bi-1', word: 'heval', part_of_speech: 'navdêr', meaning_tr: 'arkadaş, dost', meaning_en: 'friend', meaning_ku: 'Kesê ku mirov pê re dostanî dike.', example_sentence: 'Ew hevalê min ê herî baş e.' },
   { id: 'bi-2', word: 'bijîşk', part_of_speech: 'navdêr', meaning_tr: 'doktor, hekim', meaning_en: 'doctor', meaning_ku: 'Kesê ku nexweşan derman dike.', example_sentence: 'Bijîşk li nexweşxaneyê dixebite.' },
@@ -238,128 +246,37 @@ const STARTER_GAMES = [
   }
 ];
 
-const BUILTIN_ZAROK_FEKI = [
-  {
-    id: 'feki-1',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍎 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['sêv', 'hinar', 'zebeş', 'hêjîr'],
-    correct_answer: 'sêv',
-    explanation: 'Sêv (Elma)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=21,23'
-  },
-  {
-    id: 'feki-2',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍎 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['hinar', 'gûz', 'alû', 'xox'],
-    correct_answer: 'hinar',
-    explanation: 'Hinar (Nar)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=3,4.5'
-  },
-  {
-    id: 'feki-3',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🌰 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['gûz', 'mişmiş', 'vîşne', 'tirî'],
-    correct_answer: 'gûz',
-    explanation: 'Gûz (Ceviz)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=4.5,6'
-  },
-  {
-    id: 'feki-4',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍑 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['alû', 'hirmî', 'pirteqal', 'sêv'],
-    correct_answer: 'alû',
-    explanation: 'Alû (Erik)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=6,7.5'
-  },
-  {
-    id: 'feki-5',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍑 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['xox', 'zebeş', 'hinar', 'hêjîr'],
-    correct_answer: 'xox',
-    explanation: 'Xox (Şeftali)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=7.5,9'
-  },
-  {
-    id: 'feki-6',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍊 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['mişmiş', 'gûz', 'tirî', 'vîşne'],
-    correct_answer: 'mişmiş',
-    explanation: 'Mişmiş (Kayısı)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=9,10.8'
-  },
-  {
-    id: 'feki-7',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍉 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['zebeş', 'alû', 'hirmî', 'pirteqal'],
-    correct_answer: 'zebeş',
-    explanation: 'Zebeş (Karpuz)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=10.8,12.5'
-  },
-  {
-    id: 'feki-8',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍒 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['vîşne', 'xox', 'sêv', 'hinar'],
-    correct_answer: 'vîşne',
-    explanation: 'Vîşne (Vişne)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=12.5,14.2'
-  },
-  {
-    id: 'feki-9',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍐 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['hirmî', 'mişmiş', 'gûz', 'zebeş'],
-    correct_answer: 'hirmî',
-    explanation: 'Hirmî (Armut)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=14.2,15.8'
-  },
-  {
-    id: 'feki-10',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🫒 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['hêjîr', 'vîşne', 'alû', 'tirî'],
-    correct_answer: 'hêjîr',
-    explanation: 'Hêjîr (İncir)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=15.8,17.5'
-  },
-  {
-    id: 'feki-11',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍊 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['pirteqal', 'hirmî', 'xox', 'sêv'],
-    correct_answer: 'pirteqal',
-    explanation: 'Pirteqal (Portakal)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=17.5,19.3'
-  },
-  {
-    id: 'feki-12',
-    unit_title: 'ZAROK: Fêkî',
-    exercise_type: 'choice',
-    question_text: '🍇 Guhdarî bike! Ev kîjan fêkî ye?',
-    options: ['tirî', 'hêjîr', 'hinar', 'gûz'],
-    correct_answer: 'tirî',
-    explanation: 'Tirî (Üzüm)',
-    audio_url: 'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3#t=19.3,21'
-  }
+const FEKI_AUDIO =
+  'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3';
+
+// [emoji, doğru cevap, yanlış şıklar, açıklama, ses aralığı]
+const FEKI_DATA = [
+  ['🍎', 'sêv', ['hinar', 'zebeş', 'hêjîr'], 'Sêv (Elma)', '21,23'],
+  ['🍎', 'hinar', ['gûz', 'alû', 'xox'], 'Hinar (Nar)', '3,4.5'],
+  ['🌰', 'gûz', ['mişmiş', 'vîşne', 'tirî'], 'Gûz (Ceviz)', '4.5,6'],
+  ['🍑', 'alû', ['hirmî', 'pirteqal', 'sêv'], 'Alû (Erik)', '6,7.5'],
+  ['🍑', 'xox', ['zebeş', 'hinar', 'hêjîr'], 'Xox (Şeftali)', '7.5,9'],
+  ['🍊', 'mişmiş', ['gûz', 'tirî', 'vîşne'], 'Mişmiş (Kayısı)', '9,10.8'],
+  ['🍉', 'zebeş', ['alû', 'hirmî', 'pirteqal'], 'Zebeş (Karpuz)', '10.8,12.5'],
+  ['🍒', 'vîşne', ['xox', 'sêv', 'hinar'], 'Vîşne (Vişne)', '12.5,14.2'],
+  ['🍐', 'hirmî', ['mişmiş', 'gûz', 'zebeş'], 'Hirmî (Armut)', '14.2,15.8'],
+  ['🫒', 'hêjîr', ['vîşne', 'alû', 'tirî'], 'Hêjîr (İncir)', '15.8,17.5'],
+  ['🍊', 'pirteqal', ['hirmî', 'xox', 'sêv'], 'Pirteqal (Portakal)', '17.5,19.3'],
+  ['🍇', 'tirî', ['hêjîr', 'hinar', 'gûz'], 'Tirî (Üzüm)', '19.3,21']
 ];
+
+const BUILTIN_ZAROK_FEKI = FEKI_DATA.map(([emoji, answer, wrong, explanation, range], i) => ({
+  id: `feki-${i + 1}`,
+  unit_title: 'ZAROK: Fêkî',
+  exercise_type: 'choice',
+  question_text: `${emoji} Guhdarî bike! Ev kîjan fêkî ye?`,
+  // Doğru cevabın şıkların hep ilk sırada olmaması için karıştırılır
+  options: [answer, ...wrong].sort((a, b) => ((a.charCodeAt(1) + i) % 3) - ((b.charCodeAt(1) + i) % 3)),
+  correct_answer: answer,
+  explanation,
+  audio_url: `${FEKI_AUDIO}#t=${range}`
+}));
+
 export default function App() {
   const [viewMode, setViewMode] = useState('student');
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('kk_lang') || 'KU');
@@ -392,7 +309,7 @@ export default function App() {
   const [newCatName, setNewCatName] = useState('');
   const [settingsMsg, setSettingsMsg] = useState('');
 
-  const [formData, setFormData] = useState({
+  const emptyLessonForm = {
     title: '',
     description: '',
     category_slug: 'zanist',
@@ -403,7 +320,8 @@ export default function App() {
     grade_level: DEFAULT_UI.grade_2,
     teacher_guide: '',
     guide_pdf_url: ''
-  });
+  };
+  const [formData, setFormData] = useState(emptyLessonForm);
 
   // Ferheng State
   const [ferhengWords, setFerhengWords] = useState([]);
@@ -507,6 +425,187 @@ export default function App() {
   };
 
   // =========================================================================
+  // DERS / KATEGORİ / AYAR FONKSİYONLARI
+  // =========================================================================
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    if (!error && data && data.length > 0) setCategories(data);
+  };
+
+  const fetchSiteSettings = async () => {
+    const { data, error } = await supabase.from('site_settings').select('*');
+    if (!error && data) {
+      const merged = { ...DEFAULT_UI };
+      data.forEach((row) => {
+        if (row.key in DEFAULT_UI && row.value) merged[row.key] = row.value;
+      });
+      setRawUi(merged);
+    }
+  };
+
+  const fetchLessons = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('lessons')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && data) setLessons(data);
+    setLoading(false);
+  };
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASS) {
+      setIsAdmin(true);
+      localStorage.setItem('kk_admin', 'true');
+      setAuthError('');
+      setPasswordInput('');
+    } else {
+      setAuthError('Şîfre çewt e. Ji kerema xwe dîsa biceribîne.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAdmin(false);
+    localStorage.removeItem('kk_admin');
+    setViewMode('student');
+  };
+
+  const handleFileUpload = async (event, field) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadingField(field);
+    const fileExt = file.name.split('.').pop();
+    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `${field}/${safeName}`;
+
+    const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
+    if (uploadError) {
+      setStatusMsg({ type: 'error', text: 'Barkirin têk çû: ' + uploadError.message });
+    } else {
+      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
+      if (publicData?.publicUrl) {
+        setFormData((prev) => ({ ...prev, [field]: publicData.publicUrl }));
+      }
+    }
+    setUploadingField('');
+    event.target.value = '';
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData(emptyLessonForm);
+  };
+
+  const startEditing = (lesson) => {
+    setEditingId(lesson.id);
+    setFormData({
+      title: lesson.title || '',
+      description: lesson.description || '',
+      category_slug: lesson.category_slug || 'zanist',
+      media_type: lesson.media_type || 'video',
+      media_url: lesson.media_url || '',
+      thumbnail_url: lesson.thumbnail_url || '',
+      level: lesson.level || DEFAULT_UI.level_1,
+      grade_level: lesson.grade_level || DEFAULT_UI.grade_2,
+      teacher_guide: lesson.teacher_guide || '',
+      guide_pdf_url: lesson.guide_pdf_url || ''
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveLesson = async (e) => {
+    e.preventDefault();
+    if (!formData.title.trim()) return;
+
+    const payload = { ...formData, title: formData.title.trim() };
+    const query = editingId
+      ? supabase.from('lessons').update(payload).eq('id', editingId)
+      : supabase.from('lessons').insert([payload]);
+
+    const { error } = await query;
+    if (error) {
+      setStatusMsg({ type: 'error', text: 'Çewtî: ' + error.message });
+    } else {
+      setStatusMsg({
+        type: 'success',
+        text: editingId ? 'Ders bi serkeftî hat nûkirin!' : 'Materyala nû hat zêdekirin!'
+      });
+      resetForm();
+      fetchLessons();
+    }
+    setTimeout(() => setStatusMsg({ type: '', text: '' }), 4000);
+  };
+
+  const handleDeleteLesson = async (id) => {
+    if (!window.confirm('Tu piştrast î ku dixwazî vî materyalî jê bibî?')) return;
+    const { error } = await supabase.from('lessons').delete().eq('id', id);
+    if (error) {
+      setStatusMsg({ type: 'error', text: 'Çewtî: ' + error.message });
+      setTimeout(() => setStatusMsg({ type: '', text: '' }), 4000);
+    } else {
+      fetchLessons();
+    }
+  };
+
+  const handleUpdateCategoryName = (slug, name) => {
+    setCategories((prev) => prev.map((c) => (c.slug === slug ? { ...c, name } : c)));
+  };
+
+  const handleSaveCategories = async () => {
+    const rows = categories.map((c, idx) => ({
+      slug: c.slug,
+      name: c.name,
+      sort_order: c.sort_order ?? idx + 1
+    }));
+    const { error } = await supabase.from('categories').upsert(rows, { onConflict: 'slug' });
+    setCatMsg(error ? 'Çewtî: ' + error.message : 'Navên beşan hatin tomarkirin!');
+    setTimeout(() => setCatMsg(''), 3500);
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    const name = newCatName.trim();
+    if (!name) return;
+    let slug = slugify(name);
+    if (categories.some((c) => c.slug === slug)) slug = `${slug}-${Date.now()}`;
+    const row = { slug, name, sort_order: categories.length + 1 };
+    const { error } = await supabase.from('categories').upsert([row], { onConflict: 'slug' });
+    if (error) {
+      setCatMsg('Çewtî: ' + error.message);
+    } else {
+      setCategories((prev) => [...prev, row]);
+      setNewCatName('');
+      setCatMsg('Beşa nû hat zêdekirin!');
+    }
+    setTimeout(() => setCatMsg(''), 3500);
+  };
+
+  const handleDeleteCategory = async (slug) => {
+    if (!window.confirm('Tu piştrast î ku dixwazî vê beşê jê bibî?')) return;
+    const { error } = await supabase.from('categories').delete().eq('slug', slug);
+    if (error) {
+      setCatMsg('Çewtî: ' + error.message);
+    } else {
+      setCategories((prev) => prev.filter((c) => c.slug !== slug));
+      if (selectedCategory === slug) setSelectedCategory('all');
+      setCatMsg('Beş hat jêbirin.');
+    }
+    setTimeout(() => setCatMsg(''), 3500);
+  };
+
+  const handleSaveAllUiTexts = async (e) => {
+    e.preventDefault();
+    const rows = UI_FIELD_LABELS.map((f) => ({ key: f.key, value: rawUi[f.key] || '' }));
+    const { error } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
+    setSettingsMsg(error ? 'Çewtî: ' + error.message : 'Hemû nivîsên malperê hatin tomarkirin!');
+    setTimeout(() => setSettingsMsg(''), 3500);
+  };
+
+  // =========================================================================
   // FERHENG FONKSİYONLARI
   // =========================================================================
   const fetchDictionary = async (searchText = '', letter = 'all') => {
@@ -516,7 +615,7 @@ export default function App() {
       .select('*', { count: 'exact' })
       .order('word', { ascending: true });
 
-    const q = searchText.trim();
+    const q = sanitizeSearch(searchText);
     if (q) {
       query = query.or(
         `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%`
@@ -569,23 +668,17 @@ export default function App() {
     e.preventDefault();
     if (!wordForm.word.trim() || !wordForm.meaning_tr.trim()) return;
 
-    if (editingWordId) {
-      const { error } = await supabase
-        .from('dictionary')
-        .update(wordForm)
-        .eq('id', editingWordId);
-      if (!error) {
-        setWordMsg('Peyv hat nûkirin!');
-        resetWordForm();
-        fetchDictionary(ferhengQuery, selectedLetter);
-      }
+    const query = editingWordId
+      ? supabase.from('dictionary').update(wordForm).eq('id', editingWordId)
+      : supabase.from('dictionary').insert([wordForm]);
+
+    const { error } = await query;
+    if (error) {
+      setWordMsg('Çewtî: ' + error.message);
     } else {
-      const { error } = await supabase.from('dictionary').insert([wordForm]);
-      if (!error) {
-        setWordMsg('Peyva nû hat zêdekirin!');
-        resetWordForm();
-        fetchDictionary(ferhengQuery, selectedLetter);
-      }
+      setWordMsg(editingWordId ? 'Peyv hat nûkirin!' : 'Peyva nû hat zêdekirin!');
+      resetWordForm();
+      fetchDictionary(ferhengQuery, selectedLetter);
     }
     setTimeout(() => setWordMsg(''), 3500);
   };
@@ -615,7 +708,12 @@ export default function App() {
   const handleDeleteWord = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê peyvê jê bibî?')) return;
     const { error } = await supabase.from('dictionary').delete().eq('id', id);
-    if (!error) fetchDictionary(ferhengQuery, selectedLetter);
+    if (error) {
+      setWordMsg('Çewtî: ' + error.message);
+      setTimeout(() => setWordMsg(''), 3500);
+    } else {
+      fetchDictionary(ferhengQuery, selectedLetter);
+    }
   };
 
   const filteredDictionary = (() => {
@@ -635,7 +733,8 @@ export default function App() {
 
     const combined = [...dbList, ...builtinList].filter((item) => {
       if (selectedLetter === 'all') return true;
-      return item.word?.toLocaleUpperCase('ku').startsWith(selectedLetter);
+      // Not: 'tr' yerine locale'siz toUpperCase kullanılır; 'i' -> 'I' (Kurmancî I), 'î' -> 'Î'
+      return (item.word || '').toUpperCase().startsWith(selectedLetter);
     });
 
     if (!normQ) return combined;
@@ -693,55 +792,35 @@ export default function App() {
     setTimeout(() => setExMsg(''), 5000);
   };
 
-  const handleExImageUpload = async (event) => {
+  const uploadExFile = async (event, folder, setBusy, field) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setUploadingExImg(true);
+    setBusy(true);
     const fileExt = file.name.split('.').pop();
     const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const filePath = `exercises/${safeName}`;
+    const filePath = `${folder}/${safeName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('materyal')
-      .upload(filePath, file);
+    const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
 
-    if (!uploadError) {
-      const { data: publicData } = supabase.storage
-        .from('materyal')
-        .getPublicUrl(filePath);
-
+    if (uploadError) {
+      setExMsg('Barkirin têk çû: ' + uploadError.message);
+      setTimeout(() => setExMsg(''), 4000);
+    } else {
+      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
       if (publicData?.publicUrl) {
-        setExForm((prev) => ({ ...prev, image_url: publicData.publicUrl }));
+        setExForm((prev) => ({ ...prev, [field]: publicData.publicUrl }));
       }
     }
-    setUploadingExImg(false);
+    setBusy(false);
+    event.target.value = '';
   };
 
-  const handleExAudioUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleExImageUpload = (event) =>
+    uploadExFile(event, 'exercises', setUploadingExImg, 'image_url');
 
-    setUploadingExAudio(true);
-    const fileExt = file.name.split('.').pop();
-    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const filePath = `exercise_audio/${safeName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('materyal')
-      .upload(filePath, file);
-
-    if (!uploadError) {
-      const { data: publicData } = supabase.storage
-        .from('materyal')
-        .getPublicUrl(filePath);
-
-      if (publicData?.publicUrl) {
-        setExForm((prev) => ({ ...prev, audio_url: publicData.publicUrl }));
-      }
-    }
-    setUploadingExAudio(false);
-  };
+  const handleExAudioUpload = (event) =>
+    uploadExFile(event, 'exercise_audio', setUploadingExAudio, 'audio_url');
 
   const handleSaveExercise = async (e) => {
     e.preventDefault();
@@ -836,25 +915,40 @@ export default function App() {
   const handleDeleteExercise = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê lîstikê jê bibî?')) return;
     const { error } = await supabase.from('kurmanci_exercises').delete().eq('id', id);
-    if (!error) fetchExercises();
+    if (error) {
+      setExMsg('Çewtî: ' + error.message);
+      setTimeout(() => setExMsg(''), 4000);
+    } else {
+      fetchExercises();
+    }
   };
 
   // ZAROK: Fêkî ve ZAROK: Lîstika Hevnasînê Hînbûn / Lîstik listesinden tamamen çıkarılır
+  const isZarokUnit = (title = '') => {
+    const t = title.toLowerCase().trim();
+    return (
+      t.startsWith('zarok') ||
+      t.includes('fêkî') ||
+      t.includes('feki') ||
+      t.includes('hevnasîn') ||
+      t.includes('hevnasin')
+    );
+  };
+
   const unitList = [
     ...new Set(
-      exercises
-        .filter((ex) => {
-          const title = (ex.unit_title || '').toLowerCase().trim();
-          return (
-            !title.startsWith('zarok') &&
-            !title.includes('fêkî') &&
-            !title.includes('feki') &&
-            !title.includes('hevnasîn') &&
-            !title.includes('hevnasin')
-          );
-        })
-        .map((ex) => ex.unit_title)
+      exercises.filter((ex) => !isZarokUnit(ex.unit_title)).map((ex) => ex.unit_title)
     )
+  ];
+
+  // Zarok kategorisinde gösterilecek oyunlar (Fêkî her zaman vardır)
+  const zarokUnitList = [
+    ...new Set([
+      'ZAROK: Fêkî',
+      ...exercises
+        .filter((ex) => (ex.unit_title || '').toLowerCase().trim().startsWith('zarok'))
+        .map((ex) => ex.unit_title)
+    ])
   ];
 
   const unitExercises = (() => {
@@ -928,6 +1022,13 @@ export default function App() {
     }
   }, [currentEx?.id, viewMode, selectedUnit, unitCompleted]);
 
+  // Sayfa kapanırken sesi durdur
+  useEffect(() => {
+    return () => {
+      if (audioPlayerRef.current) audioPlayerRef.current.pause();
+    };
+  }, []);
+
   const parsedMatchPairs = (() => {
     if (!currentEx || currentEx.exercise_type !== 'match') return [];
     return (currentEx.options || [])
@@ -962,7 +1063,7 @@ export default function App() {
   }, [currentEx?.id]);
 
   const handleMatchSelect = (side, pairId) => {
-    if (answerState || matchedPairs.includes(pairId)) return;
+    if (answerState || matchedPairs.includes(pairId) || hearts === 0) return;
 
     const nextLeft = side === 'left' ? pairId : matchLeftSelected;
     const nextRight = side === 'right' ? pairId : matchRightSelected;
@@ -1010,6 +1111,7 @@ export default function App() {
 
   const closeActiveUnit = () => {
     const wasZarok = selectedUnit?.toUpperCase().startsWith('ZAROK:');
+    if (audioPlayerRef.current) audioPlayerRef.current.pause();
     setSelectedUnit(null);
     if (wasZarok) {
       setViewMode('student');
@@ -1050,7 +1152,21 @@ export default function App() {
     }
   };
 
+  // Seri (streak): günde en fazla bir kez artar, bir gün atlanırsa 1'e döner
+  const updateStreak = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const last = localStorage.getItem('kk_last_day');
+    if (last === today) return;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const nextStreak = last === yesterday ? streakDays + 1 : 1;
+    setStreakDays(nextStreak);
+    localStorage.setItem('kk_streak', String(nextStreak));
+    localStorage.setItem('kk_last_day', today);
+  };
+
   const goToNextExercise = () => {
+    // Kalpler bittiyse devam edilemez
+    if (hearts === 0) return;
     if (currentExIndex + 1 < unitExercises.length) {
       setCurrentExIndex((prev) => prev + 1);
       setSelectedOption('');
@@ -1058,17 +1174,867 @@ export default function App() {
       setAnswerState(null);
     } else {
       setUnitCompleted(true);
+      updateStreak();
       if (selectedUnit && !completedUnits.includes(selectedUnit)) {
         const updatedUnits = [...completedUnits, selectedUnit];
         setCompletedUnits(updatedUnits);
         localStorage.setItem('kk_completed_units', JSON.stringify(updatedUnits));
-        const nextStreak = streakDays + 1;
-        setStreakDays(nextStreak);
-        localStorage.setItem('kk_streak', String(nextStreak));
       }
     }
   };
-  <div>
+
+  const filteredLessons = lessons.filter((l) => {
+    if (selectedCategory !== 'all' && l.category_slug !== selectedCategory) return false;
+    if (selectedLevel !== 'all' && l.level !== selectedLevel) return false;
+    if (selectedMedia !== 'all' && l.media_type !== selectedMedia) return false;
+    const q = normalizeKurdish(searchQuery);
+    if (!q) return true;
+    return (
+      normalizeKurdish(l.title || '').includes(q) ||
+      normalizeKurdish(l.description || '').includes(q)
+    );
+  });
+
+  const mediaIconFor = (type) =>
+    (dynamicMediaTypes.find((m) => m.id === type) || dynamicMediaTypes[0]).icon;
+
+  const wrongAnswerLocked = answerState === 'wrong';
+  const outOfHearts = hearts === 0 && !unitCompleted;
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800">
+      {/* ÜST MENÜ */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setViewMode('student')}
+            className="flex items-center gap-2 font-extrabold text-xl text-slate-900"
+          >
+            <GraduationCap className="w-6 h-6 text-red-600" />
+            <span>
+              {ui.brand_first}
+              <span className="text-red-600">{ui.brand_second}</span>
+            </span>
+          </button>
+
+          <nav className="flex items-center gap-1 sm:gap-2">
+            {[
+              { id: 'student', label: ui.nav_site, icon: LayoutDashboard },
+              { id: 'learn', label: ui.nav_learn, icon: Sparkles },
+              { id: 'ferheng', label: ui.nav_ferheng, icon: BookA },
+              { id: 'admin', label: ui.nav_admin, icon: Lock }
+            ].map((item) => {
+              const Icon = item.icon;
+              const active = viewMode === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setViewMode(item.id);
+                    if (item.id === 'learn') setSelectedUnit(null);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition ${
+                    active
+                      ? 'bg-red-50 text-red-700'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden md:inline">{item.label}</span>
+                </button>
+              );
+            })}
+
+            <div className="relative" ref={langDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setLangMenuOpen((o) => !o)}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-bold text-slate-700 border border-slate-200 hover:bg-slate-100"
+              >
+                <span>{selectedLang}</span>
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              {langMenuOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-40">
+                  {LANGUAGE_OPTIONS.map((l) => (
+                    <button
+                      key={l.code}
+                      type="button"
+                      onClick={() => handleSelectLanguage(l.code)}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center justify-between ${
+                        selectedLang === l.code ? 'font-bold text-red-700' : 'text-slate-700'
+                      }`}
+                    >
+                      <span>{l.nativeName}</span>
+                      {selectedLang === l.code && <Check className="w-4 h-4" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ===================== MALPER (ÖĞRENCİ) ===================== */}
+        {viewMode === 'student' && (
+          <div className="space-y-8">
+            <section className="bg-slate-900 text-white rounded-3xl p-8 md:p-12">
+              <span className="inline-block bg-red-600 text-xs font-bold tracking-wide px-3 py-1 rounded-full mb-4">
+                {ui.hero_badge}
+              </span>
+              <h1 className="text-3xl md:text-4xl font-extrabold mb-3 max-w-3xl">{ui.hero_title}</h1>
+              <p className="text-slate-300 max-w-2xl mb-6">{ui.hero_subtitle}</p>
+              <div className="relative max-w-xl">
+                <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={ui.search_placeholder}
+                  className="w-full rounded-xl pl-12 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+            </section>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('all')}
+                className={`px-4 py-2 rounded-full text-sm font-bold transition ${
+                  selectedCategory === 'all'
+                    ? 'bg-red-700 text-white'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                {ui.all_categories_label}
+              </button>
+              {categories.map((c) => (
+                <button
+                  key={c.slug}
+                  type="button"
+                  onClick={() => setSelectedCategory(c.slug)}
+                  className={`px-4 py-2 rounded-full text-sm font-bold transition ${
+                    selectedCategory === c.slug
+                      ? 'bg-red-700 text-white'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-wrap items-end gap-4">
+              <div className="flex items-center gap-2 font-bold text-slate-700 text-sm">
+                <Filter className="w-4 h-4" />
+                <span>{ui.filter_title}</span>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  {ui.filter_level_label}
+                </label>
+                <select
+                  value={selectedLevel}
+                  onChange={(e) => setSelectedLevel(e.target.value)}
+                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="all">{ui.filter_level_all}</option>
+                  {dynamicLevels.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">
+                  {ui.filter_media_label}
+                </label>
+                <select
+                  value={selectedMedia}
+                  onChange={(e) => setSelectedMedia(e.target.value)}
+                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="all">{ui.filter_media_all}</option>
+                  {dynamicMediaTypes.map((m) => (
+                    <option key={m.id} value={m.id}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* ZAROK oyunları */}
+            {selectedCategory === 'zarok' && (
+              <section className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                <h2 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  <span>Lîstikên Zarokan</span>
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {zarokUnitList.map((u) => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => {
+                        startUnit(u);
+                        setViewMode('learn');
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition"
+                    >
+                      {u.replace(/^ZAROK:\s*/i, '')}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">{ui.list_all_title}</h2>
+              <span className="text-sm text-slate-500">
+                {filteredLessons.length} {ui.list_count_suffix}
+              </span>
+            </div>
+
+            {loading ? (
+              <p className="text-center text-slate-500 py-12">{ui.loading_text}</p>
+            ) : filteredLessons.length === 0 ? (
+              <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center">
+                <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                <h3 className="font-bold text-slate-800">{ui.empty_title}</h3>
+                <p className="text-sm text-slate-500 mb-4">{ui.empty_subtitle}</p>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('admin')}
+                  className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-lg text-sm"
+                >
+                  {ui.empty_button}
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredLessons.map((lesson) => {
+                  const Icon = mediaIconFor(lesson.media_type);
+                  const hasGuide = lesson.teacher_guide || lesson.guide_pdf_url;
+                  return (
+                    <button
+                      key={lesson.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveLesson(lesson);
+                        setLessonTab('content');
+                      }}
+                      className="text-left bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition"
+                    >
+                      <div className="aspect-video bg-slate-100 flex items-center justify-center relative">
+                        {lesson.thumbnail_url ? (
+                          <img
+                            src={lesson.thumbnail_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Icon className="w-10 h-10 text-slate-300" />
+                        )}
+                        {hasGuide && (
+                          <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded">
+                            {ui.card_guide_badge}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <div className="text-xs font-bold text-red-600 mb-1">
+                          {categories.find((c) => c.slug === lesson.category_slug)?.name}
+                        </div>
+                        <h3 className="font-bold text-slate-900 mb-1">{lesson.title}</h3>
+                        <p className="text-sm text-slate-500 line-clamp-2">{lesson.description}</p>
+                        <div className="text-xs text-slate-400 mt-3">
+                          {ui.meta_level_prefix} {lesson.level} • {ui.meta_grade_prefix} {lesson.grade_level}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Ders detay penceresi */}
+            {activeLesson && (
+              <div
+                className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+                onClick={() => setActiveLesson(null)}
+              >
+                <div
+                  className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <h3 className="text-xl font-bold text-slate-900">{activeLesson.title}</h3>
+                    <button
+                      type="button"
+                      onClick={() => setActiveLesson(null)}
+                      className="p-1 rounded hover:bg-slate-100"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 mb-4 border-b border-slate-200">
+                    {[
+                      { id: 'content', label: ui.tab_content },
+                      { id: 'guide', label: ui.tab_guide }
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setLessonTab(t.id)}
+                        className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px ${
+                          lessonTab === t.id
+                            ? 'border-red-600 text-red-700'
+                            : 'border-transparent text-slate-500'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {lessonTab === 'content' ? (
+                    <div className="space-y-4">
+                      {activeLesson.thumbnail_url && (
+                        <img
+                          src={activeLesson.thumbnail_url}
+                          alt=""
+                          className="w-full rounded-xl"
+                        />
+                      )}
+                      <p className="text-slate-700 whitespace-pre-line">{activeLesson.description}</p>
+                      <div className="text-xs text-slate-500">
+                        {ui.meta_level_prefix} {activeLesson.level} • {ui.meta_grade_prefix}{' '}
+                        {activeLesson.grade_level}
+                      </div>
+                      {activeLesson.media_url && (
+                        <a
+                          href={activeLesson.media_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-lg text-sm"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span>{ui.btn_open_material}</span>
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                        <ClipboardList className="w-5 h-5 text-amber-600" />
+                        <span>{ui.guide_heading}</span>
+                      </h4>
+                      {activeLesson.teacher_guide ? (
+                        <p className="text-slate-700 whitespace-pre-line">{activeLesson.teacher_guide}</p>
+                      ) : (
+                        !activeLesson.guide_pdf_url && (
+                          <p className="text-slate-500 text-sm">{ui.guide_empty_text}</p>
+                        )
+                      )}
+                      {activeLesson.guide_pdf_url && (
+                        <a
+                          href={activeLesson.guide_pdf_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>{ui.guide_download_btn}</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===================== HÎNBÛN / LÎSTIK ===================== */}
+        {viewMode === 'learn' && (
+          <div className="max-w-3xl mx-auto">
+            {!selectedUnit ? (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h1 className="text-3xl font-extrabold text-slate-900 mb-2">{ui.learn_title}</h1>
+                  <p className="text-slate-500">{ui.learn_subtitle}</p>
+                </div>
+
+                <div className="flex justify-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
+                    <Zap className="w-5 h-5 text-amber-500" />
+                    <span>{xpPoints}</span>
+                    <span className="text-xs text-slate-500 font-semibold">{ui.learn_xp_label}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
+                    <Flame className="w-5 h-5 text-orange-500" />
+                    <span>{streakDays}</span>
+                  </div>
+                </div>
+
+                {unitList.length === 0 ? (
+                  <p className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8">
+                    {ui.learn_empty_units}
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {unitList.map((unit, idx) => {
+                      const count = exercises.filter((ex) => ex.unit_title === unit).length;
+                      const done = completedUnits.includes(unit);
+                      return (
+                        <button
+                          key={unit}
+                          type="button"
+                          onClick={() => startUnit(unit)}
+                          className="w-full flex items-center justify-between gap-4 bg-white border border-slate-200 hover:border-emerald-400 rounded-2xl p-5 text-left transition"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center font-extrabold ${
+                                done ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'
+                              }`}
+                            >
+                              {done ? <Check className="w-6 h-6" /> : idx + 1}
+                            </div>
+                            <div>
+                              <div className="font-bold text-slate-900">{unit}</div>
+                              <div className="text-xs text-slate-500">
+                                {ui.learn_stage_prefix} {idx + 1} • {count} {ui.learn_question_count_suffix}
+                              </div>
+                            </div>
+                          </div>
+                          {done && <Award className="w-6 h-6 text-amber-500" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : unitCompleted || outOfHearts ? (
+              <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-5">
+                {unitCompleted ? (
+                  <Award className="w-16 h-16 text-amber-500 mx-auto" />
+                ) : (
+                  <Heart className="w-16 h-16 text-slate-300 mx-auto" />
+                )}
+                <h2 className="text-2xl font-extrabold text-slate-900">
+                  {unitCompleted ? ui.learn_win_title : ui.learn_lose_title}
+                </h2>
+                <div className="flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => startUnit(selectedUnit)}
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>{ui.learn_replay_btn}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeActiveUnit}
+                    className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-5 py-2.5 rounded-xl"
+                  >
+                    {ui.learn_back_units_btn}
+                  </button>
+                </div>
+              </div>
+            ) : !currentEx ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-4">
+                <p className="text-slate-500">{ui.learn_empty_units}</p>
+                <button
+                  type="button"
+                  onClick={closeActiveUnit}
+                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-5 py-2 rounded-xl"
+                >
+                  {ui.learn_back_units_btn}
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 space-y-6">
+                {/* Üst çubuk */}
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={closeActiveUnit}
+                    className="p-1.5 rounded-lg hover:bg-slate-100"
+                    aria-label="Derkeve"
+                  >
+                    <X className="w-5 h-5 text-slate-500" />
+                  </button>
+                  <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 transition-all"
+                      style={{ width: `${(currentExIndex / unitExercises.length) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1 font-bold text-red-600">
+                    <Heart className="w-5 h-5 fill-red-500" />
+                    <span>{hearts}</span>
+                  </div>
+                </div>
+
+                {/* Soru */}
+                <div className="space-y-3">
+                  <div className="text-xs font-bold text-emerald-700">
+                    {{
+                      choice: ui.learn_type_choice,
+                      sentence: ui.learn_type_sentence,
+                      match: ui.learn_type_match,
+                      fill_blank: ui.learn_type_fill
+                    }[currentEx.exercise_type] || ''}
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900">{currentEx.question_text}</h2>
+
+                  {currentEx.image_url && (
+                    <img
+                      src={currentEx.image_url}
+                      alt=""
+                      className="max-h-56 rounded-xl border border-slate-200 mx-auto"
+                    />
+                  )}
+
+                  {currentEx.audio_url && (
+                    <button
+                      type="button"
+                      onClick={() => playCurrentAudio(currentEx.audio_url)}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white ${
+                        isPlayingAudio ? 'bg-sky-400' : 'bg-sky-600 hover:bg-sky-700'
+                      }`}
+                    >
+                      <Volume2 className="w-5 h-5" />
+                      <span>{isPlayingAudio ? '...' : 'Guhdarî Bike'}</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Seçenekli / boşluk doldurma */}
+                {(currentEx.exercise_type === 'choice' || currentEx.exercise_type === 'fill_blank') && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {(currentEx.options || []).map((opt) => {
+                      const isSel = selectedOption === opt;
+                      const isRight =
+                        answerState && opt.toLowerCase() === currentEx.correct_answer.trim().toLowerCase();
+                      let cls = 'border-slate-200 hover:border-emerald-400';
+                      if (isSel && !answerState) cls = 'border-emerald-500 bg-emerald-50';
+                      if (answerState && isRight) cls = 'border-emerald-500 bg-emerald-50';
+                      if (answerState === 'wrong' && isSel && !isRight) cls = 'border-red-500 bg-red-50';
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          disabled={Boolean(answerState)}
+                          onClick={() => setSelectedOption(opt)}
+                          className={`border-2 rounded-xl px-4 py-3 font-semibold text-left transition ${cls}`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Cümle kurma */}
+                {currentEx.exercise_type === 'sentence' && (
+                  <div className="space-y-4">
+                    <div className="min-h-[56px] border-2 border-dashed border-slate-300 rounded-xl p-3 flex flex-wrap gap-2">
+                      {builtWords.length === 0 && (
+                        <span className="text-slate-400 text-sm">{ui.learn_sentence_placeholder}</span>
+                      )}
+                      {builtWords.map((w) => (
+                        <button
+                          key={w.idx}
+                          type="button"
+                          onClick={() => toggleSentenceWord(w.word, w.idx)}
+                          className="bg-emerald-100 text-emerald-800 font-semibold px-3 py-1.5 rounded-lg"
+                        >
+                          {w.word}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(currentEx.options || []).map((word, idx) => {
+                        const used = builtWords.some((b) => b.idx === idx);
+                        return (
+                          <button
+                            key={`${word}-${idx}`}
+                            type="button"
+                            disabled={used}
+                            onClick={() => toggleSentenceWord(word, idx)}
+                            className={`border-2 border-slate-200 font-semibold px-3 py-1.5 rounded-lg transition ${
+                              used ? 'opacity-30' : 'hover:border-emerald-400'
+                            }`}
+                          >
+                            {word}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Eşleştirme */}
+                {currentEx.exercise_type === 'match' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      {parsedMatchPairs.map((p) => {
+                        const done = matchedPairs.includes(p.id);
+                        const sel = matchLeftSelected === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={done}
+                            onClick={() => handleMatchSelect('left', p.id)}
+                            className={`w-full border-2 rounded-xl px-3 py-3 font-semibold text-sm transition ${
+                              done
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : sel
+                                ? matchWrongFlash
+                                  ? 'border-red-500 bg-red-50'
+                                  : 'border-sky-500 bg-sky-50'
+                                : 'border-slate-200 hover:border-sky-400'
+                            }`}
+                          >
+                            {p.left}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="space-y-3">
+                      {shuffledRightOptions.map((p) => {
+                        const done = matchedPairs.includes(p.id);
+                        const sel = matchRightSelected === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            disabled={done}
+                            onClick={() => handleMatchSelect('right', p.id)}
+                            className={`w-full border-2 rounded-xl px-3 py-3 font-semibold text-sm transition ${
+                              done
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : sel
+                                ? matchWrongFlash
+                                  ? 'border-red-500 bg-red-50'
+                                  : 'border-sky-500 bg-sky-50'
+                                : 'border-slate-200 hover:border-sky-400'
+                            }`}
+                          >
+                            {p.right}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Geri bildirim + butonlar */}
+                {answerState && (
+                  <div
+                    className={`rounded-xl p-4 text-sm font-medium ${
+                      answerState === 'correct'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : 'bg-red-50 text-red-800 border border-red-200'
+                    }`}
+                  >
+                    {answerState === 'correct' ? (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span>{ui.learn_correct_msg}</span>
+                        {comboCount >= 3 && <Flame className="w-4 h-4 text-orange-500" />}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5" />
+                        <span>
+                          {ui.learn_wrong_prefix} <b>{currentEx.correct_answer}</b>
+                        </span>
+                      </div>
+                    )}
+                    {currentEx.explanation && (
+                      <p className="mt-2 font-normal">{currentEx.explanation}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  {!answerState && currentEx.exercise_type !== 'match' ? (
+                    <button
+                      type="button"
+                      onClick={checkExerciseAnswer}
+                      disabled={
+                        currentEx.exercise_type === 'sentence'
+                          ? builtWords.length === 0
+                          : !selectedOption
+                      }
+                      className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold px-8 py-3 rounded-xl"
+                    >
+                      {ui.learn_check_btn}
+                    </button>
+                  ) : answerState ? (
+                    <button
+                      type="button"
+                      onClick={goToNextExercise}
+                      className={`text-white font-bold px-8 py-3 rounded-xl ${
+                        wrongAnswerLocked
+                          ? 'bg-red-600 hover:bg-red-700'
+                          : 'bg-emerald-600 hover:bg-emerald-700'
+                      }`}
+                    >
+                      {ui.learn_next_btn}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===================== FERHENG ===================== */}
+        {viewMode === 'ferheng' && (
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-extrabold text-slate-900 mb-2 flex items-center justify-center gap-2">
+                <BookA className="w-8 h-8 text-sky-600" />
+                <span>{ui.nav_ferheng}</span>
+              </h1>
+              <p className="text-sm text-slate-500">
+                {totalWordCount || filteredDictionary.length} peyv
+              </p>
+            </div>
+
+            <form onSubmit={handleDictionarySearchSubmit} className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={ferhengQuery}
+                  onChange={(e) => setFerhengQuery(e.target.value)}
+                  placeholder={ui.ferheng_search_placeholder}
+                  className="w-full border border-slate-300 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-sky-600"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 rounded-xl"
+              >
+                {ui.ferheng_search_btn}
+              </button>
+            </form>
+
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedLetter('all')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+                  selectedLetter === 'all'
+                    ? 'bg-sky-600 text-white'
+                    : 'bg-white border border-slate-200 text-slate-700'
+                }`}
+              >
+                #
+              </button>
+              {kurdishAlphabet.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setSelectedLetter(l)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+                    selectedLetter === l
+                      ? 'bg-sky-600 text-white'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            {searchingDict && <p className="text-xs text-slate-400">...</p>}
+
+            {filteredDictionary.length === 0 ? (
+              <p className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8">
+                {ui.ferheng_empty_text}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {filteredDictionary.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSelectedWordDetail(item)}
+                    className="w-full text-left bg-white border border-slate-200 hover:border-sky-400 rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition"
+                  >
+                    <div>
+                      <span className="font-extrabold text-slate-900 mr-2">{item.word}</span>
+                      <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded">
+                        {item.part_of_speech}
+                      </span>
+                      <div className="text-sm text-slate-600 mt-0.5">{item.meaning_tr}</div>
+                    </div>
+                    <Eye className="w-4 h-4 text-slate-300 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {selectedWordDetail && (
+              <div
+                className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+                onClick={() => setSelectedWordDetail(null)}
+              >
+                <div
+                  className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-2xl font-extrabold text-slate-900">
+                        {selectedWordDetail.word}
+                      </h3>
+                      <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded">
+                        {selectedWordDetail.part_of_speech}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedWordDetail(null)}
+                      className="p-1 rounded hover:bg-slate-100"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="text-sm space-y-2">
+                    <p><b>TR:</b> {selectedWordDetail.meaning_tr}</p>
+                    {selectedWordDetail.meaning_en && (
+                      <p><b>EN:</b> {selectedWordDetail.meaning_en}</p>
+                    )}
+                    {selectedWordDetail.meaning_ku && (
+                      <p><b>KU:</b> {selectedWordDetail.meaning_ku}</p>
+                    )}
+                    {selectedWordDetail.example_sentence && (
+                      <p className="italic text-slate-600 border-l-4 border-sky-300 pl-3">
+                        {selectedWordDetail.example_sentence}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===================== REWEBER (ADMIN) ===================== */}
+        {viewMode === 'admin' && (
+          <div>
             {!isAdmin ? (
               <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md border border-slate-200 p-8 mt-8">
                 <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mx-auto mb-4">
