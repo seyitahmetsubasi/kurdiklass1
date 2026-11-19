@@ -1,5 +1,3 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://mzsxryxuvyllljvbrzul.supabase.co/rest/v1/';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_';
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
@@ -41,10 +39,10 @@ import {
 } from 'lucide-react';
 
 // =========================================================================
-// SUPABASE BAĞLANTI AYARLARI (Kendi bilgilerinizi burada koruyun)
+// SUPABASE BAĞLANTI AYARLARI
 // =========================================================================
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://mzsxryxuvyllljvbrzul.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'kurdiklass2026';
@@ -458,7 +456,6 @@ export default function App() {
       (ext) => !localSet.has(ext.word?.toLowerCase())
     );
     const combined = [...localFiltered, ...otherExternal];
-    if (!q) return combined;
 
     return combined.sort((a, b) => {
       if (a.isPriorityMatch && !b.isPriorityMatch) return -1;
