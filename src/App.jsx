@@ -63,12 +63,10 @@ const DEFAULT_UI_TEXTS = {
   meta_grade_prefix: 'Pola Perwerdehiyê:',
   footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.',
 
-  // Ferheng (Sözlük) Yazıları
   ferheng_search_placeholder: 'Li peyvekê bigere (Mînak: ziman, pirtûk, dibistan)...',
   ferheng_search_btn: 'Lê Bigere',
   ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.',
 
-  // Hînbûn / Lîstik Yazıları
   learn_title: 'Fêrbûna Kurmancî — Lîstik û Rahênan',
   learn_subtitle: 'Bi gavên kurt û lîstikên nivîskî (bê deng) Kurmancî hîn bibe!',
   learn_xp_label: 'Pûan (XP)',
@@ -169,7 +167,6 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
   const [settingsMsg, setSettingsMsg] = useState('');
 
-  // Ferheng State'leri
   const [ferhengWords, setFerhengWords] = useState([]);
   const [ferhengQuery, setFerhengQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState('all');
@@ -178,7 +175,6 @@ export default function App() {
   const [selectedWordDetail, setSelectedWordDetail] = useState(null);
   const [syncingProgress, setSyncingProgress] = useState('');
 
-  // Admin Ferheng Formu State'leri
   const [editingWordId, setEditingWordId] = useState(null);
   const [wordForm, setWordForm] = useState({
     word: '',
@@ -189,7 +185,6 @@ export default function App() {
   });
   const [wordMsg, setWordMsg] = useState('');
 
-  // Kurmancî Öğrenme / Lîstik State'leri
   const [exercises, setExercises] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
@@ -200,7 +195,6 @@ export default function App() {
   const [hearts, setHearts] = useState(5);
   const [unitCompleted, setUnitCompleted] = useState(false);
 
-  // Admin Alıştırma Ekleme & Düzenleme State'i
   const [editingExId, setEditingExId] = useState(null);
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [exForm, setExForm] = useState({
@@ -214,15 +208,12 @@ export default function App() {
   });
   const [exMsg, setExMsg] = useState('');
 
-  // Kategori Ekleme / Düzenleme
   const [newCatName, setNewCatName] = useState('');
   const [catMsg, setCatMsg] = useState('');
 
-  // Şifre Giriş Formu
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
 
-  // Filtreler ve Aktif Ders
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedMedia, setSelectedMedia] = useState('all');
@@ -230,7 +221,6 @@ export default function App() {
   const [activeLesson, setActiveLesson] = useState(null);
   const [lessonTab, setLessonTab] = useState('content');
 
-  // Admin Ders Formu
   const [editingId, setEditingId] = useState(null);
   const [uploadingField, setUploadingField] = useState('');
   const [formData, setFormData] = useState({
@@ -270,7 +260,6 @@ export default function App() {
     fetchFerheng();
   }, []);
 
-  // Yazarken veya harf seçilince arka planda Türkçe karşılıklarıyla birlikte çeker
   useEffect(() => {
     if (viewMode !== 'ferheng') return;
 
@@ -288,18 +277,28 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [viewMode, ferhengQuery, selectedLetter]);
 
+  // 1.000 satır sınırını aşarak tüm sözlük kelimelerini çeker
   const fetchFerheng = async () => {
-    const { data, error } = await supabase
-      .from('ferheng')
-      .select('*')
-      .order('word', { ascending: true });
+    let allRows = [];
+    let from = 0;
+    const step = 1000;
 
-    if (!error && data) {
-      setFerhengWords(data);
+    while (true) {
+      const { data, error } = await supabase
+        .from('ferheng')
+        .select('*')
+        .order('word', { ascending: true })
+        .range(from, from + step - 1);
+
+      if (error || !data || data.length === 0) break;
+      allRows = [...allRows, ...data];
+      if (data.length < step) break;
+      from += step;
     }
+
+    setFerhengWords(allRows);
   };
 
-  // Wikitext içinden Türkçe karşılıkları ve kelime türünü ayıklayan fonksiyon
   const parseTurkishFromWikitext = (wikitext) => {
     if (!wikitext) return { tr: '', pos: 'navdêr' };
 
@@ -312,7 +311,6 @@ export default function App() {
     else if (lowerAll.includes('hejmar') || lowerAll.includes('=== sayı ===')) pos = 'hejmar';
     else if (lowerAll.includes('baneşan') || lowerAll.includes('=== ünlem ===')) pos = 'baneşan';
 
-    // 1. {{W|tr|dil}} veya {{w|tr|dil}} şablonlarını yakala
     const wMatches = [...wikitext.matchAll(/\{\{[Ww]\|tr\|([^|}]+)(?:\|[^}]*)?\}\}/g)]
       .map((m) => m[1].trim())
       .filter(Boolean);
@@ -321,7 +319,6 @@ export default function App() {
       return { tr: [...new Set(wMatches)].slice(0, 4).join(', '), pos };
     }
 
-    // 2. == Tirkî == veya === Tirkî === altındaki * [[dil]] maddelerini yakala
     const trSectionMatch = wikitext.match(/={2,4}\s*Tirkî\s*={2,4}([\s\S]*?)(?:\n={2,4}[^=]|$)/i);
     if (trSectionMatch && trSectionMatch[1]) {
       const linkMatches = [...trSectionMatch[1].matchAll(/\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/g)]
@@ -332,7 +329,6 @@ export default function App() {
       }
     }
 
-    // 3. Türkçe Vikisözlük (Kürtçe başlığı altındaki # [[dil]] maddeleri)
     const kuSectionMatch = wikitext.match(/==\s*Kürtçe\s*==([\s\S]*?)(?:\n==[^=]|$)/i);
     if (kuSectionMatch && kuSectionMatch[1]) {
       const defMatches = [...kuSectionMatch[1].matchAll(/^#\s*(?:\{\{[^}]+\}\}\s*)*\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/gm)]
@@ -352,12 +348,10 @@ export default function App() {
     setSearchingDict(true);
 
     try {
-      // 1) Kürtçe sözlükten öneki uyan kelimeleri ve ham içeriklerini çek
       const kuUrl = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
         cleanQuery
       )}&gpsnamespace=0&gpslimit=20&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
 
-      // 2) Türkçe sözlükten doğrudan tam karşılığı çek (ör. ziman -> dil)
       const trUrl = `https://tr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(
         cleanQuery
       )}&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
@@ -367,7 +361,6 @@ export default function App() {
 
       const resultsMap = new Map();
 
-      // Önce Türkçe sözlükteki tam eşleşmeyi işle (ör. ziman -> dil)
       const trPages = Object.values(trData?.query?.pages || {});
       for (const p of trPages) {
         if (!p || p.missing) continue;
@@ -385,7 +378,6 @@ export default function App() {
         }
       }
 
-      // Ardından Kürtçe sözlükteki kelimeleri ve Türkçe karşılıklarını işle
       const kuPages = Object.values(kuData?.query?.pages || {}).sort(
         (a, b) => (a.index || 0) - (b.index || 0)
       );
@@ -427,40 +419,71 @@ export default function App() {
     }
   };
 
-  // Açık sözlük kaynaklarındaki Kürtçe kelimeleri topluca kendi veritabanınıza aktarma
+  // Wîkîferheng + Türkçe Vikisözlük kategorilerinden binlerce Kürtçe kelimeyi sayfalama ile toplu aktarır
   const handleBulkImportDictionary = async () => {
-    setSyncingProgress('Peyvên Kurdî ji çavkaniya vekirî tên kişandin...');
+    setSyncingProgress('Jêderên vekirî tên girêdan (tr.wiktionary + ku.wiktionary)...');
     let totalAdded = 0;
-    const existingSet = new Set(ferhengWords.map((w) => w.word?.toLowerCase()));
+    const existingSet = new Set(ferhengWords.map((w) => w.word?.toLowerCase().trim()));
 
-    for (const letter of kurdishAlphabet) {
-      const lowerLetter = letter.toLocaleLowerCase('ku');
-      setSyncingProgress(`Tîpa "${letter}" tê barkirin... (${totalAdded} peyv hatin zêdekirin)`);
+    let trContinue = null;
+    let trBatchCount = 0;
+    do {
+      trBatchCount += 1;
+      setSyncingProgress(
+        `Beşa 1 (Vikisözlük Kurdî-Tirkî) — Paket ${trBatchCount}... (${totalAdded} peyv hatin zêdekirin)`
+      );
 
       try {
-        const url = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
-          lowerLetter
-        )}&gpsnamespace=0&gpslimit=40&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
+        const params = new URLSearchParams({
+          action: 'query',
+          generator: 'categorymembers',
+          gcmtitle: 'Kategori:Kürtçe sözcükler',
+          gcmnamespace: '0',
+          gcmlimit: '50',
+          prop: 'revisions',
+          rvprop: 'content',
+          rvslots: 'main',
+          format: 'json',
+          origin: '*'
+        });
+        if (trContinue) params.set('gcmcontinue', trContinue);
 
-        const res = await fetch(url);
+        const res = await fetch(`https://tr.wiktionary.org/w/api.php?${params.toString()}`);
         const data = await res.json();
-        const pages = Object.values(data?.query?.pages || {});
+        trContinue = data?.continue?.gcmcontinue || null;
 
+        const pages = Object.values(data?.query?.pages || {});
         const batchToInsert = [];
+
         for (const p of pages) {
           if (!p || !p.title || p.title.includes(':')) continue;
-          const key = p.title.toLowerCase();
+          const key = p.title.toLowerCase().trim();
           if (existingSet.has(key)) continue;
 
           const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
           const parsed = parseTurkishFromWikitext(content);
 
-          if (parsed.tr) {
+          let fallbackTr = parsed.tr;
+          if (!fallbackTr) {
+            const kuSec = content.match(/==\s*Kürtçe\s*==([\s\S]*?)(?:\n==[^=]|$)/i);
+            if (kuSec && kuSec[1]) {
+              const lineMatch = kuSec[1].match(/^#\s*(.+)$/m);
+              if (lineMatch) {
+                fallbackTr = lineMatch[1]
+                  .replace(/\{\{[^}]+\}\}/g, '')
+                  .replace(/\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/g, '$1')
+                  .replace(/['’]+/g, '')
+                  .trim();
+              }
+            }
+          }
+
+          if (fallbackTr) {
             existingSet.add(key);
             batchToInsert.push({
-              word: p.title,
-              part_of_speech: parsed.pos,
-              meaning_tr: parsed.tr,
+              word: p.title.trim(),
+              part_of_speech: parsed.pos || 'navdêr',
+              meaning_tr: fallbackTr.slice(0, 250),
               meaning_ku: '',
               example_sentence: ''
             });
@@ -474,13 +497,83 @@ export default function App() {
           }
         }
       } catch {
-        // Diğer harfe devam et
+        break;
       }
-    }
+    } while (trContinue);
+
+    let kuContinue = null;
+    let kuBatchCount = 0;
+    do {
+      kuBatchCount += 1;
+      setSyncingProgress(
+        `Beşa 2 (Wîkîferheng Kurmancî) — Paket ${kuBatchCount}... (${totalAdded} peyv hatin zêdekirin)`
+      );
+
+      try {
+        const params = new URLSearchParams({
+          action: 'query',
+          generator: 'categorymembers',
+          gcmtitle: 'Kategorî:Kurmancî',
+          gcmnamespace: '0',
+          gcmlimit: '50',
+          prop: 'revisions',
+          rvprop: 'content',
+          rvslots: 'main',
+          format: 'json',
+          origin: '*'
+        });
+        if (kuContinue) params.set('gcmcontinue', kuContinue);
+
+        const res = await fetch(`https://ku.wiktionary.org/w/api.php?${params.toString()}`);
+        const data = await res.json();
+        kuContinue = data?.continue?.gcmcontinue || null;
+
+        const pages = Object.values(data?.query?.pages || {});
+        const batchToInsert = [];
+
+        for (const p of pages) {
+          if (!p || !p.title || p.title.includes(':')) continue;
+          const key = p.title.toLowerCase().trim();
+          if (existingSet.has(key)) continue;
+
+          const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
+          const parsed = parseTurkishFromWikitext(content);
+
+          let kuMeaning = '';
+          const kuDefMatch = content.match(/^#\s*(.+)$/m);
+          if (kuDefMatch) {
+            kuMeaning = kuDefMatch[1]
+              .replace(/\{\{[^}]+\}\}/g, '')
+              .replace(/\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/g, '$1')
+              .replace(/['’]+/g, '')
+              .trim();
+          }
+
+          if (parsed.tr || kuMeaning) {
+            existingSet.add(key);
+            batchToInsert.push({
+              word: p.title.trim(),
+              part_of_speech: parsed.pos || 'navdêr',
+              meaning_tr: (parsed.tr || kuMeaning).slice(0, 250),
+              meaning_ku: kuMeaning.slice(0, 400),
+              example_sentence: ''
+            });
+          }
+        }
+
+        if (batchToInsert.length > 0) {
+          const { error } = await supabase.from('ferheng').insert(batchToInsert);
+          if (!error) {
+            totalAdded += batchToInsert.length;
+          }
+        }
+      } catch {
+        break;
+      }
+    } while (kuContinue);
 
     await fetchFerheng();
     setSyncingProgress(`Temam bû! Bi giştî ${totalAdded} peyvên nû li Ferhengê hatin zêdekirin.`);
-    setTimeout(() => setSyncingProgress(''), 6000);
   };
 
   const handleSaveWord = async (e) => {
@@ -549,7 +642,6 @@ export default function App() {
     if (!error) fetchFerheng();
   };
 
-  // Kendi kelimeleriniz + canlı sözlük kelimelerini tek listede birleştirme (tam eşleşen kelime en üstte)
   const mergedDictionary = (() => {
     const q = ferhengQuery.trim().toLowerCase();
     const existingKeys = new Set(ferhengWords.map((w) => w.word?.toLowerCase()));
@@ -1039,7 +1131,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-      {/* ÜST BAR (HEADER) */}
       <header className="bg-red-700 text-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
           <div
@@ -1116,7 +1207,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* DİNAMİK KATEGORİ ŞERİDİ */}
         {viewMode === 'student' && (
           <nav className="bg-red-800 border-t border-red-600/40 overflow-x-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 py-2 whitespace-nowrap">
@@ -1151,12 +1241,9 @@ export default function App() {
         )}
       </header>
 
-      {/* ANA İÇERİK ALANI */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'ferheng' ? (
-          /* ================= FERHENG (SÖZLÜK MODÜLÜ) ================= */
           <div className="max-w-4xl mx-auto bg-slate-900 text-white rounded-3xl p-5 sm:p-8 shadow-2xl border border-slate-800 space-y-6">
-            {/* ARAMA ÇUBUĞU VE SADECE "LÊ BIGERE" BUTONU */}
             <form onSubmit={handleDictionarySearchSubmit} className="flex gap-2.5">
               <div className="relative flex-1">
                 <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
@@ -1192,7 +1279,6 @@ export default function App() {
               </button>
             </form>
 
-            {/* SEÇİLEN KELİMENİN DETAY KARTI */}
             {selectedWordDetail && (
               <div className="bg-slate-800 border border-sky-500/40 rounded-2xl p-5 space-y-2.5">
                 <div className="flex items-start justify-between gap-2">
@@ -1228,7 +1314,6 @@ export default function App() {
               </div>
             )}
 
-            {/* SONUÇ LİSTESİ (KÜRTÇE KELİME + ALTINDA TÜRKÇE KARŞILIĞI + SAĞDA TÜR ROZETİ) */}
             <div className="divide-y divide-slate-800 bg-slate-950/50 rounded-2xl border border-slate-800 overflow-hidden">
               {searchingDict && filteredDictionary.length === 0 ? (
                 <div className="p-6 text-center text-sm text-slate-400">
@@ -1262,7 +1347,6 @@ export default function App() {
               )}
             </div>
 
-            {/* ALFABE HARF ŞERİDİ */}
             <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -1292,7 +1376,6 @@ export default function App() {
             </div>
           </div>
         ) : viewMode === 'learn' ? (
-          /* ================= KURMANCÎ ÖĞRENME / LÎSTİK MODÜLÜ ================= */
           <div className="max-w-3xl mx-auto">
             <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 text-white mb-6 shadow-md flex items-center justify-between">
               <div>
@@ -1537,7 +1620,6 @@ export default function App() {
           </div>
         ) : viewMode === 'student' ? (
           <>
-            {/* HERO VE ARAMA */}
             <div className="bg-gradient-to-r from-red-700 to-red-900 rounded-2xl p-6 sm:p-8 text-white mb-8 shadow-lg">
               <div className="max-w-2xl">
                 <span className="inline-block bg-red-600/80 text-red-100 text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
@@ -1563,7 +1645,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* AKTİF DERS DETAY PANELİ */}
             {activeLesson && (
               <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-8">
                 <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4 mb-5">
@@ -1676,7 +1757,6 @@ export default function App() {
               </div>
             )}
 
-            {/* SOL FİLTRE VE SAĞ DERS LİSTESİ */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               <aside className="lg:col-span-1 space-y-6">
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -1830,7 +1910,6 @@ export default function App() {
             </div>
           </>
         ) : (
-          /* ================= ADMIN PANELİ ================= */
           <div>
             {!isAdmin ? (
               <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md border border-slate-200 p-8 mt-8">
@@ -1873,7 +1952,6 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-8">
-                {/* Admin Üst Bilgi */}
                 <div className="bg-slate-900 text-white rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <h1 className="text-2xl font-bold">Panela Rêveberiya KurdiKlass</h1>
@@ -1895,7 +1973,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* DERS EKLEME / DÜZENLEME FORMU */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5 text-red-600" />
@@ -2110,7 +2187,6 @@ export default function App() {
                   </form>
                 </div>
 
-                {/* FERHENG (SÖZLÜK) KELİME EKLEME, DÜZENLEME VE TOPLU AKTARIM */}
                 <div className="bg-white rounded-2xl border border-sky-300 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -2238,7 +2314,7 @@ export default function App() {
                   </form>
 
                   <div className="space-y-2 max-h-60 overflow-y-auto border-t border-slate-100 pt-4">
-                    {ferhengWords.map((item) => (
+                    {ferhengWords.slice(0, 100).map((item) => (
                       <div key={item.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
                         <div className="truncate">
                           <span className="font-bold text-slate-900 mr-2">{item.word}</span>
@@ -2269,7 +2345,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* KURMANCÎ ÖĞRENME / LÎSTİK SORU EKLEME & DÜZENLEME */}
                 <div className="bg-white rounded-2xl border border-emerald-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-emerald-600" />
@@ -2455,7 +2530,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* MEVCUT DERSLER LİSTESİ */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4">
                     Materyalên Tomarkirî ({lessons.length})
@@ -2504,7 +2578,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* KATEGORİ BAŞLIKLARINI DÜZENLEME */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <FolderEdit className="w-5 h-5 text-red-600" />
@@ -2563,7 +2636,6 @@ export default function App() {
                   </form>
                 </div>
 
-                {/* SİTEDEKİ TÜM YAZILARI DÜZENLEME */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-red-600" />
@@ -2610,7 +2682,6 @@ export default function App() {
         )}
       </main>
 
-      {/* ALT BİLGİ (FOOTER) */}
       <footer className="bg-slate-900 text-slate-400 py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
           <div className="font-bold text-white text-base">
