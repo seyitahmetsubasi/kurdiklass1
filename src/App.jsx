@@ -379,7 +379,7 @@ export default function App() {
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
   const [exForm, setExForm] = useState({
-    unit_title: 'ZAROK: Lîstika Hevnasînê',
+    unit_title: 'ZAROK: Fêkî',
     exercise_type: 'choice',
     question_text: '',
     options_raw: '',
@@ -744,7 +744,7 @@ export default function App() {
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
-      unit_title: 'ZAROK: Lîstika Hevnasînê',
+      unit_title: 'ZAROK: Fêkî',
       exercise_type: 'choice',
       question_text: '',
       options_raw: '',
@@ -2207,7 +2207,10 @@ export default function App() {
                           onClick={() => {
                             if (lesson.media_type === 'interactive' && lesson.category_slug === 'zarok') {
                               setViewMode('learn');
-                              startUnit('ZAROK: Lîstika Hevnasînê');
+                              const targetUnit = lesson.title?.includes('Fêkî')
+                                ? 'ZAROK: Fêkî'
+                                : 'ZAROK: Lîstika Hevnasînê';
+                              startUnit(targetUnit);
                               return;
                             }
                             setActiveLesson(lesson);
@@ -2360,7 +2363,7 @@ export default function App() {
                         required
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="ZAROK: Lîstika Hevnasînê"
+                        placeholder="ZAROK: Fêkî"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -2459,7 +2462,7 @@ export default function App() {
                         placeholder={
                           exForm.exercise_type === 'match'
                             ? 'Mezin=Biçûk, Germ=Sar, Dirêj=Kurt, Spî=Reş'
-                            : 'Ez, diçim, dibistanê., tu, malê'
+                            : 'sêv, hinar, zebeş, hêjîr'
                         }
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
@@ -2475,7 +2478,7 @@ export default function App() {
                           required
                           value={exForm.correct_answer}
                           onChange={(e) => setExForm({ ...exForm, correct_answer: e.target.value })}
-                          placeholder="Ez diçim dibistanê."
+                          placeholder="sêv"
                           className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                         />
                       </div>
@@ -2489,7 +2492,7 @@ export default function App() {
                         type="text"
                         value={exForm.explanation}
                         onChange={(e) => setExForm({ ...exForm, explanation: e.target.value })}
-                        placeholder="Ravekirina rêzimanî bi Kurmancî..."
+                        placeholder="Ravekirin bi Kurmancî..."
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
