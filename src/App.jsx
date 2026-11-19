@@ -186,6 +186,51 @@ const UI_FIELD_LABELS = [
 
 const STARTER_GAMES = [
   {
+    unit_title: 'ZAROK: Lîstika Hevnasînê',
+    exercise_type: 'choice',
+    question_text: '👋 Hevalekî nû tê dibistanê. Tu jê re çi dibêjî?',
+    options: ['Silav! Navê min Azad e.', 'Şevbaş!', 'Bi xatirê te!', 'Ez nizanim.'],
+    correct_answer: 'Silav! Navê min Azad e.',
+    explanation: 'Dema em kesekî nû dibînin, em dibêjin: Silav! Navê min ... e.'
+  },
+  {
+    unit_title: 'ZAROK: Lîstika Hevnasînê',
+    exercise_type: 'match',
+    question_text: '🎈 Pirs û bersivên hevnasînê bighîne hev:',
+    options: [
+      'Navê te çi ye?=Navê min Zîn e.',
+      'Tu çawa yî?=Ez baş im, spas!',
+      'Tu çend salî yî?=Ez heft salî me.',
+      'Tu ji ku derê yî?=Ez ji Amedê me.'
+    ],
+    correct_answer: '4',
+    explanation: 'Ev çar pirs û bersiv bingeha hevnasîna rojane ne.'
+  },
+  {
+    unit_title: 'ZAROK: Lîstika Hevnasînê',
+    exercise_type: 'sentence',
+    question_text: '🧩 Peyvan rêz bike û xwe bide nasîn:',
+    options: ['Navê', 'min', 'Rojda', 'ye.', 'tu', 'baş'],
+    correct_answer: 'Navê min Rojda ye.',
+    explanation: 'Ji bo gotina navê xwe em dibêjin: Navê min [nav] e/ye.'
+  },
+  {
+    unit_title: 'ZAROK: Lîstika Hevnasînê',
+    exercise_type: 'fill_blank',
+    question_text: '🎂 Valahiyê tije bike: "Ez _____ salî me." (7)',
+    options: ['heft', 'du', 'sê', 'deh'],
+    correct_answer: 'heft',
+    explanation: 'Hejmara 7 bi Kurmancî "heft" e.'
+  },
+  {
+    unit_title: 'ZAROK: Lîstika Hevnasînê',
+    exercise_type: 'choice',
+    question_text: '😊 Hevalê te dipirse: "Tu çawa yî?" Bersiva herî xweş kîjan e?',
+    options: ['Ez gelekî baş im, spas! Tu çawa yî?', 'Navê min Baran e.', 'Ez diçim malê.', 'Rojbaş.'],
+    correct_answer: 'Ez gelekî baş im, spas! Tu çawa yî?',
+    explanation: 'Dema kesek halê me dipirse, em dibêjin "Ez baş im, spas!" û em jî halê wî dipirsin.'
+  },
+  {
     unit_title: 'Beşa 1: Silav û Nasîn',
     exercise_type: 'match',
     question_text: 'Peyvên Kurmancî bi ravekirinên wan re bighîne hev:',
@@ -280,9 +325,9 @@ export default function App() {
     guide_pdf_url: ''
   });
 
-  // Ferheng State
+  // Ferheng State (Canlı Supabase Sorgulama + Toplam Sayı)
   const [ferhengWords, setFerhengWords] = useState([]);
-  const [externalDictResults, setExternalDictResults] = useState([]);
+  const [totalWordCount, setTotalWordCount] = useState(0);
   const [searchingDict, setSearchingDict] = useState(false);
   const [ferhengQuery, setFerhengQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState('all');
@@ -330,7 +375,7 @@ export default function App() {
   const [exMsg, setExMsg] = useState('');
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [exForm, setExForm] = useState({
-    unit_title: 'Beşa 1: Silav û Nasîn',
+    unit_title: 'ZAROK: Lîstika Hevnasînê',
     exercise_type: 'choice',
     question_text: '',
     options_raw: '',
@@ -358,7 +403,7 @@ export default function App() {
     fetchCategories();
     fetchSiteSettings();
     fetchLessons();
-    fetchDictionary();
+    fetchDictionary('', 'all');
     fetchExercises();
   }, []);
 
@@ -379,43 +424,43 @@ export default function App() {
   };
 
   // =========================================================================
-  // FERHENG FONKSİYONLARI
+  // CANLI SUPABASE FERHENG FONKSİYONLARI (1000+ KELİME DESTEĞİ)
   // =========================================================================
-  const fetchDictionary = async () => {
-    const { data, error } = await supabase
+  const fetchDictionary = async (searchText = '', letter = 'all') => {
+    setSearchingDict(true);
+    let query = supabase
       .from('dictionary')
-      .select('*')
-      .order('word', { ascending: true })
-      .limit(1000);
+      .select('*', { count: 'exact' })
+      .order('word', { ascending: true });
+
+    const q = searchText.trim();
+    if (q) {
+      query = query.or(
+        `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%`
+      );
+    } else if (letter !== 'all') {
+      query = query.ilike('word', `${letter}%`);
+    }
+
+    const { data, count, error } = await query.limit(100);
     if (!error && data) {
       setFerhengWords(data);
-    }
-  };
-
-  const handleDictionarySearchSubmit = async (e) => {
-    e.preventDefault();
-    const q = ferhengQuery.trim();
-    if (!q) return;
-
-    setSearchingDict(true);
-    try {
-      const url = `https://ku.wiktionary.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
-      const res = await fetch(url);
-      const json = await res.json();
-      const hits = json?.query?.search || [];
-      const mapped = hits.map((h, idx) => ({
-        id: `wiki-${idx}-${h.pageid}`,
-        word: h.title,
-        part_of_speech: '',
-        meaning_tr: h.snippet.replace(/<[^>]+>/g, ''),
-        meaning_ku: '',
-        example_sentence: ''
-      }));
-      setExternalDictResults(mapped);
-    } catch {
-      setExternalDictResults([]);
+      if (count !== null) setTotalWordCount(count);
     }
     setSearchingDict(false);
+  };
+
+  useEffect(() => {
+    if (viewMode !== 'ferheng') return;
+    const timer = setTimeout(() => {
+      fetchDictionary(ferhengQuery, selectedLetter);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [ferhengQuery, selectedLetter, viewMode]);
+
+  const handleDictionarySearchSubmit = (e) => {
+    e.preventDefault();
+    fetchDictionary(ferhengQuery, selectedLetter);
   };
 
   const handleBulkImportDictionary = async () => {
@@ -432,7 +477,7 @@ export default function App() {
       setSyncingProgress('Çewtî: ' + error.message);
     } else {
       setSyncingProgress('Peyv bi serkeftî hatin zêdekirin!');
-      fetchDictionary();
+      fetchDictionary(ferhengQuery, selectedLetter);
     }
     setTimeout(() => setSyncingProgress(''), 4000);
   };
@@ -449,14 +494,14 @@ export default function App() {
       if (!error) {
         setWordMsg('Peyv hat nûkirin!');
         resetWordForm();
-        fetchDictionary();
+        fetchDictionary(ferhengQuery, selectedLetter);
       }
     } else {
       const { error } = await supabase.from('dictionary').insert([wordForm]);
       if (!error) {
         setWordMsg('Peyva nû hat zêdekirin!');
         resetWordForm();
-        fetchDictionary();
+        fetchDictionary(ferhengQuery, selectedLetter);
       }
     }
     setTimeout(() => setWordMsg(''), 3500);
@@ -487,10 +532,10 @@ export default function App() {
   const handleDeleteWord = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê peyvê jê bibî?')) return;
     const { error } = await supabase.from('dictionary').delete().eq('id', id);
-    if (!error) fetchDictionary();
+    if (!error) fetchDictionary(ferhengQuery, selectedLetter);
   };
 
-  const mergedDictionary = (() => {
+  const filteredDictionary = (() => {
     const rawQ = ferhengQuery.trim();
     const normQ = normalizeKurdish(rawQ);
 
@@ -504,13 +549,11 @@ export default function App() {
     const builtinList = BUILTIN_DICTIONARY.filter(
       (b) => !seenWords.has(normalizeKurdish(b.word))
     );
-    builtinList.forEach((b) => seenWords.add(normalizeKurdish(b.word)));
 
-    const externalList = externalDictResults.filter(
-      (ext) => !seenWords.has(normalizeKurdish(ext.word))
-    );
-
-    const combined = [...dbList, ...builtinList, ...externalList];
+    const combined = [...dbList, ...builtinList].filter((item) => {
+      if (selectedLetter === 'all') return true;
+      return item.word?.toLocaleUpperCase('ku').startsWith(selectedLetter);
+    });
 
     if (!normQ) return combined;
 
@@ -537,11 +580,6 @@ export default function App() {
       .sort((a, b) => b._score - a._score);
   })();
 
-  const filteredDictionary = mergedDictionary.filter((item) => {
-    if (selectedLetter === 'all') return true;
-    return item.word?.toLocaleUpperCase('ku').startsWith(selectedLetter);
-  });
-
   // =========================================================================
   // DUOLINGO TARZI HÎNBÛN / LÎSTIK MOTORU
   // =========================================================================
@@ -566,7 +604,7 @@ export default function App() {
     if (error) {
       setExMsg('Çewtî: ' + error.message);
     } else {
-      setExMsg('5 lîstikên înteraktîf bi Kurmancî hatin zêdekirin!');
+      setExMsg('10 lîstikên înteraktîf (ZAROK + Kurmancî) hatin zêdekirin!');
       fetchExercises();
     }
     setTimeout(() => setExMsg(''), 5000);
@@ -674,7 +712,7 @@ export default function App() {
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
-      unit_title: 'Beşa 1: Silav û Nasîn',
+      unit_title: 'ZAROK: Lîstika Hevnasînê',
       exercise_type: 'choice',
       question_text: '',
       options_raw: '',
@@ -1276,7 +1314,7 @@ export default function App() {
                 {ui.nav_ferheng}
               </h1>
               <p className="text-neutral-400 text-sm sm:text-base">
-                Ferhenga Kurmancî — Peyvên Kurdî, Tirkî û Îngilîzî bibîne (bê tîpên kumikdar jî dixebite).
+                Ferhenga Kurmancî — Peyvên Kurdî, Tirkî û Îngilîzî bibîne.
               </p>
             </div>
 
@@ -1297,7 +1335,6 @@ export default function App() {
                   type="button"
                   onClick={() => {
                     setFerhengQuery('');
-                    setExternalDictResults([]);
                     setSelectedWordDetail(null);
                   }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white p-1"
@@ -1401,7 +1438,12 @@ export default function App() {
 
             <div className="space-y-3 pt-1">
               <h2 className="text-xl font-extrabold text-white tracking-tight">
-                Hemû peyv
+                Hemû peyv{' '}
+                {totalWordCount > 0 && (
+                  <span className="text-sm font-normal text-neutral-400">
+                    ({totalWordCount})
+                  </span>
+                )}
               </h2>
 
               {searchingDict && filteredDictionary.length === 0 ? (
@@ -1414,7 +1456,7 @@ export default function App() {
                 </div>
               ) : (
                 <div className="divide-y divide-neutral-800/90 rounded-2xl bg-neutral-900/50 border border-neutral-800 overflow-hidden">
-                  {filteredDictionary.slice(0, 30).map((item) => (
+                  {filteredDictionary.slice(0, 100).map((item) => (
                     <div
                       key={item.id}
                       onClick={() => setSelectedWordDetail(item)}
@@ -2080,6 +2122,11 @@ export default function App() {
                         <div
                           key={lesson.id}
                           onClick={() => {
+                            if (lesson.media_type === 'interactive' && lesson.category_slug === 'zarok') {
+                              setViewMode('learn');
+                              startUnit('ZAROK: Lîstika Hevnasînê');
+                              return;
+                            }
                             setActiveLesson(lesson);
                             setLessonTab('content');
                             window.scrollTo({ top: 180, behavior: 'smooth' });
@@ -2210,7 +2257,7 @@ export default function App() {
                       onClick={handleLoadStarterGames}
                       className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
                     >
-                      + Paketa Destpêkê ya Lîstikan Bar Bike
+                      + Paketa Destpêkê ya Lîstikan (ZAROK + Kurmancî) Bar Bike
                     </button>
                   </div>
 
@@ -2230,7 +2277,7 @@ export default function App() {
                         required
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="Beşa 1: Silav û Nasîn"
+                        placeholder="ZAROK: Lîstika Hevnasînê"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -2619,7 +2666,7 @@ export default function App() {
                       <span>
                         {editingWordId
                           ? 'Peyva Ferhengê Sererast Bike'
-                          : `Ferheng — Peyvên Nû Zêde Bike (${ferhengWords.length} tomarkirî)`}
+                          : `Ferheng — Peyvên Nû Zêde Bike (${totalWordCount || ferhengWords.length} tomarkirî)`}
                       </span>
                     </h2>
 
