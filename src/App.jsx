@@ -187,51 +187,6 @@ const UI_FIELD_LABELS = [
 
 const STARTER_GAMES = [
   {
-    unit_title: 'ZAROK: Lîstika Hevnasînê',
-    exercise_type: 'choice',
-    question_text: '👋 Hevalekî nû tê dibistanê. Tu jê re çi dibêjî?',
-    options: ['Silav! Navê min Azad e.', 'Şevbaş!', 'Bi xatirê te!', 'Ez nizanim.'],
-    correct_answer: 'Silav! Navê min Azad e.',
-    explanation: 'Dema em kesekî nû dibînin, em dibêjin: Silav! Navê min ... e.'
-  },
-  {
-    unit_title: 'ZAROK: Lîstika Hevnasînê',
-    exercise_type: 'match',
-    question_text: '🎈 Pirs û bersivên hevnasînê bighîne hev:',
-    options: [
-      'Navê te çi ye?=Navê min Zîn e.',
-      'Tu çawa yî?=Ez baş im, spas!',
-      'Tu çend salî yî?=Ez heft salî me.',
-      'Tu ji ku derê yî?=Ez ji Amedê me.'
-    ],
-    correct_answer: '4',
-    explanation: 'Ev çar pirs û bersiv bingeha hevnasîna rojane ne.'
-  },
-  {
-    unit_title: 'ZAROK: Lîstika Hevnasînê',
-    exercise_type: 'sentence',
-    question_text: '🧩 Peyvan rêz bike û xwe bide nasîn:',
-    options: ['Navê', 'min', 'Rojda', 'ye.', 'tu', 'baş'],
-    correct_answer: 'Navê min Rojda ye.',
-    explanation: 'Ji bo gotina navê xwe em dibêjin: Navê min [nav] e/ye.'
-  },
-  {
-    unit_title: 'ZAROK: Lîstika Hevnasînê',
-    exercise_type: 'fill_blank',
-    question_text: '🎂 Valahiyê tije bike: "Ez _____ salî me." (7)',
-    options: ['heft', 'du', 'sê', 'deh'],
-    correct_answer: 'heft',
-    explanation: 'Hejmara 7 bi Kurmancî "heft" e.'
-  },
-  {
-    unit_title: 'ZAROK: Lîstika Hevnasînê',
-    exercise_type: 'choice',
-    question_text: '😊 Hevalê te dipirse: "Tu çawa yî?" Bersiva herî xweş kîjan e?',
-    options: ['Ez gelekî baş im, spas! Tu çawa yî?', 'Navê min Baran e.', 'Ez diçim malê.', 'Rojbaş.'],
-    correct_answer: 'Ez gelekî baş im, spas! Tu çawa yî?',
-    explanation: 'Dema kesek halê me dipirse, em dibêjin "Ez baş im, spas!" û em jî halê wî dipirsin.'
-  },
-  {
     unit_title: 'Beşa 1: Silav û Nasîn',
     exercise_type: 'match',
     question_text: 'Peyvên Kurmancî bi ravekirinên wan re bighîne hev:',
@@ -586,7 +541,7 @@ export default function App() {
   })();
 
   // =========================================================================
-  // HÎNBÛN / LÎSTIK MOTORU (SESLİ + GÖRSELLİ)
+  // HÎNBÛN / LÎSTIK MOTORU (SESLİ + GÖRSELLİ + SANİYE ARALIKLI)
   // =========================================================================
   const fetchExercises = async () => {
     const { data, error } = await supabase
@@ -609,7 +564,7 @@ export default function App() {
     if (error) {
       setExMsg('Çewtî: ' + error.message);
     } else {
-      setExMsg('10 lîstikên înteraktîf (ZAROK + Kurmancî) hatin zêdekirin!');
+      setExMsg('Lîstikên înteraktîf hatin zêdekirin!');
       fetchExercises();
     }
     setTimeout(() => setExMsg(''), 5000);
@@ -719,7 +674,7 @@ export default function App() {
       if (error) {
         setExMsg('Çewtî: ' + error.message);
       } else {
-        setExMsg('Lîstika nû li beşa Hînbûn / Lîstik hat zêdekirin!');
+        setExMsg('Lîstika nû hat zêdekirin!');
         resetExForm();
         fetchExercises();
       }
@@ -761,7 +716,15 @@ export default function App() {
     if (!error) fetchExercises();
   };
 
-  const unitList = [...new Set(exercises.map((ex) => ex.unit_title))];
+  // ZAROK: oyunları Hînbûn / Lîstik listesinde gizlenir, sadece ZAROK kategorisinden açılır
+  const unitList = [
+    ...new Set(
+      exercises
+        .filter((ex) => !ex.unit_title?.toUpperCase().startsWith('ZAROK:'))
+        .map((ex) => ex.unit_title)
+    )
+  ];
+
   const unitExercises = selectedUnit
     ? exercises.filter((ex) => ex.unit_title === selectedUnit)
     : [];
@@ -773,12 +736,40 @@ export default function App() {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
       }
-      const audio = new Audio(url);
+      const [baseUrl, hashPart] = url.split('#t=');
+      let startSec = 0;
+      let endSec = null;
+      if (hashPart) {
+        const parts = hashPart.split(',');
+        startSec = parseFloat(parts[0]) || 0;
+        if (parts[1]) endSec = parseFloat(parts[1]);
+      }
+
+      const audio = new Audio(baseUrl);
+      audio.preload = 'auto';
       audioPlayerRef.current = audio;
       setIsPlayingAudio(true);
+
+      audio.onloadedmetadata = () => {
+        if (startSec > 0) {
+          audio.currentTime = startSec;
+        }
+      };
+
+      audio.ontimeupdate = () => {
+        if (endSec !== null && audio.currentTime >= endSec) {
+          audio.pause();
+          setIsPlayingAudio(false);
+        }
+      };
+
       audio.onended = () => setIsPlayingAudio(false);
       audio.onerror = () => setIsPlayingAudio(false);
-      audio.play().catch(() => setIsPlayingAudio(false));
+
+      audio.play().catch((err) => {
+        console.error('Audio play error:', err);
+        setIsPlayingAudio(false);
+      });
     } catch {
       setIsPlayingAudio(false);
     }
@@ -875,6 +866,15 @@ export default function App() {
     setComboCount(0);
     setHearts(5);
     setUnitCompleted(false);
+  };
+
+  const closeActiveUnit = () => {
+    const wasZarok = selectedUnit?.toUpperCase().startsWith('ZAROK:');
+    setSelectedUnit(null);
+    if (wasZarok) {
+      setViewMode('student');
+      setSelectedCategory('zarok');
+    }
   };
 
   const toggleSentenceWord = (word, idx) => {
@@ -1688,10 +1688,12 @@ export default function App() {
                     <span>{ui.learn_replay_btn}</span>
                   </button>
                   <button
-                    onClick={() => setSelectedUnit(null)}
+                    onClick={closeActiveUnit}
                     className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-black px-6 py-3 rounded-2xl shadow-[0_4px_0_rgb(148,163,184)] active:translate-y-0.5 transition"
                   >
-                    {ui.learn_back_units_btn}
+                    {selectedUnit?.toUpperCase().startsWith('ZAROK:')
+                      ? 'Vegere Beşa ZAROK'
+                      : ui.learn_back_units_btn}
                   </button>
                 </div>
               </div>
@@ -1700,7 +1702,7 @@ export default function App() {
                 <div className="p-6 sm:p-8">
                   <div className="flex items-center gap-4 mb-6">
                     <button
-                      onClick={() => setSelectedUnit(null)}
+                      onClick={closeActiveUnit}
                       className="text-slate-400 hover:text-slate-700 p-1"
                     >
                       <X className="w-6 h-6" />
@@ -2205,9 +2207,11 @@ export default function App() {
                         <div
                           key={lesson.id}
                           onClick={() => {
-                            if (lesson.media_type === 'interactive' && lesson.category_slug === 'zarok') {
+                            if (lesson.media_type === 'interactive') {
                               setViewMode('learn');
-                              const targetUnit = lesson.title?.includes('Fêkî')
+                              const targetUnit = lesson.media_url?.trim()
+                                ? lesson.media_url.trim()
+                                : lesson.title?.includes('Fêkî')
                                 ? 'ZAROK: Fêkî'
                                 : 'ZAROK: Lîstika Hevnasînê';
                               startUnit(targetUnit);
@@ -2263,836 +2267,3 @@ export default function App() {
             </div>
           </>
         ) : (
-          <div>
-            {!isAdmin ? (
-              <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md border border-slate-200 p-8 mt-8">
-                <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-6 h-6" />
-                </div>
-                <h2 className="text-xl font-bold text-center text-slate-900 mb-1">
-                  Têketina Rêveber (Admin)
-                </h2>
-                <p className="text-sm text-center text-slate-500 mb-6">
-                  Ji bo birêvebirina naveroka KurdiKlass şîfreyê binivîse.
-                </p>
-
-                <form onSubmit={handleAdminLogin} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                      Şîfreya Rêveber
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      placeholder="••••••••••••"
-                      className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
-                    />
-                  </div>
-
-                  {authError && (
-                    <p className="text-xs text-red-600 font-medium">{authError}</p>
-                  )}
-
-                  <button
-                    type="submit"
-                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-lg transition"
-                  >
-                    Têkeve Panelê
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                <div className="bg-slate-900 text-white rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-bold">Panela Rêveberiya KurdiKlass</h1>
-                    <p className="text-slate-400 text-sm">
-                      Ders, PDF, pirsên Hînbûn / Lîstik, peyvên Ferhengê û hemû nivîsên malperê ji vir biguherîne.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="bg-red-600 px-4 py-2 rounded-xl text-sm font-bold">
-                      {lessons.length} materyal
-                    </span>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl text-sm font-semibold transition"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Derkeve</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* HÎNBÛN / LÎSTİK YÖNETİMİ */}
-                <div className="bg-white rounded-2xl border-2 border-emerald-300 p-6 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-emerald-600" />
-                      <span>
-                        {editingExId
-                          ? 'Lîstika Hînbûnê Sererast Bike'
-                          : 'Hînbûn / Lîstik — Lîstikan Zêde Bike û Biguherîne'}
-                      </span>
-                    </h2>
-
-                    <button
-                      type="button"
-                      onClick={handleLoadStarterGames}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
-                    >
-                      + Paketa Destpêkê ya Lîstikan Bar Bike
-                    </button>
-                  </div>
-
-                  {exMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
-                      {exMsg}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSaveExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Navê Beşê / Qonaxê
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={exForm.unit_title}
-                        onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="ZAROK: Fêkî"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Cureyê Lîstikê
-                      </label>
-                      <select
-                        value={exForm.exercise_type}
-                        onChange={(e) => setExForm({ ...exForm, exercise_type: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      >
-                        <option value="choice">Vebijêrka Rast</option>
-                        <option value="sentence">Hevokê Saz Bike</option>
-                        <option value="match">Peyvan Bighîne Hev</option>
-                        <option value="fill_blank">Valahiyê Tije Bike</option>
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Pirs an Rênîşander
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={exForm.question_text}
-                        onChange={(e) => setExForm({ ...exForm, question_text: e.target.value })}
-                        placeholder="Guhdarî bike û bersiva rast bibîne:"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Dengê Lîstikê (Vebijarkî)
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={exForm.audio_url}
-                          onChange={(e) => setExForm({ ...exForm, audio_url: e.target.value })}
-                          placeholder="https://... an jî deng bar bike ->"
-                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                        />
-                        <label className="cursor-pointer bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
-                          <Volume2 className="w-4 h-4" />
-                          <span>{uploadingExAudio ? 'Tê barkirin...' : 'Deng Bar Bike'}</span>
-                          <input
-                            type="file"
-                            accept="audio/*"
-                            className="hidden"
-                            onChange={handleExAudioUpload}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Wêneyê Lîstikê (Vebijarkî)
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={exForm.image_url}
-                          onChange={(e) => setExForm({ ...exForm, image_url: e.target.value })}
-                          placeholder="https://... an jî wêne bar bike ->"
-                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                        />
-                        <label className="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
-                          <ImageIcon className="w-4 h-4" />
-                          <span>{uploadingExImg ? 'Tê barkirin...' : 'Wêne Bar Bike'}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleExImageUpload}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        {exForm.exercise_type === 'match'
-                          ? 'Cotên Peyvan (Mezin=Biçûk, Germ=Sar)'
-                          : 'Vebijêrk an Peyv (bi bêhnokê veqetandî)'}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={exForm.options_raw}
-                        onChange={(e) => setExForm({ ...exForm, options_raw: e.target.value })}
-                        placeholder={
-                          exForm.exercise_type === 'match'
-                            ? 'Mezin=Biçûk, Germ=Sar, Dirêj=Kurt, Spî=Reş'
-                            : 'sêv, hinar, zebeş, hêjîr'
-                        }
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    {exForm.exercise_type !== 'match' && (
-                      <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">
-                          Bersiva Rast
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={exForm.correct_answer}
-                          onChange={(e) => setExForm({ ...exForm, correct_answer: e.target.value })}
-                          placeholder="sêv"
-                          className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                        />
-                      </div>
-                    )}
-
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Ravekirin (Vebijarkî)
-                      </label>
-                      <input
-                        type="text"
-                        value={exForm.explanation}
-                        onChange={(e) => setExForm({ ...exForm, explanation: e.target.value })}
-                        placeholder="Ravekirin bi Kurmancî..."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2 flex items-center gap-3">
-                      <button
-                        type="submit"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
-                      >
-                        {editingExId ? 'Guhertina Lîstikê Tomar Bike' : '+ Lîstika Nû Zêde Bike'}
-                      </button>
-                      {editingExId && (
-                        <button
-                          type="button"
-                          onClick={resetExForm}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm"
-                        >
-                          Betal Bike
-                        </button>
-                      )}
-                    </div>
-                  </form>
-
-                  <div className="space-y-2 max-h-64 overflow-y-auto border-t border-slate-100 pt-4">
-                    {exercises.map((ex) => (
-                      <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          {ex.audio_url && (
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-sky-100 text-sky-700 shrink-0">
-                              <Volume2 className="w-4 h-4" />
-                            </span>
-                          )}
-                          {ex.image_url && (
-                            <img
-                              src={ex.image_url}
-                              alt=""
-                              className="w-9 h-9 rounded object-cover shrink-0 border border-slate-200"
-                            />
-                          )}
-                          <div className="truncate">
-                            <span className="text-xs font-bold text-emerald-700 mr-2">[{ex.unit_title}]</span>
-                            <span className="font-medium text-slate-800">{ex.question_text}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => startEditingExercise(ex)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-medium"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            <span>Sererast</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteExercise(ex.id)}
-                            className="text-red-600 hover:text-red-800 p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* DERS EKLEME FORMU */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-red-600" />
-                    <span>{editingId ? 'Dersê Sererast Bike' : 'Materyala Nû Zêde Bike'}</span>
-                  </h2>
-
-                  {statusMsg.text && (
-                    <div
-                      className={`p-3.5 rounded-xl mb-4 flex items-center gap-2 text-sm font-medium ${
-                        statusMsg.type === 'error'
-                          ? 'bg-red-50 text-red-700 border border-red-200'
-                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      }`}
-                    >
-                      {statusMsg.type === 'error' ? (
-                        <AlertCircle className="w-4 h-4" />
-                      ) : (
-                        <CheckCircle2 className="w-4 h-4" />
-                      )}
-                      <span>{statusMsg.text}</span>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSaveLesson} className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Sernavê Dersê *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="Mînak: Pergala Rojê û Gerstêrk"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Beş (Kategori)
-                      </label>
-                      <select
-                        value={formData.category_slug}
-                        onChange={(e) => setFormData({ ...formData, category_slug: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
-                      >
-                        {categories.map((c) => (
-                          <option key={c.slug} value={c.slug}>{c.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Cureyê Materyalê
-                      </label>
-                      <select
-                        value={formData.media_type}
-                        onChange={(e) => setFormData({ ...formData, media_type: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
-                      >
-                        {dynamicMediaTypes.map((m) => (
-                          <option key={m.id} value={m.id}>{m.label}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Lînka Materyalê an Pel Bar Bike
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={formData.media_url}
-                          onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
-                          placeholder="https://... an jî pel bar bike ->"
-                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-600"
-                        />
-                        <label className="cursor-pointer bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
-                          <Upload className="w-4 h-4" />
-                          <span>{uploadingField === 'media_url' ? 'Tê barkirin...' : 'Pel Bar Bike'}</span>
-                          <input
-                            type="file"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, 'media_url')}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Wêneyê Bergê
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={formData.thumbnail_url}
-                          onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-                          placeholder="https://... an jî wêne bar bike ->"
-                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-600"
-                        />
-                        <label className="cursor-pointer bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
-                          <Upload className="w-4 h-4" />
-                          <span>{uploadingField === 'thumbnail_url' ? 'Tê barkirin...' : 'Wêne Bar Bike'}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, 'thumbnail_url')}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Ast
-                      </label>
-                      <select
-                        value={formData.level}
-                        onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
-                      >
-                        {dynamicLevels.map((l) => (
-                          <option key={l} value={l}>{l}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Pola Perwerdehiyê
-                      </label>
-                      <select
-                        value={formData.grade_level}
-                        onChange={(e) => setFormData({ ...formData, grade_level: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
-                      >
-                        {dynamicGrades.map((g) => (
-                          <option key={g} value={g}>{g}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                        Daxuyanî û Naveroka Dersê
-                      </label>
-                      <textarea
-                        rows="3"
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        placeholder="Derbarê vê dersê de agahî binivîse..."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2 bg-amber-50/60 border border-amber-200 rounded-xl p-4 space-y-3">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <label className="text-xs font-extrabold uppercase text-amber-900 flex items-center gap-1.5">
-                          <ClipboardList className="w-4 h-4 text-amber-700" />
-                          <span>Rêbera Mamosteyan</span>
-                        </label>
-
-                        <label className="cursor-pointer bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5">
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>
-                            {uploadingField === 'guide_pdf_url'
-                              ? 'PDF tê barkirin...'
-                              : formData.guide_pdf_url
-                              ? 'PDF Hat Barkirin ✓'
-                              : 'PDFya Rêberê Bar Bike'}
-                          </span>
-                          <input
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, 'guide_pdf_url')}
-                          />
-                        </label>
-                      </div>
-
-                      <textarea
-                        rows="3"
-                        value={formData.teacher_guide}
-                        onChange={(e) => setFormData({ ...formData, teacher_guide: e.target.value })}
-                        placeholder="Armancên dersê, çalakiyên polê û notên ji bo mamosteyan..."
-                        className="w-full border border-amber-300 bg-white rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-amber-600"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2 flex items-center gap-3">
-                      <button
-                        type="submit"
-                        className="bg-red-700 hover:bg-red-800 text-white font-bold px-6 py-2.5 rounded-lg transition"
-                      >
-                        {editingId ? 'Guhertinan Tomar Bike' : 'Li Malperê Zêde Bike'}
-                      </button>
-                      {editingId && (
-                        <button
-                          type="button"
-                          onClick={resetForm}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-5 py-2.5 rounded-lg transition"
-                        >
-                          Betal Bike
-                        </button>
-                      )}
-                    </div>
-                  </form>
-                </div>
-
-                {/* FERHENG YÖNETİMİ */}
-                <div className="bg-white rounded-2xl border border-sky-300 p-6 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                      <BookA className="w-5 h-5 text-sky-600" />
-                      <span>
-                        {editingWordId
-                          ? 'Peyva Ferhengê Sererast Bike'
-                          : `Ferheng — Peyvên Nû Zêde Bike (${totalWordCount || ferhengWords.length} tomarkirî)`}
-                      </span>
-                    </h2>
-
-                    <button
-                      type="button"
-                      onClick={handleBulkImportDictionary}
-                      disabled={Boolean(syncingProgress)}
-                      className="bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
-                    >
-                      + Peyvên Bingehîn Tomar Bike
-                    </button>
-                  </div>
-
-                  {syncingProgress && (
-                    <div className="p-3 rounded-xl mb-4 bg-sky-50 text-sky-900 border border-sky-200 text-xs font-bold">
-                      {syncingProgress}
-                    </div>
-                  )}
-
-                  {wordMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-sky-50 text-sky-900 border border-sky-200 text-sm font-medium">
-                      {wordMsg}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSaveWord} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Peyv (Kurmancî) *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={wordForm.word}
-                        onChange={(e) => setWordForm({ ...wordForm, word: e.target.value })}
-                        placeholder="Mînak: heval"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Cureyê Peyvê
-                      </label>
-                      <select
-                        value={wordForm.part_of_speech}
-                        onChange={(e) => setWordForm({ ...wordForm, part_of_speech: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      >
-                        <option value="navdêr">navdêr</option>
-                        <option value="lêker">lêker</option>
-                        <option value="rengdêr">rengdêr</option>
-                        <option value="hoker">hoker</option>
-                        <option value="cînavk">cînavk</option>
-                        <option value="hejmar">hejmar</option>
-                        <option value="baneşan">baneşan</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Wateya Peyvê *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={wordForm.meaning_tr}
-                        onChange={(e) => setWordForm({ ...wordForm, meaning_tr: e.target.value })}
-                        placeholder="arkadaş"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Ravekirina bi Kurmancî
-                      </label>
-                      <input
-                        type="text"
-                        value={wordForm.meaning_ku}
-                        onChange={(e) => setWordForm({ ...wordForm, meaning_ku: e.target.value })}
-                        placeholder="Kesê ku mirov pê re dostanî dike."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Hevoka Mînak
-                      </label>
-                      <input
-                        type="text"
-                        value={wordForm.example_sentence}
-                        onChange={(e) => setWordForm({ ...wordForm, example_sentence: e.target.value })}
-                        placeholder="Ew hevalê min ê herî baş e."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2 flex items-center gap-3">
-                      <button
-                        type="submit"
-                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
-                      >
-                        {editingWordId ? 'Guhertina Peyvê Tomar Bike' : '+ Peyva Nû Zêde Bike'}
-                      </button>
-                      {editingWordId && (
-                        <button
-                          type="button"
-                          onClick={resetWordForm}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm"
-                        >
-                          Betal Bike
-                        </button>
-                      )}
-                    </div>
-                  </form>
-
-                  <div className="space-y-2 max-h-60 overflow-y-auto border-t border-slate-100 pt-4">
-                    {ferhengWords.slice(0, 100).map((item) => (
-                      <div key={item.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
-                        <div className="truncate">
-                          <span className="font-bold text-slate-900 mr-2">{item.word}</span>
-                          <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded mr-2">
-                            {item.part_of_speech}
-                          </span>
-                          <span className="text-slate-600">— {item.meaning_tr}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => startEditingWord(item)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-800 hover:bg-amber-100 text-xs font-medium"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            <span>Sererast</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteWord(item.id)}
-                            className="text-red-600 hover:text-red-800 p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* KAYITLI MATERYALLER */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4">
-                    Materyalên Tomarkirî ({lessons.length})
-                  </h2>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-200 text-xs uppercase text-slate-500">
-                          <th className="py-3 px-4">Sernav</th>
-                          <th className="py-3 px-4">Beş</th>
-                          <th className="py-3 px-4">Ast</th>
-                          <th className="py-3 px-4 text-right">Kiryar</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 text-sm">
-                        {lessons.map((lesson) => (
-                          <tr key={lesson.id} className="hover:bg-slate-50">
-                            <td className="py-3 px-4 font-semibold text-slate-900">
-                              {lesson.title}
-                            </td>
-                            <td className="py-3 px-4 text-red-600 font-medium">
-                              {categories.find((c) => c.slug === lesson.category_slug)?.name}
-                            </td>
-                            <td className="py-3 px-4 text-slate-600">{lesson.level}</td>
-                            <td className="py-3 px-4 text-right space-x-2">
-                              <button
-                                onClick={() => startEditing(lesson)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                                <span>Sererast</span>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteLesson(lesson.id)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-red-50 text-red-700 hover:bg-red-100 font-medium"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>Jê Bibe</span>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* KATEGORİ YÖNETİMİ */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <FolderEdit className="w-5 h-5 text-red-600" />
-                    <span>Beş û Sernavên Sereke Biguherîne</span>
-                  </h2>
-
-                  {catMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
-                      {catMsg}
-                    </div>
-                  )}
-
-                  <div className="space-y-3 mb-6">
-                    {categories.map((cat) => (
-                      <div key={cat.slug} className="flex items-center gap-3">
-                        <input
-                          type="text"
-                          value={cat.name}
-                          onChange={(e) => handleUpdateCategoryName(cat.slug, e.target.value)}
-                          className="flex-1 border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-semibold focus:outline-none focus:border-red-600"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCategory(cat.slug)}
-                          className="p-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100"
-                          title="Beşê Jê Bibe"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-
-                    <button
-                      type="button"
-                      onClick={handleSaveCategories}
-                      className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
-                    >
-                      Navên Beşan Tomar Bike
-                    </button>
-                  </div>
-
-                  <form onSubmit={handleAddCategory} className="pt-4 border-t border-slate-200 flex flex-wrap gap-3">
-                    <input
-                      type="text"
-                      value={newCatName}
-                      onChange={(e) => setNewCatName(e.target.value)}
-                      placeholder="Navê Beşa Nû"
-                      className="flex-1 min-w-[220px] border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
-                    />
-                    <button
-                      type="submit"
-                      className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
-                    >
-                      + Beşa Nû Zêde Bike
-                    </button>
-                  </form>
-                </div>
-
-                {/* TÜM SİTE YAZILARI */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-red-600" />
-                    <span>Hemû Nivîsên Malperê Biguherîne</span>
-                  </h2>
-
-                  {settingsMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
-                      {settingsMsg}
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSaveAllUiTexts} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {UI_FIELD_LABELS.map((field) => (
-                      <div key={field.key}>
-                        <label className="block text-xs font-bold text-slate-600 mb-1">
-                          {field.label}
-                        </label>
-                        <input
-                          type="text"
-                          value={rawUi[field.key] || ''}
-                          onChange={(e) => setRawUi({ ...rawUi, [field.key]: e.target.value })}
-                          className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
-                        />
-                      </div>
-                    ))}
-
-                    <div className="md:col-span-2 pt-2">
-                      <button
-                        type="submit"
-                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-lg transition text-sm"
-                      >
-                        Hemû Nivîsên Malperê Tomar Bike
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      <footer className="bg-slate-900 text-slate-400 py-8 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
-          <div className="font-bold text-white text-base">
-            {ui.brand_first}<span className="text-red-500">{ui.brand_second}</span>
-          </div>
-          <p>{ui.footer_text}</p>
-        </div>
-      </footer>
-    </div>
-  );
-}
