@@ -30,7 +30,7 @@ const LOCALE_TRANSLATIONS = {
     hero_title: 'Fêrbûn, Lêkolîn û Pêşketin bi Zimanê Kurdî',
     hero_subtitle: 'Vîdyo, belge, rêbera mamosteyan û materyalên perwerdehiyê ji bo mamoste û xwendekaran.',
     search_placeholder: 'Li ders, mijar an materyalan bigere...',
-    ferheng_search_placeholder: 'Li peyvekê bigere (Mînak: ziman, pirtûk, dibistan)...',
+    ferheng_search_placeholder: 'Bi her zimanî peyvekê binivîse (Mînak: doctor, Arzt, doktor, bijîşk)...',
     ferheng_search_btn: 'Lê Bigere',
     ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.'
   },
@@ -44,7 +44,7 @@ const LOCALE_TRANSLATIONS = {
     hero_title: 'Lernen, Forschen und Entwickeln auf Kurdisch',
     hero_subtitle: 'Videos, Dokumente, Lehrerhandbücher und Lernmaterialien für Lehrkräfte und Lernende.',
     search_placeholder: 'Nach Lektionen, Themen oder Materialien suchen...',
-    ferheng_search_placeholder: 'Wort suchen (z. B. ziman, pirtûk, dibistan)...',
+    ferheng_search_placeholder: 'Wort auf Deutsch oder Kurdisch eingeben (z. B. Arzt, Buch, doctor)...',
     ferheng_search_btn: 'Suchen',
     ferheng_empty_text: 'Das gesuchte Wort wurde nicht gefunden.'
   },
@@ -58,7 +58,7 @@ const LOCALE_TRANSLATIONS = {
     hero_title: 'Kürtçe Öğrenme, Araştırma ve Gelişim',
     hero_subtitle: 'Öğretmenler ve öğrenciler için videolar, belgeler, öğretmen rehberleri ve eğitim materyalleri.',
     search_placeholder: 'Ders, konu veya materyal ara...',
-    ferheng_search_placeholder: 'Kelime ara (Örnek: ziman, pirtûk, dibistan)...',
+    ferheng_search_placeholder: 'Herhangi bir dilde kelime yazın (Örnek: doktor, doctor, Arzt, ziman)...',
     ferheng_search_btn: 'Ara',
     ferheng_empty_text: 'Aradığınız kelime bulunamadı.'
   },
@@ -72,7 +72,7 @@ const LOCALE_TRANSLATIONS = {
     hero_title: 'Learn, Explore, and Grow in Kurdish',
     hero_subtitle: 'Videos, documents, teacher guides, and learning materials for educators and students.',
     search_placeholder: 'Search lessons, topics, or materials...',
-    ferheng_search_placeholder: 'Search a word (e.g. ziman, pirtûk, dibistan)...',
+    ferheng_search_placeholder: 'Type a word in English or any language (e.g. doctor, book, water)...',
     ferheng_search_btn: 'Search',
     ferheng_empty_text: 'The word you searched for was not found.'
   },
@@ -86,7 +86,7 @@ const LOCALE_TRANSLATIONS = {
     hero_title: 'Apprendre, Explorer et Progresser en Kurde',
     hero_subtitle: 'Vidéos, documents, guides pédagogiques et supports éducatifs pour enseignants et élèves.',
     search_placeholder: 'Rechercher des cours, sujets ou supports...',
-    ferheng_search_placeholder: 'Rechercher un mot (ex. ziman, pirtûk, dibistan)...',
+    ferheng_search_placeholder: 'Écrivez un mot en français ou kurde (ex. médecin, livre, doctor)...',
     ferheng_search_btn: 'Rechercher',
     ferheng_empty_text: 'Le mot recherché est introuvable.'
   },
@@ -100,7 +100,7 @@ const LOCALE_TRANSLATIONS = {
     hero_title: 'Aprender, Investigar y Crecer en Kurdo',
     hero_subtitle: 'Videos, documentos, guías docentes y materiales educativos para profesores y estudiantes.',
     search_placeholder: 'Buscar lecciones, temas o materiales...',
-    ferheng_search_placeholder: 'Buscar una palabra (ej. ziman, pirtûk, dibistan)...',
+    ferheng_search_placeholder: 'Escribe una palabra en español o kurdo (ej. médico, libro, doctor)...',
     ferheng_search_btn: 'Buscar',
     ferheng_empty_text: 'No se encontró la palabra buscada.'
   },
@@ -114,7 +114,7 @@ const LOCALE_TRANSLATIONS = {
     hero_title: 'Imparare, Esplorare e Crescere in Curdo',
     hero_subtitle: 'Video, documenti, guide per insegnanti e materiali didattici per docenti e studenti.',
     search_placeholder: 'Cerca lezioni, argomenti o materiali...',
-    ferheng_search_placeholder: 'Cerca una parola (es. ziman, pirtûk, dibistan)...',
+    ferheng_search_placeholder: 'Scrivi una parola in italiano o curdo (es. medico, libro, doctor)...',
     ferheng_search_btn: 'Cerca',
     ferheng_empty_text: 'La parola cercata non è stata trovata.'
   }
@@ -174,7 +174,7 @@ const DEFAULT_UI_TEXTS = {
   meta_grade_prefix: 'Pola Perwerdehiyê:',
   footer_text: 'Platforma Perwerdehiyê ya Kurdî — Hemû maf parastî ne.',
 
-  ferheng_search_placeholder: 'Li peyvekê bigere (Mînak: ziman, pirtûk, dibistan)...',
+  ferheng_search_placeholder: 'Bi her zimanî peyvekê binivîse (Mînak: doctor, Arzt, doktor, bijîşk)...',
   ferheng_search_btn: 'Lê Bigere',
   ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.',
 
@@ -352,7 +352,6 @@ export default function App() {
   });
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
 
-  // Aktif dile göre birleştirilmiş arayüz metinleri
   const ui = {
     ...rawUi,
     ...(selectedLang !== 'KU' ? LOCALE_TRANSLATIONS[selectedLang] || {} : {})
@@ -405,7 +404,7 @@ export default function App() {
         ferhengQuery.trim() ||
         (selectedLetter !== 'all' ? selectedLetter.toLocaleLowerCase('ku') : '');
       if (term) {
-        fetchBilingualDictionary(term, selectedLang);
+        fetchMultilingualToKurdishDictionary(term, selectedLang);
       } else {
         setExternalEntries([]);
       }
@@ -435,7 +434,65 @@ export default function App() {
     setFerhengWords(allRows);
   };
 
-  const parseTranslationsFromWikitext = (wikitext, targetWikiCode = 'tr') => {
+  // Yabancı dil Wiktionary sayfalarından Kürtçe (Kurmancî) karşılıklarını çıkarır
+  const extractKurdishFromForeignWikitext = (wikitext, sourceWiki = 'en') => {
+    if (!wikitext) return { kuWords: [], pos: 'navdêr' };
+
+    let pos = 'navdêr';
+    const lower = wikitext.toLowerCase();
+    if (lower.includes('=== verb ===') || lower.includes('=== fiil ===') || lower.includes('=== verbe ===') || lower.includes('=== verbo ===')) {
+      pos = 'lêker';
+    } else if (lower.includes('=== adjective ===') || lower.includes('=== sıfat ===') || lower.includes('=== adjektiv ===') || lower.includes('=== adjectif ===') || lower.includes('=== adjetivo ===') || lower.includes('=== aggettivo ===')) {
+      pos = 'rengdêr';
+    } else if (lower.includes('=== adverb ===') || lower.includes('=== zarf ===') || lower.includes('=== adverbe ===') || lower.includes('=== adverbio ===') || lower.includes('=== avverbio ===')) {
+      pos = 'hoker';
+    }
+
+    const found = new Set();
+
+    // 1. Genel çeviri şablonları: {{t|kmr|bijîşk}}, {{t+|kmr|bijîşk}}, {{t|ku|bijîşk}}, {{Ü|kmr|bijîşk}}, {{trad|ku|...}}, {{trad-|kmr|...}}
+    const templateRegex = /\{\{(?:t\+?|tt\+?|Ü|trad[-+]?|traducción|traduzione)\|(?:kmr|ku)\|([^|}]+)(?:\|[^}]*)?\}\}/gi;
+    for (const m of wikitext.matchAll(templateRegex)) {
+      const clean = m[1].replace(/\[\[|\]\]/g, '').trim();
+      if (clean && !clean.includes(':')) found.add(clean);
+    }
+
+    // 2. Satır bazlı Kürtçe / Kurmancî çeviri listeleri (* Kurdish: ... / * Kurdisch: ... / * Kürtçe: ... / * Kurde: ... / * Kurdo: ... / * Curdo: ...)
+    const lineRegex = /(?:Kurdish|Northern Kurdish|Kurmanji|Kurdisch|Kurmandschi|Kürtçe|Kurmanci|Kurde|Kurmandji|Kurdo|Curdo)[^:\n]*:\s*([^\n]+)/gi;
+    for (const m of wikitext.matchAll(lineRegex)) {
+      const line = m[1];
+      // Şablon içindeki kelimeler
+      for (const tm of line.matchAll(/\{\{(?:t\+?|tt\+?|Ü|trad[-+]?)\|(?:kmr|ku)\|([^|}]+)(?:\|[^}]*)?\}\}/gi)) {
+        const clean = tm[1].trim();
+        if (clean) found.add(clean);
+      }
+      // Link içindeki kelimeler: [[bijîşk]] veya [[bijîşk#Kurdish|bijîşk]]
+      for (const lm of line.matchAll(/\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/g)) {
+        const clean = lm[1].trim();
+        if (clean && !clean.includes(':') && clean.toLowerCase() !== 'kurdish' && clean.toLowerCase() !== 'kurmanji') {
+          found.add(clean);
+        }
+      }
+    }
+
+    // 3. Başlık bazlı Kürtçe bölümleri (== Kürtçe == veya == Kurdish ==)
+    const sectionRegex = /={2,4}\s*(?:Kürtçe|Kurdish|Northern Kurdish|Kurdisch|Kurde|Kurdo|Curdo)\s*={2,4}([\s\S]*?)(?:\n={2,4}[^=]|$)/gi;
+    for (const sm of wikitext.matchAll(sectionRegex)) {
+      const secBody = sm[1];
+      for (const defM of secBody.matchAll(/^#\s*(?:\{\{[^}]+\}\}\s*)*\[\[(?:[^|\]]+\|)?([^\]]+)\]\]/gm)) {
+        const clean = defM[1].trim();
+        if (clean && !clean.includes(':')) found.add(clean);
+      }
+    }
+
+    return {
+      kuWords: Array.from(found).slice(0, 6),
+      pos
+    };
+  };
+
+  // Wîkîferheng (ku.wiktionary) sayfasından tanımları ve yabancı dil çevirilerini çıkarır
+  const parseKurdishWikitext = (wikitext, targetWikiCode = 'en') => {
     if (!wikitext) return { tr: '', targetMeaning: '', pos: 'navdêr' };
 
     let pos = 'navdêr';
@@ -452,7 +509,7 @@ export default function App() {
       const matches = [...wikitext.matchAll(regex)]
         .map((m) => m[1].trim())
         .filter(Boolean);
-      return matches.length > 0 ? [...new Set(matches)].slice(0, 4).join(', ') : '';
+      return matches.length > 0 ? [...new Set(matches)].slice(0, 5).join(', ') : '';
     };
 
     let tr = extractByWikiCode('tr');
@@ -468,18 +525,6 @@ export default function App() {
       }
     }
 
-    if (!tr) {
-      const kuSectionMatch = wikitext.match(/==\s*Kürtçe\s*==([\s\S]*?)(?:\n==[^=]|$)/i);
-      if (kuSectionMatch && kuSectionMatch[1]) {
-        const defMatches = [...kuSectionMatch[1].matchAll(/^#\s*(?:\{\{[^}]+\}\}\s*)*\[\[([^\]|#]+)(?:\|[^\]]+)?\]\]/gm)]
-          .map((m) => m[1].trim())
-          .filter(Boolean);
-        if (defMatches.length > 0) {
-          tr = [...new Set(defMatches)].slice(0, 4).join(', ');
-        }
-      }
-    }
-
     let targetMeaning = '';
     if (targetWikiCode && targetWikiCode !== 'ku' && targetWikiCode !== 'tr') {
       targetMeaning = extractByWikiCode(targetWikiCode);
@@ -488,71 +533,148 @@ export default function App() {
     return { tr, targetMeaning, pos };
   };
 
-  const fetchBilingualDictionary = async (queryText, activeLangCode = 'KU') => {
-    const cleanQuery = queryText.trim().toLowerCase();
+  // Seçili dil veya herhangi bir yabancı dilden Kürtçe-Kurmancî karşılığı bulan çok dilli arama motoru
+  const fetchMultilingualToKurdishDictionary = async (queryText, activeLangCode = 'KU') => {
+    const rawQ = queryText.trim();
+    const cleanQuery = rawQ.toLowerCase();
     if (!cleanQuery) return;
     setSearchingDict(true);
 
-    const langObj = LANGUAGE_OPTIONS.find((l) => l.code === activeLangCode);
-    const targetWiki = langObj ? langObj.wiki : 'tr';
+    const activeLangObj = LANGUAGE_OPTIONS.find((l) => l.code === activeLangCode);
+    const activeWiki = activeLangObj ? activeLangObj.wiki : 'ku';
+
+    // Taranacak yabancı diller: Önce kullanıcının seçtiği dil, ardından diğer tüm desteklenen diller
+    const foreignWikis = [
+      ...(activeWiki !== 'ku' ? [activeWiki] : []),
+      ...['en', 'de', 'tr', 'fr', 'es', 'it'].filter((w) => w !== activeWiki)
+    ];
 
     try {
-      const kuUrl = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
-        cleanQuery
-      )}&gpsnamespace=0&gpslimit=20&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
-
-      const trUrl = `https://tr.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(
-        cleanQuery
-      )}&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
-
-      const [kuRes, trRes] = await Promise.all([fetch(kuUrl), fetch(trUrl)]);
-      const [kuData, trData] = await Promise.all([kuRes.json(), trRes.json()]);
-
       const resultsMap = new Map();
 
-      const trPages = Object.values(trData?.query?.pages || {});
-      for (const p of trPages) {
-        if (!p || p.missing) continue;
+      // 1. ADIM: Yabancı dillerdeki Wiktionary sayfalarından (en, de, tr, fr, es, it) doğrudan Kürtçe-Kurmancî karşılıklarını çek
+      // Örn: "doctor" -> en.wiktionary'de "bijîşk, doktor" olarak döner!
+      const foreignFetches = foreignWikis.map(async (wikiCode) => {
+        try {
+          // Hem küçük harfli hem ilk harfi büyük (Almanca isimler için: Arzt, Buch) başlıkları sorgula
+          const capitalized = rawQ.charAt(0).toUpperCase() + rawQ.slice(1);
+          const titlesParam =
+            rawQ === capitalized ? rawQ : `${rawQ}|${capitalized}`;
+
+          const url = `https://${wikiCode}.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(
+            titlesParam
+          )}&redirects=1&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
+
+          const res = await fetch(url);
+          const data = await res.json();
+          const pages = Object.values(data?.query?.pages || {});
+
+          for (const p of pages) {
+            if (!p || p.missing) continue;
+            const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
+            const extracted = extractKurdishFromForeignWikitext(content, wikiCode);
+
+            if (extracted.kuWords.length > 0) {
+              const langLabel =
+                LANGUAGE_OPTIONS.find((l) => l.wiki === wikiCode)?.nativeName || wikiCode.toUpperCase();
+
+              // Her bulunan Kurmancî kelimeyi ana başlık (Kurdî) olarak ekle ki kullanıcı net şekilde Kürtçe karşılığını görsün
+              extracted.kuWords.forEach((kuWord, idx) => {
+                const key = `ku-ans-${kuWord.toLowerCase()}`;
+                if (!resultsMap.has(key)) {
+                  resultsMap.set(key, {
+                    id: `ext-${wikiCode}-${p.pageid}-${idx}`,
+                    word: kuWord,
+                    part_of_speech: extracted.pos,
+                    meaning_tr: `${p.title} (${langLabel})`,
+                    meaning_ku: `${langLabel} “${p.title}” → bi Kurdî (Kurmancî): ${extracted.kuWords.join(', ')}`,
+                    example_sentence: '',
+                    isPriorityMatch: true
+                  });
+                }
+              });
+            }
+          }
+        } catch {
+          // Tek bir dil servisi yanıt vermezse diğerlerini engelleme
+        }
+      });
+
+      // 2. ADIM: Wîkîferheng (ku.wiktionary) üzerinde hem Kürtçe kelimeleri hem de yabancı dil çeviri şablonlarını (örn. "W|en|doctor") ara
+      const kuPrefixUrl = `https://ku.wiktionary.org/w/api.php?action=query&generator=prefixsearch&gpssearch=${encodeURIComponent(
+        cleanQuery
+      )}&gpsnamespace=0&gpslimit=15&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
+
+      const kuReverseSearchUrl = `https://ku.wiktionary.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
+        `"${cleanQuery}"`
+      )}&gsrnamespace=0&gsrlimit=15&prop=revisions&rvprop=content&rvslots=main&format=json&origin=*`;
+
+      const [kuPrefixRes, kuReverseRes] = await Promise.all([
+        fetch(kuPrefixUrl),
+        fetch(kuReverseSearchUrl),
+        ...foreignFetches
+      ]);
+
+      const [kuPrefixData, kuReverseData] = await Promise.all([
+        kuPrefixRes.json(),
+        kuReverseRes.json()
+      ]);
+
+      // Ters aramadan gelen (örneğin içinde doctor geçen Kürtçe maddeler: bijîşk, doktor...)
+      const reversePages = Object.values(kuReverseData?.query?.pages || {}).sort(
+        (a, b) => (a.index || 0) - (b.index || 0)
+      );
+      for (const p of reversePages) {
+        if (!p || !p.title || p.title.includes(':')) continue;
         const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-        const parsed = parseTranslationsFromWikitext(content, targetWiki);
-        if (parsed.tr) {
-          resultsMap.set(p.title.toLowerCase(), {
-            id: `tr-${p.pageid}`,
-            word: p.title,
-            part_of_speech: parsed.pos,
-            meaning_tr: parsed.tr,
-            meaning_ku: '',
-            example_sentence: ''
-          });
+
+        // Gerçekten çeviri şablonunda geçip geçmediğini kontrol et
+        const hasExactTranslation = new RegExp(
+          `\\{\\{[Ww]\\|[a-z]{2,3}\\|${cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\||\\}\\})`,
+          'i'
+        ).test(content);
+
+        if (hasExactTranslation) {
+          const parsed = parseKurdishWikitext(content, activeWiki === 'ku' ? 'en' : activeWiki);
+          const key = `ku-ans-${p.title.toLowerCase()}`;
+          if (!resultsMap.has(key)) {
+            resultsMap.set(key, {
+              id: `kurev-${p.pageid}`,
+              word: p.title,
+              part_of_speech: parsed.pos,
+              meaning_tr: parsed.targetMeaning || parsed.tr || rawQ,
+              meaning_ku: parsed.tr && parsed.targetMeaning ? `${parsed.targetMeaning} • ${parsed.tr}` : '',
+              example_sentence: '',
+              isPriorityMatch: true
+            });
+          }
         }
       }
 
-      const kuPages = Object.values(kuData?.query?.pages || {}).sort(
+      // Doğrudan Kürtçe aramadan gelen maddeler (örn. "bijîşk" veya "ziman" yazıldığında)
+      const prefixPages = Object.values(kuPrefixData?.query?.pages || {}).sort(
         (a, b) => (a.index || 0) - (b.index || 0)
       );
-      for (const p of kuPages) {
+      for (const p of prefixPages) {
         if (!p || !p.title || p.title.includes(':')) continue;
         const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-        const parsed = parseTranslationsFromWikitext(content, targetWiki);
-        const key = p.title.toLowerCase();
-        const displayMeaning =
-          targetWiki !== 'ku' && targetWiki !== 'tr' && parsed.targetMeaning
-            ? `${parsed.targetMeaning}${parsed.tr ? ` (${parsed.tr})` : ''}`
-            : parsed.tr;
+        const parsed = parseKurdishWikitext(content, activeWiki === 'ku' ? 'tr' : activeWiki);
+        const key = `ku-ans-${p.title.toLowerCase()}`;
 
-        if (resultsMap.has(key)) {
-          const existing = resultsMap.get(key);
-          if (displayMeaning) {
-            existing.meaning_tr = displayMeaning;
-          }
-        } else if (displayMeaning) {
+        const displayTranslation =
+          activeWiki !== 'ku' && activeWiki !== 'tr' && parsed.targetMeaning
+            ? `${parsed.targetMeaning}${parsed.tr ? ` (${parsed.tr})` : ''}`
+            : parsed.tr || parsed.targetMeaning;
+
+        if (!resultsMap.has(key) && displayTranslation) {
           resultsMap.set(key, {
-            id: `ku-${p.pageid}`,
+            id: `kupref-${p.pageid}`,
             word: p.title,
             part_of_speech: parsed.pos,
-            meaning_tr: displayMeaning,
+            meaning_tr: displayTranslation,
             meaning_ku: '',
-            example_sentence: ''
+            example_sentence: '',
+            isPriorityMatch: p.title.toLowerCase() === cleanQuery
           });
         }
       }
@@ -568,7 +690,7 @@ export default function App() {
   const handleDictionarySearchSubmit = (e) => {
     e.preventDefault();
     if (ferhengQuery.trim()) {
-      fetchBilingualDictionary(ferhengQuery.trim(), selectedLang);
+      fetchMultilingualToKurdishDictionary(ferhengQuery.trim(), selectedLang);
     }
   };
 
@@ -613,7 +735,7 @@ export default function App() {
           if (existingSet.has(key)) continue;
 
           const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-          const parsed = parseTranslationsFromWikitext(content, 'tr');
+          const parsed = parseKurdishWikitext(content, 'tr');
 
           let fallbackTr = parsed.tr;
           if (!fallbackTr) {
@@ -689,7 +811,7 @@ export default function App() {
           if (existingSet.has(key)) continue;
 
           const content = p.revisions?.[0]?.slots?.main?.['*'] || p.revisions?.[0]?.['*'] || '';
-          const parsed = parseTranslationsFromWikitext(content, 'tr');
+          const parsed = parseKurdishWikitext(content, 'tr');
 
           let kuMeaning = '';
           const kuDefMatch = content.match(/^#\s*(.+)$/m);
@@ -796,13 +918,27 @@ export default function App() {
 
   const mergedDictionary = (() => {
     const q = ferhengQuery.trim().toLowerCase();
-    const existingKeys = new Set(ferhengWords.map((w) => w.word?.toLowerCase()));
-    const extra = externalEntries.filter((e) => !existingKeys.has(e.word?.toLowerCase()));
-    const combined = [...ferhengWords, ...extra];
+
+    // Eğer yabancı dilden direkt Kurmancî karşılığı bulunduysa (ör: doctor -> bijîşk), öncelikli göster
+    const priorityExternal = externalEntries.filter((e) => e.isPriorityMatch);
+    const priorityWords = new Set(priorityExternal.map((e) => e.word?.toLowerCase()));
+
+    const localFiltered = ferhengWords.filter(
+      (w) => !priorityWords.has(w.word?.toLowerCase())
+    );
+    const otherExternal = externalEntries.filter(
+      (e) =>
+        !e.isPriorityMatch &&
+        !localFiltered.some((w) => w.word?.toLowerCase() === e.word?.toLowerCase())
+    );
+
+    const combined = [...priorityExternal, ...localFiltered, ...otherExternal];
 
     if (!q) return combined;
 
     return combined.sort((a, b) => {
+      if (a.isPriorityMatch && !b.isPriorityMatch) return -1;
+      if (!a.isPriorityMatch && b.isPriorityMatch) return 1;
       const aExact = a.word?.toLowerCase() === q ? 0 : 1;
       const bExact = b.word?.toLowerCase() === q ? 0 : 1;
       if (aExact !== bExact) return aExact - bExact;
@@ -816,6 +952,7 @@ export default function App() {
     const q = ferhengQuery.trim().toLowerCase();
     const matchesSearch =
       !q ||
+      item.isPriorityMatch ||
       item.word?.toLowerCase().includes(q) ||
       item.meaning_tr?.toLowerCase().includes(q) ||
       item.meaning_ku?.toLowerCase().includes(q);
@@ -1346,7 +1483,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* AÇILIR DİL SEÇİCİ MENÜSÜ (GÖRSELDEKİ KU v TASARIMI) */}
             <div className="relative shrink-0" ref={langDropdownRef}>
               <button
                 type="button"
