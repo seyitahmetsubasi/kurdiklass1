@@ -1,0 +1,25 @@
+name: Ferheng Verilerini Supabase'e Yükle
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Kütüphaneleri yükle
+        run: pip install requests
+
+      - name: Kelimeleri çek ve Supabase'e gönder
+        env:
+          SUPABASE_URL: 'https://mzsxryxuvyllljvbrzul.supabase.co'
+          SUPABASE_KEY: 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_'
+        run: python scripts/sync_ferheng.py
