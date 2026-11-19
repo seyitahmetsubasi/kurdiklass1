@@ -457,7 +457,7 @@ export default function App() {
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
   const [exForm, setExForm] = useState({
-    unit_title: 'ZAROK: Fêkî',
+    unit_title: 'Beşa 1: Silav û Nasîn',
     exercise_type: 'choice',
     question_text: '',
     options_raw: '',
@@ -664,7 +664,7 @@ export default function App() {
   })();
 
   // =========================================================================
-  // HÎNBÛN / LÎSTIK MOTORU (SESLİ + GÖRSELLİ + GARANTİLİ MEYVE OYUNU)
+  // HÎNBÛN / LÎSTIK MOTORU (ZAROK OYUNLARI HÎNBÛN LİSTESİNDEN GİZLİ)
   // =========================================================================
   const fetchExercises = async () => {
     const { data, error } = await supabase
@@ -822,7 +822,7 @@ export default function App() {
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
-      unit_title: 'ZAROK: Fêkî',
+      unit_title: 'Beşa 1: Silav û Nasîn',
       exercise_type: 'choice',
       question_text: '',
       options_raw: '',
@@ -839,11 +839,20 @@ export default function App() {
     if (!error) fetchExercises();
   };
 
-  // ZAROK: oyunları Hînbûn / Lîstik listesinde gizlenir, sadece ZAROK kategorisinden açılır
+  // ZAROK: Fêkî ve ZAROK: Lîstika Hevnasînê Hînbûn / Lîstik listesinden tamamen çıkarılır
   const unitList = [
     ...new Set(
       exercises
-        .filter((ex) => !ex.unit_title?.toUpperCase().startsWith('ZAROK:'))
+        .filter((ex) => {
+          const title = (ex.unit_title || '').toLowerCase().trim();
+          return (
+            !title.startsWith('zarok') &&
+            !title.includes('fêkî') &&
+            !title.includes('feki') &&
+            !title.includes('hevnasîn') &&
+            !title.includes('hevnasin')
+          );
+        })
         .map((ex) => ex.unit_title)
     )
   ];
