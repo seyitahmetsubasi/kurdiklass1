@@ -456,6 +456,7 @@ export default function App() {
       (ext) => !localSet.has(ext.word?.toLowerCase())
     );
     const combined = [...localFiltered, ...otherExternal];
+    if (!q) return combined;
 
     return combined.sort((a, b) => {
       if (a.isPriorityMatch && !b.isPriorityMatch) return -1;
