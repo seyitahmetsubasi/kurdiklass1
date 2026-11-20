@@ -44,7 +44,6 @@ const SUPABASE_ANON_KEY = 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'kurdiklass2026';
-const BRAND_LOGO_URL = '/logo.jpg';
 
 const DEFAULT_CATEGORIES = [
   { slug: 'zanist', name: 'ZANIST', sort_order: 1 },
@@ -1667,11 +1666,9 @@ export default function App() {
             onClick={() => setViewMode('student')}
             className="flex items-center gap-2.5 font-extrabold text-xl text-slate-900"
           >
-            <img
-              src={BRAND_LOGO_URL}
-              alt="KurdiKlass Logo"
-              className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
-            />
+            <span className="w-9 h-9 rounded-lg bg-red-700 text-white text-sm font-black tracking-tight flex items-center justify-center shrink-0">
+              KK
+            </span>
             <span>
               {ui.brand_first}
               <span className="text-red-600">{ui.brand_second}</span>
