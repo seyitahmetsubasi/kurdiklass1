@@ -169,6 +169,7 @@ const DEFAULT_UI = {
   learn_type_sentence: 'Hevokê Saz Bike',
   learn_type_match: 'Peyvan Bighîne Hev',
   learn_type_fill: 'Valahiyê Tije Bike',
+  learn_type_image: 'Wêneyê Bibîne, Peyvê Hilbijêre',
   learn_sentence_placeholder: 'Li peyvên jêrîn bitikîne da ku hevokê rêz bikî...',
   learn_correct_msg: 'Gelek baş e! Bersiva te rast e.',
   learn_wrong_prefix: 'Bersiva rast:',
@@ -841,6 +842,20 @@ export default function App() {
 
     if (exForm.exercise_type !== 'match' && !finalCorrect) {
       setExMsg('Ji kerema xwe bersiva rast binivîse.');
+      return;
+    }
+
+    if (exForm.exercise_type === 'image_choice' && !exForm.image_url.trim()) {
+      setExMsg('Ji bo vê cureyê lîstikê wêne pêwîst e. Wêneyek bar bike.');
+      return;
+    }
+
+    if (
+      exForm.exercise_type !== 'match' &&
+      exForm.exercise_type !== 'sentence' &&
+      !parsedOptions.some((o) => o.toLowerCase() === finalCorrect.toLowerCase())
+    ) {
+      setExMsg('Bersiva rast divê di nav vebijêrkan de hebe.');
       return;
     }
 
@@ -1688,7 +1703,8 @@ export default function App() {
                       choice: ui.learn_type_choice,
                       sentence: ui.learn_type_sentence,
                       match: ui.learn_type_match,
-                      fill_blank: ui.learn_type_fill
+                      fill_blank: ui.learn_type_fill,
+                      image_choice: ui.learn_type_image
                     }[currentEx.exercise_type] || ''}
                   </div>
                   <h2 className="text-xl font-bold text-slate-900">{currentEx.question_text}</h2>
@@ -1697,7 +1713,11 @@ export default function App() {
                     <img
                       src={currentEx.image_url}
                       alt=""
-                      className="max-h-56 rounded-xl border border-slate-200 mx-auto"
+                      className={`rounded-xl border border-slate-200 mx-auto object-contain ${
+                        currentEx.exercise_type === 'image_choice'
+                          ? 'max-h-72 w-full bg-slate-50'
+                          : 'max-h-56'
+                      }`}
                     />
                   )}
 
@@ -1716,7 +1736,9 @@ export default function App() {
                 </div>
 
                 {/* Seçenekli / boşluk doldurma */}
-                {(currentEx.exercise_type === 'choice' || currentEx.exercise_type === 'fill_blank') && (
+                {(currentEx.exercise_type === 'choice' ||
+                  currentEx.exercise_type === 'fill_blank' ||
+                  currentEx.exercise_type === 'image_choice') && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {(currentEx.options || []).map((opt) => {
                       const isSel = selectedOption === opt;
@@ -2152,6 +2174,7 @@ export default function App() {
                         <option value="sentence">Hevokê Saz Bike</option>
                         <option value="match">Peyvan Bighîne Hev</option>
                         <option value="fill_blank">Valahiyê Tije Bike</option>
+                        <option value="image_choice">Wêneyê Bibîne, Peyvê Hilbijêre</option>
                       </select>
                     </div>
 
@@ -2223,6 +2246,8 @@ export default function App() {
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         {exForm.exercise_type === 'match'
                           ? 'Cotên Peyvan (Mezin=Biçûk, Germ=Sar)'
+                          : exForm.exercise_type === 'image_choice'
+                          ? 'Vebijêrk (bi bêhnokê veqetandî) — wêne li jor bar bike'
                           : 'Vebijêrk an Peyv (bi bêhnokê veqetandî)'}
                       </label>
                       <input
