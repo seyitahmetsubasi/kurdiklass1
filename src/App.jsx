@@ -11,7 +11,6 @@ import {
   Edit3,
   Lock,
   LogOut,
-  GraduationCap,
   Filter,
   CheckCircle2,
   AlertCircle,
@@ -29,7 +28,6 @@ import {
   RotateCcw,
   ChevronDown,
   Flame,
-  Star,
   Check,
   Zap,
   Image as ImageIcon,
@@ -46,6 +44,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'kurdiklass2026';
+const BRAND_LOGO_URL = '/logo.jpg';
 
 const DEFAULT_CATEGORIES = [
   { slug: 'zanist', name: 'ZANIST', sort_order: 1 },
@@ -77,7 +76,6 @@ const normalizeKurdish = (str = '') =>
     .replace(/[ç]/g, 'c')
     .trim();
 
-// Supabase .or() / .ilike() filtrelerini bozan karakterleri temizler
 const sanitizeSearch = (str = '') => str.replace(/[,()%*\\]/g, ' ').trim();
 
 const slugify = (str = '') =>
@@ -716,7 +714,6 @@ const STARTER_GAMES = [
 const FEKI_AUDIO =
   'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3';
 
-// [emoji, doğru cevap, yanlış şıklar, açıklama, ses aralığı]
 const FEKI_DATA = [
   ['🍎', 'sêv', ['hinar', 'zebeş', 'hêjîr'], 'Sêv (Elma)', '21,23'],
   ['🍎', 'hinar', ['gûz', 'alû', 'xox'], 'Hinar (Nar)', '3,4.5'],
@@ -737,7 +734,6 @@ const BUILTIN_ZAROK_FEKI = FEKI_DATA.map(([emoji, answer, wrong, explanation, ra
   unit_title: 'ZAROK: Fêkî',
   exercise_type: 'choice',
   question_text: `${emoji} Guhdarî bike! Ev kîjan fêkî ye?`,
-  // Doğru cevabın şıkların hep ilk sırada olmaması için karıştırılır
   options: [answer, ...wrong].sort((a, b) => ((a.charCodeAt(1) + i) % 3) - ((b.charCodeAt(1) + i) % 3)),
   correct_answer: answer,
   explanation,
@@ -754,7 +750,6 @@ export default function App() {
   const [rawUi, setRawUi] = useState(DEFAULT_UI);
   const ui = { ...rawUi, ...(UI_TRANSLATIONS[selectedLang] || {}) };
 
-  // Dersler & Kategoriler
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -765,7 +760,6 @@ export default function App() {
   const [activeLesson, setActiveLesson] = useState(null);
   const [lessonTab, setLessonTab] = useState('content');
 
-  // Admin & Form State
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
@@ -790,7 +784,6 @@ export default function App() {
   };
   const [formData, setFormData] = useState(emptyLessonForm);
 
-  // Ferheng State
   const [ferhengWords, setFerhengWords] = useState([]);
   const [totalWordCount, setTotalWordCount] = useState(0);
   const [searchingDict, setSearchingDict] = useState(false);
@@ -808,7 +801,6 @@ export default function App() {
     example_sentence: ''
   });
 
-  // Hînbûn / Lîstik State
   const [exercises, setExercises] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
@@ -829,14 +821,12 @@ export default function App() {
     }
   });
 
-  // Eşleştirme (Match) oyunu state
   const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
   const [matchLeftSelected, setMatchLeftSelected] = useState(null);
   const [matchRightSelected, setMatchRightSelected] = useState(null);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [matchWrongFlash, setMatchWrongFlash] = useState(false);
 
-  // Admin Lîstik Form State
   const [editingExId, setEditingExId] = useState(null);
   const [exMsg, setExMsg] = useState('');
   const [uploadingExImg, setUploadingExImg] = useState(false);
@@ -891,9 +881,6 @@ export default function App() {
     setLangMenuOpen(false);
   };
 
-  // =========================================================================
-  // DERS / KATEGORİ / AYAR FONKSİYONLARI
-  // =========================================================================
   const fetchCategories = async () => {
     const { data, error } = await supabase
       .from('categories')
@@ -1072,9 +1059,6 @@ export default function App() {
     setTimeout(() => setSettingsMsg(''), 3500);
   };
 
-  // =========================================================================
-  // FERHENG FONKSİYONLARI
-  // =========================================================================
   const fetchDictionary = async (searchText = '', letter = 'all') => {
     setSearchingDict(true);
     let query = supabase
@@ -1200,7 +1184,6 @@ export default function App() {
 
     const combined = [...dbList, ...builtinList].filter((item) => {
       if (selectedLetter === 'all') return true;
-      // Not: 'tr' yerine locale'siz toUpperCase kullanılır; 'i' -> 'I' (Kurmancî I), 'î' -> 'Î'
       return (item.word || '').toUpperCase().startsWith(selectedLetter);
     });
 
@@ -1229,9 +1212,6 @@ export default function App() {
       .sort((a, b) => b._score - a._score);
   })();
 
-  // =========================================================================
-  // HÎNBÛN / LÎSTIK MOTORU (ZAROK OYUNLARI HÎNBÛN LİSTESİNDEN GİZLİ)
-  // =========================================================================
   const fetchExercises = async () => {
     const { data, error } = await supabase
       .from('kurmanci_exercises')
@@ -1404,7 +1384,6 @@ export default function App() {
     }
   };
 
-  // ZAROK: Fêkî ve ZAROK: Lîstika Hevnasînê Hînbûn / Lîstik listesinden tamamen çıkarılır
   const isZarokUnit = (title = '') => {
     const t = title.toLowerCase().trim();
     return (
@@ -1422,7 +1401,6 @@ export default function App() {
     )
   ];
 
-  // Zarok kategorisinde gösterilecek oyunlar (Fêkî her zaman vardır)
   const zarokUnitList = [
     ...new Set([
       'ZAROK: Fêkî',
@@ -1503,7 +1481,6 @@ export default function App() {
     }
   }, [currentEx?.id, viewMode, selectedUnit, unitCompleted]);
 
-  // Sayfa kapanırken sesi durdur
   useEffect(() => {
     return () => {
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
@@ -1633,7 +1610,6 @@ export default function App() {
     }
   };
 
-  // Seri (streak): günde en fazla bir kez artar, bir gün atlanırsa 1'e döner
   const updateStreak = () => {
     const today = new Date().toISOString().slice(0, 10);
     const last = localStorage.getItem('kk_last_day');
@@ -1646,7 +1622,6 @@ export default function App() {
   };
 
   const goToNextExercise = () => {
-    // Kalpler bittiyse devam edilemez
     if (hearts === 0) return;
     if (currentExIndex + 1 < unitExercises.length) {
       setCurrentExIndex((prev) => prev + 1);
@@ -1690,9 +1665,13 @@ export default function App() {
           <button
             type="button"
             onClick={() => setViewMode('student')}
-            className="flex items-center gap-2 font-extrabold text-xl text-slate-900"
+            className="flex items-center gap-2.5 font-extrabold text-xl text-slate-900"
           >
-            <GraduationCap className="w-6 h-6 text-red-600" />
+            <img
+              src={BRAND_LOGO_URL}
+              alt="KurdiKlass Logo"
+              className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
+            />
             <span>
               {ui.brand_first}
               <span className="text-red-600">{ui.brand_second}</span>
@@ -1846,7 +1825,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* ZAROK oyunları */}
             {selectedCategory === 'zarok' && (
               <section className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
                 <h2 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
@@ -1940,7 +1918,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Ders detay penceresi */}
             {activeLesson && (
               <div
                 className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
@@ -2140,7 +2117,6 @@ export default function App() {
               </div>
             ) : (
               <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 space-y-6">
-                {/* Üst çubuk */}
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
@@ -2162,7 +2138,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Soru */}
                 <div className="space-y-3">
                   <div className="text-xs font-bold text-emerald-700">
                     {{
@@ -2201,7 +2176,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Seçenekli / boşluk doldurma */}
                 {(currentEx.exercise_type === 'choice' ||
                   currentEx.exercise_type === 'fill_blank' ||
                   currentEx.exercise_type === 'image_choice') && (
@@ -2229,7 +2203,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Cümle kurma */}
                 {currentEx.exercise_type === 'sentence' && (
                   <div className="space-y-4">
                     <div className="min-h-[56px] border-2 border-dashed border-slate-300 rounded-xl p-3 flex flex-wrap gap-2">
@@ -2268,7 +2241,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Eşleştirme */}
                 {currentEx.exercise_type === 'match' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
@@ -2324,7 +2296,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Geri bildirim + butonlar */}
                 {answerState && (
                   <div
                     className={`rounded-xl p-4 text-sm font-medium ${
