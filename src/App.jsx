@@ -739,6 +739,77 @@ const BUILTIN_ZAROK_FEKI = FEKI_DATA.map(([emoji, answer, wrong, explanation, ra
   audio_url: `${FEKI_AUDIO}#t=${range}`
 }));
 
+const fetchFromWiktionary = async (rawWord) => {
+  const cleanWord = rawWord.trim().toLowerCase();
+  if (!cleanWord || cleanWord.length < 2) return null;
+
+  try {
+    const res = await fetch(
+      `https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(cleanWord)}`
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const kuEntries = data.kmr || data.ku || [];
+      if (kuEntries.length > 0) {
+        const firstEntry = kuEntries[0];
+        const posMap = {
+          Noun: 'navdêr',
+          Verb: 'lêker',
+          Adjective: 'rengdêr',
+          Adverb: 'hoker',
+          Pronoun: 'cînavk',
+          Interjection: 'baneşan'
+        };
+        const definitions = kuEntries
+          .flatMap((e) => (e.definitions || []).map((d) => d.definition.replace(/<[^>]+>/g, '')))
+          .filter(Boolean)
+          .slice(0, 3);
+
+        if (definitions.length > 0) {
+          return {
+            word: cleanWord,
+            part_of_speech: posMap[firstEntry.partOfSpeech] || 'navdêr',
+            meaning_tr: '',
+            meaning_en: definitions.join('; '),
+            meaning_ku: '',
+            example_sentence: ''
+          };
+        }
+      }
+    }
+
+    const kuRes = await fetch(
+      `https://ku.wiktionary.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(
+        cleanWord
+      )}&format=json&origin=*`
+    );
+    if (kuRes.ok) {
+      const kuData = await kuRes.json();
+      const pages = kuData?.query?.pages || {};
+      const page = Object.values(pages)[0];
+      if (page && !page.missing && page.extract) {
+        const lines = page.extract
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l && !l.startsWith('=='));
+        const summary = lines.slice(1, 3).join(' ') || lines[0] || '';
+        if (summary) {
+          return {
+            word: cleanWord,
+            part_of_speech: 'navdêr',
+            meaning_tr: '',
+            meaning_en: '',
+            meaning_ku: summary.slice(0, 280),
+            example_sentence: ''
+          };
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Wiktionary API error:', err);
+  }
+  return null;
+};
 export default function App() {
   const [viewMode, setViewMode] = useState('student');
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('kk_lang') || 'KU');
@@ -1068,17 +1139,32 @@ export default function App() {
     const q = sanitizeSearch(searchText);
     if (q) {
       query = query.or(
-        `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%`
+        `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%,meaning_en.ilike.%${q}%`
       );
     } else if (letter !== 'all') {
       query = query.ilike('word', `${letter}%`);
     }
 
     const { data, count, error } = await query.limit(100);
-    if (!error && data) {
-      setFerhengWords(data);
-      if (count !== null) setTotalWordCount(count);
+    let results = !error && data ? data : [];
+
+    if (q && !results.some((r) => normalizeKurdish(r.word) === normalizeKurdish(q))) {
+      const liveEntry = await fetchFromWiktionary(q);
+      if (liveEntry) {
+        const { data: inserted } = await supabase
+          .from('dictionary')
+          .insert([liveEntry])
+          .select();
+        if (inserted && inserted.length > 0) {
+          results = [inserted[0], ...results];
+        } else {
+          results = [{ id: `live-${Date.now()}`, ...liveEntry }, ...results];
+        }
+      }
     }
+
+    setFerhengWords(results);
+    if (count !== null) setTotalWordCount(count);
     setSearchingDict(false);
   };
 
@@ -2434,7 +2520,9 @@ export default function App() {
                       <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded">
                         {item.part_of_speech}
                       </span>
-                      <div className="text-sm text-slate-600 mt-0.5">{item.meaning_tr}</div>
+                      <div className="text-sm text-slate-600 mt-0.5">
+                        {item.meaning_tr || item.meaning_en || item.meaning_ku}
+                      </div>
                     </div>
                     <Eye className="w-4 h-4 text-slate-300 shrink-0" />
                   </button>
@@ -2469,7 +2557,9 @@ export default function App() {
                     </button>
                   </div>
                   <div className="text-sm space-y-2">
-                    <p><b>TR:</b> {selectedWordDetail.meaning_tr}</p>
+                    {selectedWordDetail.meaning_tr && (
+                      <p><b>TR:</b> {selectedWordDetail.meaning_tr}</p>
+                    )}
                     {selectedWordDetail.meaning_en && (
                       <p><b>EN:</b> {selectedWordDetail.meaning_en}</p>
                     )}
@@ -3139,7 +3229,7 @@ export default function App() {
                           <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded mr-2">
                             {item.part_of_speech}
                           </span>
-                          <span className="text-slate-600">— {item.meaning_tr}</span>
+                          <span className="text-slate-600">— {item.meaning_tr || item.meaning_en || item.meaning_ku}</span>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <button
